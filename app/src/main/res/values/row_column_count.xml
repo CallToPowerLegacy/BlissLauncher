@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="row_count">4</integer>
+    <integer name="col_count">4</integer>
+    <integer name="dock_column_count">4</integer>
+    <integer name="dock_row_count">1</integer>
+</resources>

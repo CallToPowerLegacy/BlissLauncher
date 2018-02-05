@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/workspace"
+    tools:context="org.indin.blisslaunchero.MainActivity">
+
+    <com.github.horizontalpagerlibrary.HorizontalPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/page_indicator"
+        android:id="@+id/pages_container"
+        android:layout_marginTop="@dimen/pager_margin"
+        >
+    </com.github.horizontalpagerlibrary.HorizontalPager>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/page_indicator"
+        android:layout_above="@+id/dock"
+        android:gravity="center_horizontal"
+        android:showDividers="middle"
+        android:divider="@drawable/gap"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp">
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dockHeight"
+        android:id="@+id/dock"
+        android:background="@color/dockColor"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:animateLayoutChanges="false"
+        android:layout_alignParentBottom="true">
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:rowCount="@integer/dock_row_count"
+            android:columnCount="@integer/dock_column_count"
+            android:useDefaultMargins="true"
+            android:alignmentMode="alignBounds">
+        </GridLayout>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/folder_window_container"
+        android:background="#EE000000"
+        android:visibility="gone">
+
+        <org.indin.blisslaunchero.BlissInput
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_above="@+id/folder_apps"
+            android:textSize="18sp"
+            android:text="Untitled"
+            android:id="@+id/folder_title"
+            android:background="@null"
+            android:textAlignment="center"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions"
+            android:textColor="@android:color/white"/>
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:background="@drawable/folder_window"
+            android:rowCount="4"
+            android:columnCount="3"
+            android:layout_centerInParent="true"
+            android:alignmentMode="alignBounds"
+            android:useDefaultMargins="true"
+            android:id="@+id/folder_apps"
+            android:minWidth="240dp"
+            android:minHeight="230dp"
+            >
+
+        </GridLayout>
+
+    </RelativeLayout>
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/progressbar"
+        android:visibility="gone"/>
+
+</RelativeLayout>

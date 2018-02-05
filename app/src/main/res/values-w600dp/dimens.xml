@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="maxDistanceForFolderCreation">20dp</dimen>
+    <dimen name="iconSize">72dp</dimen>
+    <dimen name="labelSize">16sp</dimen>
+    <dimen name="dotSize">12dp</dimen>
+    <dimen name="hitBoxSize">60dp</dimen>
+    <dimen name="scrollCorner">8dp</dimen>
+    <dimen name="iconPadding">12dp</dimen>
+    <dimen name="dockHeight">104dp</dimen>
+    <dimen name="pager_margin">32dp</dimen>
+</resources>

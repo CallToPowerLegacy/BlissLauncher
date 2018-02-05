@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="app_label_color">#ffffff</color>
+    <color name="dockColor">#55ffffff</color>
+    <color name="dot_off_color">#88FFFFFF</color>
+    <color name="dot_on_color">#FFFFFF</color>
+    <color name="widgetsPageColor">#88000000</color>
+</resources>
