@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.acl.Group;
 import java.util.List;
 
 public class Storage {
@@ -31,7 +32,7 @@ public class Storage {
      * @param pages
      * @param dock
      */
-    public void save(final List<GridLayout> pages, final LinearLayout dock) {
+    public void save(final List<GridLayout> pages, final GridLayout dock) {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {

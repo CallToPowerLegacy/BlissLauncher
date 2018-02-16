@@ -51,7 +51,7 @@ public class GraphicsUtil {
                 Log.d(TAG, "Unknown type of icon found");
                 return context.getResources().getDrawable(R.mipmap.ic_folder, null);
             }
-        int width = context.getResources().getDimensionPixelSize(R.dimen.iconSize) * 3/4;
+        int width = sources[0].getIntrinsicWidth() * 3/4;
         int height = width; // Square icons
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
@@ -127,10 +127,10 @@ public class GraphicsUtil {
         if ((image == null) || !(image instanceof BitmapDrawable)) {
             return image;
         }
-        double scale = 0.83;
+        double scale = 0.8;
         Bitmap original = Bitmap.createScaledBitmap(((BitmapDrawable)image).getBitmap(),
-                (int)(context.getResources().getDimensionPixelSize(R.dimen.iconSize) * scale),
-                (int)(context.getResources().getDimensionPixelSize(R.dimen.iconSize) * scale), true);
+                (int)(image.getIntrinsicWidth() * scale),
+                (int)(image.getIntrinsicWidth() * scale), true);
         Bitmap mask = ((BitmapDrawable)IconPackUtil.getIconMask()).getBitmap();
         Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(result);

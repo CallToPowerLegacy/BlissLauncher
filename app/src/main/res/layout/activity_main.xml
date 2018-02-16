@@ -5,6 +5,7 @@
     android:id="@+id/workspace"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context="org.indin.blisslaunchero.DesktopActivity">
 
     <org.indin.blisslaunchero.HorizontalPager
@@ -12,16 +13,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/pager_margin" />
+        android:layout_alignParentTop="true" />
 
     <LinearLayout
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/dock"
-        android:layout_marginBottom="12dp"
         android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
         android:divider="@drawable/gap"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
@@ -29,19 +29,19 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <GridLayout
         android:id="@+id/dock"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dockHeight"
         android:layout_alignParentBottom="true"
         android:animateLayoutChanges="false"
         android:background="@color/dockColor"
-        android:gravity="center"
-        android:paddingLeft="@dimen/app_col_margin"
-        android:paddingRight="@dimen/app_col_margin"
-        android:orientation="horizontal">
+        android:columnCount="@integer/col_count"
+        android:rowCount="1"
+        android:paddingLeft="@dimen/app_grid_padding"
+        android:paddingRight="@dimen/app_grid_padding">
 
-    </LinearLayout>
+    </GridLayout>
 
     <RelativeLayout
         android:id="@+id/folder_window_container"

@@ -2,6 +2,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval"
     android:innerRadius="0dp"
-    android:thickness="8dp">
+    android:thickness="6dp">
     <solid android:color="@color/dot_off_color"/>
 </shape>

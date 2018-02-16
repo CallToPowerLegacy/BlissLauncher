@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -21,11 +22,14 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.DragEvent;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
@@ -50,7 +54,7 @@ public class DesktopActivity extends AppCompatActivity {
 
     private HorizontalPager pager;
     private View workspace;
-    private LinearLayout dock;
+    private GridLayout dock;
     private LinearLayout indicator;
     private ViewGroup folderWindowContainer;
     private GridLayout folderApps;
@@ -106,6 +110,8 @@ public class DesktopActivity extends AppCompatActivity {
     private int maxWidth;
     private boolean isDragging;
     private int screenHeight;
+    private int mWidthPixels;
+    private int mHeightPixels;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -275,24 +281,32 @@ public class DesktopActivity extends AppCompatActivity {
     }
 
     private void prepareResources() {
-        iconSize = getResources().getDimensionPixelSize(R.dimen.iconSize);
-        float appHeight = iconSize
-                + 2 * getResources().getDimensionPixelSize(R.dimen.app_icon_margin)
-                + getResources().getDimensionPixelSize(R.dimen.labelHeight) + Utils.dp2Px(12,
-                this);
-        float topH = screenHeight - getResources().getDimensionPixelSize(R.dimen.dockHeight)
-                - Utils.dp2Px(32, this)
-                - getResources().getDimensionPixelSize(R.dimen.pager_margin);
-        Log.i(TAG, "prepareResources: hieht = " + topH + " " + appHeight);
 
+        setRealDeviceSizeInPixels();
 
-        nRows = (int) Math.floor(screenHeight / appHeight);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        double x = Math.pow(mWidthPixels / dm.xdpi, 2);
+        double y = Math.pow(mHeightPixels / dm.ydpi, 2);
+        double screenInches = Math.sqrt(x + y);
+        Log.d("debug", "Screen inches : " + screenInches);
+
+        if (screenInches <= 4.7) {
+            nRows = 4;
+        } else if (screenInches <= 5.4) {
+            nRows = 5;
+        } else {
+            nRows = 6;
+        }
+
         Log.i(TAG, "prepareResources: " + nRows);
         nCols = getResources().getInteger(R.integer.col_count);
         maxAppsPerPage = nRows * nCols;
         screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+
         maxDistanceForFolderCreation = getResources()
-                .getDimensionPixelSize(R.dimen.maxDistanceForFolderCreation);
+                .getDimensionPixelSize(R.dimen.maxDistanceForFolderCreation) * screenWidth / 480;
+
         hotBackground = getResources().getDrawable(R.drawable.rounded_corners_icon_hot, null);
         defaultBackground = getResources().getDrawable(R.drawable.rounded_corners_icon, null);
         scrollCorner = getResources().getDimensionPixelSize(R.dimen.scrollCorner);
@@ -301,6 +315,38 @@ public class DesktopActivity extends AppCompatActivity {
         transparentBackground = getResources().getDrawable(R.drawable.transparent, null);
         inputMethodManager =
                 (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+    }
+
+    private void setRealDeviceSizeInPixels() {
+        WindowManager windowManager = getWindowManager();
+        Display display = windowManager.getDefaultDisplay();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        display.getMetrics(displayMetrics);
+
+
+        // since SDK_INT = 1;
+        mWidthPixels = displayMetrics.widthPixels;
+        mHeightPixels = displayMetrics.heightPixels;
+
+        // includes window decorations (statusbar bar/menu bar)
+        if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
+            try {
+                mWidthPixels = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
+                mHeightPixels = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // includes window decorations (statusbar bar/menu bar)
+        if (Build.VERSION.SDK_INT >= 17) {
+            try {
+                Point realSize = new Point();
+                Display.class.getMethod("getRealSize", Point.class).invoke(display, realSize);
+                mWidthPixels = realSize.x;
+                mHeightPixels = realSize.y;
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void createLauncher() {
@@ -654,13 +700,14 @@ public class DesktopActivity extends AppCompatActivity {
     }
 
     private void addAppToPage(GridLayout page, View view) {
-        GridLayout.Spec spec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
-        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(spec, colSpec);
+        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
         iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                getResources().getDimensionPixelSize(R.dimen.app_icon_margin),
+                0,
                 getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                getResources().getDimensionPixelSize(R.dimen.app_icon_margin));
+                0);
+        iconLayoutParams.height = (screenHeight) / nRows;
         iconLayoutParams.width =
                 ((screenWidth - 10 * getResources().getDimensionPixelSize(
                         R.dimen.app_col_margin))
@@ -672,13 +719,14 @@ public class DesktopActivity extends AppCompatActivity {
     }
 
     private void addAppToPage(GridLayout page, View view, int index) {
-        GridLayout.Spec spec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
-        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(spec, colSpec);
+        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
         iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                getResources().getDimensionPixelSize(R.dimen.app_icon_margin),
+                0,
                 getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                getResources().getDimensionPixelSize(R.dimen.app_icon_margin));
+                0);
+        iconLayoutParams.height = (screenHeight) / nRows;
         iconLayoutParams.width =
                 ((screenWidth - 10 * getResources().getDimensionPixelSize(
                         R.dimen.app_col_margin))
@@ -749,7 +797,19 @@ public class DesktopActivity extends AppCompatActivity {
      */
     private View prepareApp(final AppItem app) {
         final View v = getLayoutInflater().inflate(R.layout.app_view, null);
-        final ImageView icon = v.findViewById(R.id.app_icon);
+        final SquareImageView icon = v.findViewById(R.id.app_icon);
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
+        int margin = 0;
+        if (nRows == 4) {
+            margin = getResources().getDimensionPixelSize(R.dimen.margin_inch1);
+        } else if (nRows == 5) {
+            margin = getResources().getDimensionPixelSize(R.dimen.margin_inch2);
+        } else if (nRows == 6) {
+            margin = getResources().getDimensionPixelSize(R.dimen.margin_inch3);
+        }
+        layoutParams.leftMargin = margin;
+        layoutParams.rightMargin = margin;
+
         final TextView label = v.findViewById(R.id.app_label);
         final Intent intent = app.getIntent();
         icon.setImageDrawable(app.getIcon());
@@ -1213,7 +1273,7 @@ public class DesktopActivity extends AppCompatActivity {
                 AppItem item = activeFolder.getSubApps().get(0);
                 activeFolder.getSubApps().remove(item);
                 item.setBelongsToFolder(false);
-                View view  = prepareApp(item);
+                View view = prepareApp(item);
                 addAppToPage(pages.get(getCurrentAppsPageNumber()), view);
 
                 ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
@@ -1248,12 +1308,20 @@ public class DesktopActivity extends AppCompatActivity {
      * not violated.
      */
     private void addToDock(View view, int index) {
-
-        // Hide label in dock
+        GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
+        iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                0,
+                getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                0);
+        iconLayoutParams.height = (screenHeight) / nRows;
+        iconLayoutParams.width =
+                ((screenWidth - 10 * getResources().getDimensionPixelSize(
+                        R.dimen.app_col_margin))
+                        / dock.getColumnCount());
         view.findViewById(R.id.app_label).setVisibility(View.GONE);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(0, ViewGroup
-                .LayoutParams.MATCH_PARENT, 1);
-        view.setLayoutParams(layoutParams);
+        view.setLayoutParams(iconLayoutParams);
         if (index != INVALID) {
             dock.addView(view, index);
         } else {

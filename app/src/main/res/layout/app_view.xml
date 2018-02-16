@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:gravity="center"
-    android:layout_marginLeft="@dimen/app_col_margin"
-    android:layout_marginRight="@dimen/app_col_margin"
     android:orientation="vertical">
 
-    <ImageView
+    <org.indin.blisslaunchero.SquareImageView
         android:id="@+id/app_icon"
-        android:layout_width="@dimen/iconSize"
-        android:layout_height="@dimen/iconSize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:background="@drawable/rounded_corners_icon"
         android:foreground="?attr/selectableItemBackground"
@@ -20,10 +18,10 @@
         android:id="@+id/app_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"
+        android:layout_marginTop="4dp"
         android:textColor="@color/app_label_color"
         android:textSize="@dimen/labelSize" />
 
