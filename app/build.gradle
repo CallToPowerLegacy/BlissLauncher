@@ -25,12 +25,18 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:26.0.0'
-    compile 'com.android.support:gridlayout-v7:26.0.0'
-    compile 'com.github.droidlibrarian:horizontalpager:v2.0'
+    compile 'me.relex:circleindicator:1.2.2@aar'
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support:gridlayout-v7:26.1.0'
     compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
-        transitive = true;
+        transitive = true
     }
 
+    compile files('libs/bruce-utils.jar')
+
     testCompile 'junit:junit:4.12'
+
+    compile 'org.lucasr.dspec:dspec:0.1.1'
 }
+
+apply plugin: 'com.jakewharton.hugo'

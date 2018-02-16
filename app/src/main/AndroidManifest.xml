@@ -2,31 +2,35 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.indin.blisslaunchero">
 
-    <uses-permission android:name="android.permission.SET_WALLPAPER"/>
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".BlissLauncher"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:name=".BlissLauncher">
-        <activity android:name=".MainActivity"
-            android:theme="@style/HomeScreenTheme"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".DesktopActivity"
+            android:clearTaskOnLaunch="true"
             android:launchMode="singleTask"
-            android:screenOrientation="nosensor">
+            android:screenOrientation="nosensor"
+            android:stateNotNeeded="true"
+            android:theme="@style/HomeScreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="8fcf342f1b8ac74d6980872082b7216ef4682a29"
-            />
+            android:value="8fcf342f1b8ac74d6980872082b7216ef4682a29" />
     </application>
 
 </manifest>

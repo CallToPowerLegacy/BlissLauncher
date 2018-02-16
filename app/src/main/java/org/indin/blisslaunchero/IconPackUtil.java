@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import org.w3c.dom.Document;
@@ -37,6 +39,7 @@ public class IconPackUtil {
     private static Resources iconPackResources;
 
     private static Map<String, Integer> iconMapper;
+    private static Context mContext;
 
     public static boolean iconPackExists(PackageManager packageManager) {
         try {
@@ -57,6 +60,7 @@ public class IconPackUtil {
     }
 
     public static void cacheIconsFromIconPack(Context context) {
+        mContext  = context;
         if(iconMapper != null)
             return;
         if(!iconPackExists(context.getPackageManager()))

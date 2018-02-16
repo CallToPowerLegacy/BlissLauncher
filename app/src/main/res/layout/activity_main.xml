@@ -2,100 +2,91 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/workspace"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/workspace"
-    tools:context="org.indin.blisslaunchero.MainActivity">
+    tools:context="org.indin.blisslaunchero.DesktopActivity">
 
-    <com.github.horizontalpagerlibrary.HorizontalPager
+    <org.indin.blisslaunchero.HorizontalPager
+        android:id="@+id/pages_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
-        android:id="@+id/pages_container"
-        android:layout_marginTop="@dimen/pager_margin"
-        >
-    </com.github.horizontalpagerlibrary.HorizontalPager>
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="@dimen/pager_margin" />
 
     <LinearLayout
+        android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/page_indicator"
         android:layout_above="@+id/dock"
-        android:gravity="center_horizontal"
-        android:showDividers="middle"
-        android:divider="@drawable/gap"
+        android:layout_marginBottom="12dp"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp">
+        android:divider="@drawable/gap"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:showDividers="middle">
 
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/dock"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dockHeight"
-        android:id="@+id/dock"
-        android:background="@color/dockColor"
-        android:orientation="horizontal"
-        android:gravity="center"
+        android:layout_alignParentBottom="true"
         android:animateLayoutChanges="false"
-        android:layout_alignParentBottom="true">
-
-        <GridLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:rowCount="@integer/dock_row_count"
-            android:columnCount="@integer/dock_column_count"
-            android:useDefaultMargins="true"
-            android:alignmentMode="alignBounds">
-        </GridLayout>
+        android:background="@color/dockColor"
+        android:gravity="center"
+        android:paddingLeft="@dimen/app_col_margin"
+        android:paddingRight="@dimen/app_col_margin"
+        android:orientation="horizontal">
 
     </LinearLayout>
 
     <RelativeLayout
+        android:id="@+id/folder_window_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/folder_window_container"
-        android:background="#EE000000"
+        android:background="#E6000000"
         android:visibility="gone">
 
         <org.indin.blisslaunchero.BlissInput
+            android:id="@+id/folder_title"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
             android:layout_above="@+id/folder_apps"
-            android:textSize="18sp"
-            android:text="Untitled"
-            android:id="@+id/folder_title"
+            android:layout_centerHorizontal="true"
             android:background="@null"
-            android:textAlignment="center"
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions"
-            android:textColor="@android:color/white"/>
+            android:text="Untitled"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
 
         <GridLayout
+            android:id="@+id/folder_apps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:background="@drawable/folder_window"
-            android:rowCount="4"
-            android:columnCount="3"
             android:layout_centerInParent="true"
+            android:layout_margin="20dp"
             android:alignmentMode="alignBounds"
-            android:useDefaultMargins="true"
-            android:id="@+id/folder_apps"
-            android:minWidth="240dp"
+            android:background="@drawable/folder_window"
+            android:columnCount="3"
             android:minHeight="230dp"
-            >
+            android:minWidth="240dp"
+            android:rowCount="4"
+            android:useDefaultMargins="true">
 
         </GridLayout>
 
     </RelativeLayout>
 
     <ProgressBar
+        android:id="@+id/progressbar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:id="@+id/progressbar"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </RelativeLayout>

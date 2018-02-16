@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="maxDistanceForFolderCreation">20dp</dimen>
-    <dimen name="iconSize">84dp</dimen>
+    <dimen name="iconSize">80dp</dimen>
     <dimen name="labelSize">18sp</dimen>
     <dimen name="dotSize">6dp</dimen>
     <dimen name="hitBoxSize">60dp</dimen>

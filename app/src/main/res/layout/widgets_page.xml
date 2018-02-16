@@ -28,7 +28,7 @@
             android:background="@null"
             android:inputType="text"
             android:maxLines="1"
-            android:imeOptions="actionGo"
+            android:imeOptions="actionSearch"
             />
     </LinearLayout>
 

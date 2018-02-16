@@ -10,18 +10,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.graphics.Point;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
@@ -31,22 +35,22 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.github.horizontalpagerlibrary.HorizontalPager;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.lucasr.dspec.DesignSpec;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+public class DesktopActivity extends AppCompatActivity {
 
     private HorizontalPager pager;
     private View workspace;
-    private GridLayout dock;
+    private LinearLayout dock;
     private LinearLayout indicator;
     private ViewGroup folderWindowContainer;
     private GridLayout folderApps;
@@ -70,9 +74,11 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int INVALID = -999;
 
-    private List<LinearLayout> pages;
+    private List<GridLayout> pages;
 
     private int screenWidth;
+
+    private int pagerWidth;
     private Drawable hotBackground;
     private Drawable defaultBackground;
     private Drawable transparentBackground;
@@ -92,6 +98,14 @@ public class MainActivity extends AppCompatActivity {
     private int scrollCorner;
 
     private Storage storage;
+    private int nPages;
+    private boolean newPageAdded;
+    private int parentPage = -99;
+    private ImageView dot;
+    private LinearLayout.LayoutParams params;
+    private int maxWidth;
+    private boolean isDragging;
+    private int screenHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +115,7 @@ public class MainActivity extends AppCompatActivity {
         workspace = findViewById(R.id.workspace);
         pager = findViewById(R.id.pages_container);
 
-        LinearLayout dockContainer = findViewById(R.id.dock);
-        dock = (GridLayout) dockContainer.getChildAt(0);
+        dock = findViewById(R.id.dock);
 
         indicator = findViewById(R.id.page_indicator);
         folderWindowContainer = findViewById(R.id.folder_window_container);
@@ -110,15 +123,31 @@ public class MainActivity extends AppCompatActivity {
         folderTitle = findViewById(R.id.folder_title);
         progressBar = findViewById(R.id.progressbar);
 
+        /*DesignSpec designSpec = DesignSpec.fromResource(workspace, R.raw.spec);
+        workspace.getOverlay().add(designSpec);*/
+
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         storage = new Storage(getApplicationContext());
 
-        prepareBroadcastReceivers();
+        pager.getViewTreeObserver().addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        screenHeight = pager.getHeight();
+                        pagerWidth = pager.getWidth();
+                        //we only wanted the first call back so now remove
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                            pager.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        } else {
+                            pager.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        }
+                        createLauncher();
+                    }
+                });
 
-        createLauncher();
     }
 
     /**
@@ -156,6 +185,29 @@ public class MainActivity extends AppCompatActivity {
 
         registerReceiver(installReceiver, installFilter);
         registerReceiver(uninstallReceiver, uninstallFilter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        prepareBroadcastReceivers();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        overridePendingTransition(R.anim.reenter, R.anim.releave);
+
+        if (!minimumWidthDetermined) {
+            //fixMinimumGridWidth();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(installReceiver);
+        unregisterReceiver(uninstallReceiver);
     }
 
     private void addNewApp(String packageName) {
@@ -223,7 +275,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void prepareResources() {
-        nRows = getResources().getInteger(R.integer.row_count);
+        iconSize = getResources().getDimensionPixelSize(R.dimen.iconSize);
+        float appHeight = iconSize
+                + 2 * getResources().getDimensionPixelSize(R.dimen.app_icon_margin)
+                + getResources().getDimensionPixelSize(R.dimen.labelHeight) + Utils.dp2Px(12,
+                this);
+        float topH = screenHeight - getResources().getDimensionPixelSize(R.dimen.dockHeight)
+                - Utils.dp2Px(32, this)
+                - getResources().getDimensionPixelSize(R.dimen.pager_margin);
+        Log.i(TAG, "prepareResources: hieht = " + topH + " " + appHeight);
+
+
+        nRows = (int) Math.floor(screenHeight / appHeight);
+        Log.i(TAG, "prepareResources: " + nRows);
         nCols = getResources().getInteger(R.integer.col_count);
         maxAppsPerPage = nRows * nCols;
         screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
@@ -231,7 +295,6 @@ public class MainActivity extends AppCompatActivity {
                 .getDimensionPixelSize(R.dimen.maxDistanceForFolderCreation);
         hotBackground = getResources().getDrawable(R.drawable.rounded_corners_icon_hot, null);
         defaultBackground = getResources().getDrawable(R.drawable.rounded_corners_icon, null);
-        iconSize = getResources().getDimensionPixelSize(R.dimen.iconSize);
         scrollCorner = getResources().getDimensionPixelSize(R.dimen.scrollCorner);
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
@@ -257,13 +320,12 @@ public class MainActivity extends AppCompatActivity {
 
                         progressBar.setVisibility(View.GONE);
                         createUI();
-                        createDragListener();
                         createPageChangeListener();
                         createFolderTitleListener();
+                        createDragListener();
                         createWidgetsPage();
                         createIndicator();
-
-                        fixMinimumGridWidth();
+                        // fixMinimumGridWidth();
                         Log.i(TAG, "Launcher ready.");
                     }
                 });
@@ -277,9 +339,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (IconPackUtil.iconPackPresent) {
-            WallpaperManager wm = WallpaperManager.getInstance(this);
+
+            Bitmap bmap2 = BitmapFactory.decodeStream(
+                    getResources().openRawResource(+R.drawable.wall1));
+
+            DisplayMetrics metrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            int height = metrics.heightPixels;
+            int width = metrics.widthPixels;
+            Bitmap bitmap = Bitmap.createScaledBitmap(bmap2, width, height, true);
+
+            WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
             try {
-                wm.setBitmap(IconPackUtil.getWallpaper());
+                wallpaperManager.setBitmap(bitmap);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -343,16 +415,6 @@ public class MainActivity extends AppCompatActivity {
         folderTitle.setCursorVisible(false);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        overridePendingTransition(R.anim.reenter, R.anim.releave);
-
-        if (!minimumWidthDetermined) {
-            fixMinimumGridWidth();
-        }
-    }
-
     /**
      * Adds a scroll listener to the pager in order to keep the currentPageNumber
      * updated
@@ -366,30 +428,34 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onViewScrollFinished(int page) {
+                Log.d(TAG, "onViewScrollFinished() called with: page = [" + page + "]");
                 currentPageNumber = page;
 
                 // Remove indicator and dock from widgets page, and make them
                 // reappear when user swipes to the first apps page
                 if (currentPageNumber == 0) {
-                    indicator.animate().alpha(0).setDuration(300).withEndAction(new Runnable() {
+                    dock.animate().translationYBy(
+                            Utils.dp2Px(105, DesktopActivity.this)).setDuration(
+                            100).withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            dock.setVisibility(View.GONE);
+                        }
+                    });
+
+                    indicator.animate().alpha(0).setDuration(100).withEndAction(new Runnable() {
                         @Override
                         public void run() {
                             indicator.setVisibility(View.GONE);
                         }
                     });
-                    ((View) dock.getParent()).animate().translationYBy(500).setDuration(
-                            300).withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((View) dock.getParent()).setVisibility(View.GONE);
-                        }
-                    });
+
                 } else {
                     if (indicator.getAlpha() != 1.0f) {
                         indicator.setVisibility(View.VISIBLE);
-                        ((View) dock.getParent()).setVisibility(View.VISIBLE);
-                        indicator.animate().alpha(1).setDuration(300);
-                        ((View) dock.getParent()).animate().translationY(0).setDuration(300);
+                        dock.setVisibility(View.VISIBLE);
+                        indicator.animate().alpha(1).setDuration(100);
+                        dock.animate().translationY(0).setDuration(100);
                         Log.d(TAG, "Making dock and indicator reappear");
                     }
                 }
@@ -404,16 +470,20 @@ public class MainActivity extends AppCompatActivity {
      * Populates the pages and the dock for the first time.
      */
     private void createUI() {
+        pager.setUiCreated(false);
+        dock.setEnabled(false);
         if (storage.isLayoutPresent()) {
             Log.i(TAG, "Preparing UI from storage");
             createUIFromStorage();
+            pager.setUiCreated(true);
+            dock.setEnabled(true);
             return;
         }
-        int nPages = (int) Math.ceil((float) launchableApps.size() / (float) maxAppsPerPage) + 1;
+        nPages = (int) Math.ceil((float) launchableApps.size() / (float) maxAppsPerPage);
         Log.i(TAG, "createUI: npages: " + nPages + ", max: " + maxAppsPerPage);
         pages = new ArrayList<>();
         for (int i = 0; i < nPages; i++) {
-            LinearLayout page = preparePage();
+            GridLayout page = preparePage();
             pages.add(page);
         }
         int count = 0;
@@ -436,15 +506,17 @@ public class MainActivity extends AppCompatActivity {
             View appView = prepareApp(pinnedApps.get(i));
             addToDock(appView, INVALID);
         }
+        pager.setUiCreated(true);
+        dock.setEnabled(true);
 
     }
 
-    private void fixMinimumGridWidth() {
+    /*private void fixMinimumGridWidth() {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(2000);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -456,11 +528,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
 
-    private void _fixMinimumGridWidth() {
+    }*/
+
+    /*private void _fixMinimumGridWidth() {
         // Find the grid with the maximum width
-        int maxWidth = 0;
+        maxWidth = 0;
         for (int i = 0; i < pages.size(); i++) {
             GridLayout grid = getGridFromPage(pages.get(i));
             if (grid.getWidth() > maxWidth) {
@@ -477,13 +550,16 @@ public class MainActivity extends AppCompatActivity {
         }
         //dock.setMinimumWidth(maxWidth);
         minimumWidthDetermined = true;
-    }
+    }*/
 
-    private LinearLayout preparePage() {
-        LinearLayout page = (LinearLayout) getLayoutInflater().inflate(R.layout.apps_page, null);
-        GridLayout grid = getGridFromPage(page);
+    private GridLayout preparePage() {
+        GridLayout grid = (GridLayout) getLayoutInflater().inflate(R.layout.apps_page, null);
+        if (minimumWidthDetermined) {
+            grid.setMinimumWidth(maxWidth);
+        }
+        grid.setRowCount(nRows);
         grid.setLayoutTransition(getDefaultLayoutTransition());
-        return page;
+        return grid;
     }
 
     /**
@@ -494,7 +570,7 @@ public class MainActivity extends AppCompatActivity {
         int nPages = storageData.getNPages();
         pages = new ArrayList<>();
         for (int i = 0; i < nPages; i++) {
-            LinearLayout page = preparePage();
+            GridLayout page = preparePage();
             pages.add(page);
 
             try {
@@ -544,13 +620,23 @@ public class MainActivity extends AppCompatActivity {
         currentPageNumber = 1;
         pager.setCurrentPage(currentPageNumber);
         searchInput = layout.findViewById(R.id.search_input);
-        searchInput.setOnDragListener(null);
+        layout.setOnDragListener(null);
+
+        searchInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    hideKeyboard(v);
+                }
+            }
+        });
 
         searchInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int action, KeyEvent keyEvent) {
-                if (action == EditorInfo.IME_ACTION_GO) {
+                if (action == EditorInfo.IME_ACTION_SEARCH) {
                     runSearch(searchInput.getText().toString());
+                    searchInput.setText("");
                 }
                 return false;
             }
@@ -567,18 +653,39 @@ public class MainActivity extends AppCompatActivity {
         return currentPageNumber - 1;
     }
 
-    private void addAppToPage(LinearLayout page, View view) {
+    private void addAppToPage(GridLayout page, View view) {
+        GridLayout.Spec spec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(spec, colSpec);
+        iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                getResources().getDimensionPixelSize(R.dimen.app_icon_margin),
+                getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                getResources().getDimensionPixelSize(R.dimen.app_icon_margin));
+        iconLayoutParams.width =
+                ((screenWidth - 10 * getResources().getDimensionPixelSize(
+                        R.dimen.app_col_margin))
+                        / page.getColumnCount());
         view.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
-        getGridFromPage(page).addView(view);
+        view.setLayoutParams(iconLayoutParams);
+        page.addView(view);
+
     }
 
-    private void addAppToPage(LinearLayout page, View view, int index) {
+    private void addAppToPage(GridLayout page, View view, int index) {
+        GridLayout.Spec spec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(spec, colSpec);
+        iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                getResources().getDimensionPixelSize(R.dimen.app_icon_margin),
+                getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                getResources().getDimensionPixelSize(R.dimen.app_icon_margin));
+        iconLayoutParams.width =
+                ((screenWidth - 10 * getResources().getDimensionPixelSize(
+                        R.dimen.app_col_margin))
+                        / page.getColumnCount());
         view.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
-        getGridFromPage(page).addView(view, index);
-    }
-
-    private void removeAppFromPage(LinearLayout page, View view) {
-        getGridFromPage(page).removeView(view);
+        view.setLayoutParams(iconLayoutParams);
+        page.addView(view, index);
     }
 
     /**
@@ -668,8 +775,14 @@ public class MainActivity extends AppCompatActivity {
         icon.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                View.DragShadowBuilder dragShadowBuilder = new View.DragShadowBuilder(icon);
+                View.DragShadowBuilder dragShadowBuilder = new BlissDragShadowBuilder(icon);
                 v.startDrag(null, dragShadowBuilder, v, 0);
+                isDragging = true;
+                if (v.getParent() instanceof GridLayout) {
+                    parentPage = getCurrentAppsPageNumber();
+                } else {
+                    parentPage = -99;
+                }
                 v.setVisibility(View.INVISIBLE);
                 movingApp = v;
                 dragDropEnabled = true;
@@ -678,7 +791,7 @@ public class MainActivity extends AppCompatActivity {
                     handleWobbling(true);
                 }
 
-                return false;
+                return true;
             }
         });
 
@@ -708,7 +821,7 @@ public class MainActivity extends AppCompatActivity {
     private void displayFolder(AppItem app, View v) {
         folderWindowContainer.setAlpha(0f);
         folderWindowContainer.setVisibility(View.VISIBLE);
-        folderWindowContainer.animate().alpha(1.0f).setDuration(800);
+        folderWindowContainer.animate().alpha(1.0f).setDuration(200);
 
         folderTitle.setText(app.getLabel());
         folderTitle.setCursorVisible(false);
@@ -776,29 +889,117 @@ public class MainActivity extends AppCompatActivity {
      */
     private void createDragListener() {
         dock.setOnDragListener(new View.OnDragListener() {
+
+            private int latestIndex;
+            private long interestExpressedAt;
+            private final int timeToSwap = 300;
+            private boolean latestFolderInterest;
+
+            private float lastX, lastY;
+
             @Override
             public boolean onDrag(View view, DragEvent dragEvent) {
+
+                Log.d(TAG, "onDrag of dock");
+                if (dock.getChildCount() > nCols) {
+                    Log.d(TAG, "Too many children in dock: " + dock.getChildCount());
+                }
+
+                // Don't offer rearrange functionality when app is being dragged
+                // out of folder window
                 if (getAppDetails(movingApp).isBelongsToFolder()) {
                     return true;
                 }
 
-                if (dock.getChildCount() > nCols) {
-                    Log.d(TAG, "Too many children in dock: " + dock.getChildCount());
-                    return false;
+                // Do nothing during scroll operations
+                if (!dragDropEnabled) {
+                    return true;
                 }
 
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
-                    int index = getIndex(dock, dragEvent.getX(), dragEvent.getY());
-                    if (index >= nCols || dock.getChildCount() >= nCols) {
-                        Log.d(TAG, "Won't add");
+
+                    lastX = dragEvent.getX();
+                    lastY = dragEvent.getY();
+
+                    int index = getIndex(dock, dragEvent.getX(), dragEvent.getY(), "dock");
+                    Log.i(TAG, "onDrag: Index: " + index);
+                    // If hovering over self, ignore drag/drop
+                    if (index == dock.indexOfChild(movingApp)) {
+                        latestIndex = INVALID;
+                        discardCollidingApp();
                         return true;
                     }
-                    if (movingApp.getParent() != null) {
-                        ((ViewGroup) movingApp.getParent()).removeView(movingApp);
-                    }
-                    addToDock(movingApp, index);
-                }
 
+                    // If hovering over an empty location, ignore drag/drop
+                    if (index == INVALID) {
+                        discardCollidingApp();
+                    }
+
+                    // If hovering over another app icon
+                    // either move it or create a folder
+                    // depending on time and distance
+                    if (index != INVALID) {
+                        View latestCollidingApp = dock.getChildAt(index);
+                        if (collidingApp != latestCollidingApp) {
+                            makeAppCold(collidingApp, true);
+                            collidingApp = dock.getChildAt(index);
+                            folderInterest = false;
+                        }
+
+                        AppItem moveAppDetails = getAppDetails(movingApp);
+                        if (moveAppDetails.isFolder()) {
+                            folderInterest = false;
+                        } else {
+                            latestFolderInterest = checkIfFolderInterest(dock, index,
+                                    dragEvent.getX(), dragEvent.getY());
+                            if (latestFolderInterest != folderInterest) {
+                                folderInterest = latestFolderInterest;
+                                interestExpressedAt = System.currentTimeMillis();
+                            }
+                            if (folderInterest) {
+                                makeAppHot(collidingApp);
+                            } else {
+                                makeAppCold(collidingApp, true);
+                            }
+                        }
+                    }
+
+                    if (index == latestIndex) {
+                        long elapsedTime = System.currentTimeMillis() - interestExpressedAt;
+
+                        if (elapsedTime > timeToSwap && !folderInterest
+                                && dock.getChildCount() < nCols) {
+                            if (movingApp.getParent() != null) {
+                                ((ViewGroup) movingApp.getParent()).removeView(movingApp);
+                            }
+                            addToDock(movingApp, index);
+                            parentPage = -99;
+                            //movingApp.setVisibility(View.VISIBLE);
+                        }
+                    } else {
+                        latestIndex = index;
+                        interestExpressedAt = System.currentTimeMillis();
+                    }
+
+
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                    if (getCurrentAppsPageNumber() > 0 && getGridFromPage(
+                            pages.get(getCurrentAppsPageNumber() - 1)).getChildCount()
+                            <= 0) {
+                        pages.remove(getCurrentAppsPageNumber() - 1);
+                        indicator.removeViewAt(getCurrentAppsPageNumber());
+                        pager.removeViewAt(getCurrentAppsPageNumber());
+                        pager.scrollLeft();
+                    }
+
+
+                    if (getCurrentAppsPageNumber() < pages.size() - 1 && getGridFromPage(
+                            pages.get(getCurrentAppsPageNumber() + 1)).getChildCount() <= 0) {
+                        pages.remove(getCurrentAppsPageNumber() + 1);
+                        indicator.removeViewAt(getCurrentAppsPageNumber() + 2);
+                        pager.removeViewAt(getCurrentAppsPageNumber() + 2);
+                    }
+                }
                 movingApp = (View) dragEvent.getLocalState();
                 return true;
             }
@@ -807,7 +1008,7 @@ public class MainActivity extends AppCompatActivity {
         pager.setOnDragListener(new View.OnDragListener() {
             private int latestIndex;
             private long interestExpressedAt;
-            private final int timeToSwap = 300;
+            private final int timeToSwap = 100;
             private boolean latestFolderInterest;
 
             private float lastX, lastY;
@@ -831,11 +1032,10 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     }
 
-                    LinearLayout page = pages.get(getCurrentAppsPageNumber());
+                    GridLayout page = pages.get(getCurrentAppsPageNumber());
                     if (dragEvent.getX() < screenWidth - scrollCorner
                             && dragEvent.getX() > scrollCorner) {
-                        int index = getIndex(page, dragEvent.getX(), dragEvent.getY());
-
+                        int index = getIndex(page, dragEvent.getX(), dragEvent.getY(), "main");
                         // If hovering over self, ignore drag/drop
                         if (index == getGridFromPage(page).indexOfChild(movingApp)) {
                             latestIndex = INVALID;
@@ -854,7 +1054,7 @@ public class MainActivity extends AppCompatActivity {
                         if (index != INVALID) {
                             View latestCollidingApp = getGridFromPage(page).getChildAt(index);
                             if (collidingApp != latestCollidingApp) {
-                                makeAppCold(collidingApp);
+                                makeAppCold(collidingApp, false);
                                 collidingApp = getGridFromPage(page).getChildAt(index);
                                 folderInterest = false;
                             }
@@ -863,8 +1063,16 @@ public class MainActivity extends AppCompatActivity {
                             if (moveAppDetails.isFolder()) {
                                 folderInterest = false;
                             } else {
-                                latestFolderInterest = checkIfFolderInterest(index,
-                                        dragEvent.getX(), dragEvent.getY());
+                                if (view instanceof HorizontalPager) {
+                                    latestFolderInterest = checkIfFolderInterest(
+                                            getGridFromPage(pages.get(getCurrentAppsPageNumber())),
+                                            index,
+                                            dragEvent.getX(), dragEvent.getY());
+                                } else {
+                                    latestFolderInterest = checkIfFolderInterest(dock, index,
+                                            dragEvent.getX(), dragEvent.getY());
+                                }
+
                                 if (latestFolderInterest != folderInterest) {
                                     folderInterest = latestFolderInterest;
                                     interestExpressedAt = System.currentTimeMillis();
@@ -872,14 +1080,16 @@ public class MainActivity extends AppCompatActivity {
                                 if (folderInterest) {
                                     makeAppHot(collidingApp);
                                 } else {
-                                    makeAppCold(collidingApp);
+                                    makeAppCold(collidingApp, false);
                                 }
                             }
                         }
 
                         if (index == latestIndex) {
                             long elapsedTime = System.currentTimeMillis() - interestExpressedAt;
-                            if (elapsedTime > timeToSwap && !folderInterest) {
+                            if (elapsedTime > timeToSwap && !folderInterest
+                                    && (page.getChildCount() < maxAppsPerPage
+                                    || parentPage == getCurrentAppsPageNumber())) {
                                 if (movingApp.getParent() != null) {
                                     ((ViewGroup) movingApp.getParent()).removeView(movingApp);
                                 }
@@ -888,6 +1098,8 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     addAppToPage(page, movingApp);
                                 }
+                                parentPage = -99;
+                                //movingApp.setVisibility(View.VISIBLE);
                             }
                         } else {
                             latestIndex = index;
@@ -896,20 +1108,37 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         if (dragEvent.getX() > screenWidth - scrollCorner) {
                             if (getCurrentAppsPageNumber() + 1 < pages.size()) {
-                                removeAppFromPage(page, movingApp);
+                                //removeAppFromPage(page, movingApp);
                                 pager.scrollRight();
+                            } else if (getCurrentAppsPageNumber() + 1 == pages.size()
+                                    && getGridFromPage(page).getChildCount() > 1) {
+                                GridLayout layout = preparePage();
+                                pages.add(layout);
+                                ImageView dot = new ImageView(DesktopActivity.this);
+                                dot.setImageDrawable(getDrawable(R.drawable.dot_off));
+                                dot.setLayoutParams(params);
+                                indicator.addView(dot);
+                                pager.addView(layout);
                             }
                         } else if (dragEvent.getX() < scrollCorner) {
+                            if (getCurrentAppsPageNumber() == 0) {
+                                return true;
+                            }
                             if (getCurrentAppsPageNumber() - 1 >= 0) {
-                                removeAppFromPage(page, movingApp);
+                                //removeAppFromPage(page, movingApp);
                                 pager.scrollLeft();
+                            } else if (getCurrentAppsPageNumber() + 1 == pages.size() - 2
+                                    && getGridFromPage(pages.get(pages.size() - 1)).getChildCount()
+                                    <= 0) {
+                                indicator.removeViewAt(pages.size());
+                                pager.removeViewAt(pages.size());
+                                pages.remove(pages.size() - 1);
                             }
                         }
                     }
                 }
 
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
-                    System.out.println("Drag ended.");
                     handleWobbling(false);
                     if (folderWindowContainer.getVisibility() != View.VISIBLE) {
                         // Drop functionality when the folder window container
@@ -917,15 +1146,23 @@ public class MainActivity extends AppCompatActivity {
                         if (!folderInterest) {
                             if (movingApp.getParent() == null) {
                                 if (view instanceof HorizontalPager) {
-                                    addAppToPage(pages.get(getCurrentAppsPageNumber()), movingApp);
+                                    GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+                                    if (gridLayout.getChildCount() < maxAppsPerPage) {
+                                        addAppToPage(gridLayout, movingApp);
+                                    }
                                 }
-                                if (view instanceof GridLayout && view.getId() == R.id.dock) {
+                                if (view instanceof LinearLayout && view.getId() == R.id.dock) {
                                     addToDock(movingApp, INVALID);
                                 }
                             }
                             movingApp.setVisibility(View.VISIBLE);
                         } else {
-                            createFolder();
+                            if (collidingApp.getParent() instanceof GridLayout) {
+                                createFolder(false);
+                            } else {
+                                createFolder(true);
+                            }
+
                         }
                         folderInterest = false;
                     } else {
@@ -939,29 +1176,60 @@ public class MainActivity extends AppCompatActivity {
                             movingApp.setVisibility(View.VISIBLE);
                         }
                     }
+
+                    if (getCurrentAppsPageNumber() > 0 && getGridFromPage(
+                            pages.get(getCurrentAppsPageNumber() - 1)).getChildCount()
+                            <= 0) {
+                        pages.remove(getCurrentAppsPageNumber() - 1);
+                        indicator.removeViewAt(getCurrentAppsPageNumber());
+                        pager.removeViewAt(getCurrentAppsPageNumber());
+                        pager.scrollLeft();
+                    }
+
+
+                    if (getCurrentAppsPageNumber() < pages.size() - 1 && getGridFromPage(
+                            pages.get(getCurrentAppsPageNumber() + 1)).getChildCount() <= 0) {
+                        pages.remove(getCurrentAppsPageNumber() + 1);
+                        indicator.removeViewAt(getCurrentAppsPageNumber() + 2);
+                        pager.removeViewAt(getCurrentAppsPageNumber() + 2);
+                    }
                 }
                 return true;
             }
         });
     }
 
-    private void removeAppFromFolder() {
-        AppItem app = getAppDetails(movingApp);
-        activeFolder.getSubApps().remove(app);
-        app.setBelongsToFolder(false);
 
-        if (activeFolder.getSubApps().size() == 0) {
-            ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
+    private void removeAppFromFolder() {
+        if (pages.get(getCurrentAppsPageNumber()).getChildCount() >= maxAppsPerPage) {
+            Toast.makeText(this, "No more room in page", Toast.LENGTH_SHORT).show();
+            movingApp.setVisibility(View.VISIBLE);
         } else {
-            updateIcon(activeFolderView, activeFolder,
-                    GraphicsUtil.generateFolderIcon(this, activeFolder));
+            AppItem app = getAppDetails(movingApp);
+            activeFolder.getSubApps().remove(app);
+            app.setBelongsToFolder(false);
+
+            if (activeFolder.getSubApps().size() == 1) {
+                AppItem item = activeFolder.getSubApps().get(0);
+                activeFolder.getSubApps().remove(item);
+                item.setBelongsToFolder(false);
+                View view  = prepareApp(item);
+                addAppToPage(pages.get(getCurrentAppsPageNumber()), view);
+
+                ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
+            } else {
+                updateIcon(activeFolderView, activeFolder,
+                        GraphicsUtil.generateFolderIcon(this, activeFolder));
+            }
+            hideFolderWindowContainer();
+            if (movingApp.getParent() != null) {
+                ((ViewGroup) movingApp.getParent()).removeView(movingApp);
+            }
+            movingApp.setVisibility(View.VISIBLE);
+            int current = getCurrentAppsPageNumber();
+            addAppToPage(pages.get(current), movingApp);
         }
-        hideFolderWindowContainer();
-        if (movingApp.getParent() != null) {
-            ((ViewGroup) movingApp.getParent()).removeView(movingApp);
-        }
-        movingApp.setVisibility(View.VISIBLE);
-        addAppToPage(pages.get(getCurrentAppsPageNumber()), movingApp);
+
     }
 
     /**
@@ -969,7 +1237,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void discardCollidingApp() {
         if (collidingApp != null) {
-            makeAppCold(collidingApp);
+            makeAppCold(collidingApp, collidingApp.getParent() instanceof LinearLayout);
             collidingApp = null;
             folderInterest = false;
         }
@@ -983,7 +1251,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Hide label in dock
         view.findViewById(R.id.app_label).setVisibility(View.GONE);
-
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(0, ViewGroup
+                .LayoutParams.MATCH_PARENT, 1);
+        view.setLayoutParams(layoutParams);
         if (index != INVALID) {
             dock.addView(view, index);
         } else {
@@ -995,9 +1265,16 @@ public class MainActivity extends AppCompatActivity {
      * Creates/updates a folder using the tags associated with the app being dragged,
      * and the target app.
      */
-    private void createFolder() {
-        int index = getGridFromPage(pages.get(getCurrentAppsPageNumber())).indexOfChild(
-                collidingApp);
+    private void createFolder(boolean fromDock) {
+        int index;
+
+        if (fromDock) {
+            index = dock.indexOfChild(
+                    collidingApp);
+        } else {
+            index = getGridFromPage(pages.get(getCurrentAppsPageNumber())).indexOfChild(
+                    collidingApp);
+        }
 
         AppItem app1 = (AppItem) ((List<Object>) collidingApp.getTag()).get(2);
         AppItem app2 = (AppItem) ((List<Object>) movingApp.getTag()).get(2);
@@ -1019,7 +1296,11 @@ public class MainActivity extends AppCompatActivity {
             subApps.add(app2);
 
             View folderView = prepareApp(folder);
-            addAppToPage(pages.get(getCurrentAppsPageNumber()), folderView, index);
+            if (fromDock) {
+                addToDock(folderView, index);
+            } else {
+                addAppToPage(pages.get(getCurrentAppsPageNumber()), folderView, index);
+            }
 
             ((ViewGroup) collidingApp.getParent()).removeView(collidingApp);
 
@@ -1034,11 +1315,10 @@ public class MainActivity extends AppCompatActivity {
             ((ViewGroup) movingApp.getParent()).removeView(movingApp);
         }
 
-        makeAppCold(collidingApp);
-        makeAppCold(movingApp);
+        makeAppCold(collidingApp, fromDock);
+        makeAppCold(movingApp, fromDock);
 
         storage.save(pages, dock);
-        Log.i(TAG, "Created folder");
     }
 
     private void updateIcon(View appView, AppItem app, Drawable drawable) {
@@ -1084,7 +1364,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Makes an app look normal
      */
-    private void makeAppCold(View app) {
+    private void makeAppCold(View app, boolean fromDock) {
         if (app == null) {
             return;
         }
@@ -1093,7 +1373,11 @@ public class MainActivity extends AppCompatActivity {
         ((View) (views.get(0))).setBackground(
                 getDefaultBackground(((AppItem) views.get(2)))
         );
-        ((View) views.get(1)).setVisibility(View.VISIBLE);
+        if (!fromDock) {
+            ((View) views.get(1)).setVisibility(View.VISIBLE);
+        } else {
+            ((View) views.get(1)).setVisibility(View.GONE);
+        }
         app.setScaleX(1.0f);
         app.setScaleY(1.0f);
         collidingApp = null;
@@ -1114,8 +1398,8 @@ public class MainActivity extends AppCompatActivity {
      * Checks if the user wants to create a folder based on the distance
      * between the dragged app and the dragged-over app
      */
-    private boolean checkIfFolderInterest(int index, float x, float y) {
-        View v = getGridFromPage(pages.get(getCurrentAppsPageNumber())).getChildAt(index);
+    private boolean checkIfFolderInterest(ViewGroup view, int index, float x, float y) {
+        View v = view.getChildAt(index);
         double distance = getDistance(x, y, v.getX() + v.getWidth() / 2,
                 v.getY() + v.getHeight() / 2);
         if (distance < maxDistanceForFolderCreation) {
@@ -1125,7 +1409,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private GridLayout getGridFromPage(ViewGroup page) {
-        return (GridLayout) page.getChildAt(0);
+        return (GridLayout) page;
     }
 
     /**
@@ -1138,16 +1422,10 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Identifies the app that surrounds a given point
      */
-    private int getIndex(ViewGroup page, float x, float y) {
-        GridLayout grid;
-        if (page instanceof LinearLayout) {
-            grid = getGridFromPage(page);
-        } else {
-            grid = (GridLayout) page;
-        }
+    private int getIndex(ViewGroup page, float x, float y, String groupName) {
 
-        for (int i = 0; i < grid.getChildCount(); i++) {
-            View v = grid.getChildAt(i);
+        for (int i = 0; i < page.getChildCount(); i++) {
+            View v = page.getChildAt(i);
             Rect r = new Rect((int) v.getX(), (int) v.getY(), (int) v.getX() + v.getWidth(),
                     (int) v.getY() + v.getHeight());
             Rect r2 = new Rect((int) (x - iconSize / 2), (int) (y - iconSize / 2),
@@ -1156,6 +1434,7 @@ public class MainActivity extends AppCompatActivity {
                 return i;
             }
         }
+
         return INVALID;
     }
 
@@ -1192,13 +1471,14 @@ public class MainActivity extends AppCompatActivity {
             indicator.removeAllViews();
         }
 
+        params = new LinearLayout.LayoutParams(
+                getResources().getDimensionPixelSize(R.dimen.dotSize),
+                getResources().getDimensionPixelSize(R.dimen.dotSize)
+        );
+
         for (int i = 0; i < pages.size() + 1; i++) {
             ImageView dot = new ImageView(this);
             dot.setImageDrawable(getDrawable(R.drawable.dot_off));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    getResources().getDimensionPixelSize(R.dimen.dotSize),
-                    getResources().getDimensionPixelSize(R.dimen.dotSize)
-            );
             dot.setLayoutParams(params);
             indicator.addView(dot);
         }
@@ -1208,9 +1488,16 @@ public class MainActivity extends AppCompatActivity {
     private int activeDot;
 
     private void updateIndicator() {
-        ((ImageView) indicator.getChildAt(activeDot)).setImageResource(R.drawable.dot_off);
-        ((ImageView) indicator.getChildAt(currentPageNumber)).setImageResource(R.drawable.dot_on);
-        activeDot = currentPageNumber;
+
+        Log.i(TAG, "activeDot: [" + activeDot + "] currentPageNumber: [" + currentPageNumber + "]");
+        if (indicator.getChildAt(activeDot) != null) {
+            ((ImageView) indicator.getChildAt(activeDot)).setImageResource(R.drawable.dot_off);
+        }
+        if (indicator.getChildAt(currentPageNumber) != null) {
+            ((ImageView) indicator.getChildAt(currentPageNumber)).setImageResource(
+                    R.drawable.dot_on);
+            activeDot = currentPageNumber;
+        }
     }
 
     /**
@@ -1228,7 +1515,7 @@ public class MainActivity extends AppCompatActivity {
         storage.save(pages, dock);
         folderTitle.clearFocus();
         folderWindowContainer.animate().alpha(0f)
-                .setDuration(800).setListener(new AnimatorListenerAdapter() {
+                .setDuration(200).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
@@ -1246,6 +1533,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void returnToHomeScreen() {
+        if (searchInput != null) {
+            searchInput.setText("");
+        }
         if (backAllowed && folderWindowContainer.getVisibility() == View.VISIBLE) {
             hideFolderWindowContainer();
         } else if (backAllowed) {

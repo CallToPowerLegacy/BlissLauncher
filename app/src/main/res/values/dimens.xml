@@ -2,11 +2,16 @@
 <resources>
     <dimen name="maxDistanceForFolderCreation">20dp</dimen>
     <dimen name="iconSize">56dp</dimen>
-    <dimen name="labelSize">12sp</dimen>
+    <dimen name="labelSize">14sp</dimen>
     <dimen name="dotSize">8dp</dimen>
     <dimen name="hitBoxSize">60dp</dimen>
     <dimen name="scrollCorner">8dp</dimen>
     <dimen name="iconPadding">8dp</dimen>
     <dimen name="dockHeight">84dp</dimen>
     <dimen name="pager_margin">24dp</dimen>
+    <dimen name="app_icon_margin">12dp</dimen>
+    <dimen name="app_col_margin">12dp</dimen>
+    <dimen name="app_grid_padding">12dp</dimen>
+    <dimen name="labelHeight">14dp</dimen>
+
 </resources>

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 
@@ -30,7 +31,7 @@ public class Storage {
      * @param pages
      * @param dock
      */
-    public void save(final List<LinearLayout> pages, final GridLayout dock) {
+    public void save(final List<GridLayout> pages, final LinearLayout dock) {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -39,7 +40,7 @@ public class Storage {
                 JSONArray dockData = new JSONArray();
                 try {
                     for (int i = 0; i < pages.size(); i++) {
-                        stuffData(pagesData, (GridLayout)pages.get(i).getChildAt(0));
+                        stuffData(pagesData, pages.get(i));
                     }
 
                     stuffData(dockData, dock);
@@ -63,7 +64,7 @@ public class Storage {
      * @param layout
      * @throws Exception
      */
-    private void stuffData(JSONArray storageArray, GridLayout layout) throws Exception {
+    private void stuffData(JSONArray storageArray, ViewGroup layout) throws Exception {
         JSONArray apps = new JSONArray();
         for (int j = 0; j < layout.getChildCount(); j++) {
             List<Object> tags = (List<Object>) layout.getChildAt(j).getTag();
@@ -115,15 +116,15 @@ public class Storage {
      * A class that simplifies access to the stored JSON data.
      */
     public static class StorageData {
-        JSONArray pages;
-        JSONArray dock;
+        public JSONArray pages;
+        public JSONArray dock;
         private String TAG = "BLISS_STORAGE_DATA";
 
-        int getNPages() {
+        public int getNPages() {
             return pages.length();
         }
 
-        int getNDocked() {
+        public int getNDocked() {
             try {
                 return dock.getJSONArray(0).length();
             } catch (JSONException e) {
