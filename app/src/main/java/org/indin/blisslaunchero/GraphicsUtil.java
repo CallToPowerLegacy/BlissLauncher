@@ -127,7 +127,7 @@ public class GraphicsUtil {
         if ((image == null) || !(image instanceof BitmapDrawable)) {
             return image;
         }
-        double scale = 0.8;
+        double scale = 0.64;
         Bitmap original = Bitmap.createScaledBitmap(((BitmapDrawable)image).getBitmap(),
                 (int)(image.getIntrinsicWidth() * scale),
                 (int)(image.getIntrinsicWidth() * scale), true);

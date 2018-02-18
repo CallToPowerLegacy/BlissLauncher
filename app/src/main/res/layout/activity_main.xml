@@ -13,7 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="16dp"/>
 
     <LinearLayout
         android:id="@+id/page_indicator"
@@ -69,13 +70,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_margin="20dp"
+            android:layout_margin="16dp"
             android:alignmentMode="alignBounds"
             android:background="@drawable/folder_window"
             android:columnCount="3"
+            android:rowCount="4"
             android:minHeight="230dp"
             android:minWidth="240dp"
-            android:rowCount="4"
             android:useDefaultMargins="true">
 
         </GridLayout>

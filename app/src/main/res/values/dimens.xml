@@ -7,7 +7,7 @@
     <dimen name="hitBoxSize">60dp</dimen>
     <dimen name="scrollCorner">8dp</dimen>
     <dimen name="iconPadding">8dp</dimen>
-    <dimen name="dockHeight">84dp</dimen>
+    <dimen name="dockHeight">96dp</dimen>
     <dimen name="pager_margin">24dp</dimen>
     <dimen name="app_icon_margin">8dp</dimen>
     <dimen name="app_col_margin">8dp</dimen>

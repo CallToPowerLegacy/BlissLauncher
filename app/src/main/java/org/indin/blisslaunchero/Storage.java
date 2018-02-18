@@ -140,6 +140,6 @@ public class Storage {
     }
 
     public void setWallpaperShown() {
-        prefs.edit().putBoolean("WALLPAPER_SHOWN", true).commit();
+        prefs.edit().putBoolean("WALLPAPER_SHOWN", true).apply();
     }
 }
