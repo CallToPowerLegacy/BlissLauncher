@@ -51,7 +51,7 @@ public class GraphicsUtil {
                 Log.d(TAG, "Unknown type of icon found");
                 return context.getResources().getDrawable(R.mipmap.ic_folder, null);
             }
-        int width = sources[0].getIntrinsicWidth() * 3/4;
+        int width = sources[0].getIntrinsicWidth();
         int height = width; // Square icons
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
