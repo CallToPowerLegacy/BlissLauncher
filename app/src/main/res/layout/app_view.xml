@@ -24,5 +24,4 @@
         android:maxLines="1"
         android:textColor="@color/app_label_color"
         android:textSize="@dimen/labelSize" />
-
 </LinearLayout>

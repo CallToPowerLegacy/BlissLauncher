@@ -9,7 +9,7 @@ import android.widget.ImageView;
  * Created by falcon on 16/2/18.
  */
 
-public class SquareImageView  extends ImageView {
+public class SquareImageView extends android.support.v7.widget.AppCompatImageView {
 
 
     public SquareImageView(Context context) {
@@ -30,7 +30,9 @@ public class SquareImageView  extends ImageView {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         int width = getMeasuredWidth();
-        setMeasuredDimension(width, width);
+        int height = getMeasuredHeight();
+        int size = width < height ? width : height;
+        setMeasuredDimension(size, size);
     }
 
 

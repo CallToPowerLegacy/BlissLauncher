@@ -2,7 +2,6 @@ package org.indin.blisslaunchero;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -13,6 +12,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 public class GraphicsUtil {
@@ -41,16 +41,14 @@ public class GraphicsUtil {
     /**
      * Takes 1 or more drawables and merges them to form a single Drawable.
      * However, if more than 4 drawables are provided, only the first 4 are used.
-     * @param context
-     * @param sources
-     * @return
      */
-    public static Drawable generateFolderIcon(Context context, Drawable ...sources) {
-        for(Drawable d:sources)
-            if(!(d instanceof BitmapDrawable)) {
+    public static Drawable generateFolderIcon(Context context, int iconWidth, Drawable... sources) {
+        for (Drawable d : sources) {
+            if (!(d instanceof BitmapDrawable)) {
                 Log.d(TAG, "Unknown type of icon found");
                 return context.getResources().getDrawable(R.mipmap.ic_folder, null);
             }
+        }
         int width = sources[0].getIntrinsicWidth();
         int height = width; // Square icons
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -64,26 +62,26 @@ public class GraphicsUtil {
         int yIncrement = bitmap.getHeight() / 10;
         int count = 0;
         int total = 0;
-        for(Drawable d:sources) {
-            BitmapDrawable bd = (BitmapDrawable)d;
-            bd.setBounds(x, y, (int)(x+width/2.5f), (int)(y+height/2.5f));
+        for (Drawable d : sources) {
+            BitmapDrawable bd = (BitmapDrawable) d;
+            bd.setBounds(x, y, (int) (x + width / 2.5f), (int) (y + height / 2.5f));
             bd.draw(canvas);
-            x += (int)(width/2.5f + xIncrement);
+            x += (int) (width / 2.5f + xIncrement);
             count++;
             total++;
-            if(count == 2) {
+            if (count == 2) {
                 count = 0;
-                y += (int)(height/2.5f + yIncrement);
+                y += (int) (height / 2.5f + yIncrement);
                 x = xOrigin;
             }
-            if(total > 3) {
+            if (total > 3) {
                 break;
             }
         }
 
         Drawable output = new BitmapDrawable(context.getResources(), bitmap);
-        if(IconPackUtil.iconPackPresent) {
-            output = GraphicsUtil.scaleImage(context, output, 0.90f);
+        if (IconPackUtil.iconPackPresent) {
+            output = GraphicsUtil.scaleImage(context, output, 1f, iconWidth);
             output = GraphicsUtil.maskImage(context, output);
         }
         return output;
@@ -92,30 +90,24 @@ public class GraphicsUtil {
     /**
      * A utility method that simplifies calls to the generateFolderIcon() method that
      * expects an array of Drawables.
-     * @param context
-     * @param app
-     * @return
      */
-    public static Drawable generateFolderIcon(Context context, AppItem app) {
+    public static Drawable generateFolderIcon(Context context, AppItem app, int iconWidth) {
         Drawable[] drawables = new Drawable[app.getSubApps().size()];
-        for(int i=0;i<app.getSubApps().size();i++) {
+        for (int i = 0; i < app.getSubApps().size(); i++) {
             drawables[i] = app.getSubApps().get(i).getIcon();
         }
-        return generateFolderIcon(context, drawables);
+        return generateFolderIcon(context, iconWidth, drawables);
     }
 
     /**
      * Scales icons to match the icon pack
-     * @param context
-     * @param image
-     * @param scaleFactor
-     * @return
      */
-    public static Drawable scaleImage(Context context, Drawable image, float scaleFactor) {
+    public static Drawable scaleImage(Context context, Drawable image, float scaleFactor,
+            int iconWidth) {
         if ((image == null) || !(image instanceof BitmapDrawable)) {
             return image;
         }
-        Bitmap b = ((BitmapDrawable)image).getBitmap();
+        Bitmap b = ((BitmapDrawable) image).getBitmap();
         int sizeX = Math.round(image.getIntrinsicWidth() * scaleFactor);
         int sizeY = Math.round(image.getIntrinsicHeight() * scaleFactor);
         Bitmap bitmapResized = Bitmap.createScaledBitmap(b, sizeX, sizeY, false);
@@ -127,16 +119,25 @@ public class GraphicsUtil {
         if ((image == null) || !(image instanceof BitmapDrawable)) {
             return image;
         }
-        double scale = 0.64;
-        Bitmap original = Bitmap.createScaledBitmap(((BitmapDrawable)image).getBitmap(),
-                (int)(image.getIntrinsicWidth() * scale),
-                (int)(image.getIntrinsicWidth() * scale), true);
-        Bitmap mask = ((BitmapDrawable)IconPackUtil.getIconMask()).getBitmap();
-        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(), Bitmap.Config.ARGB_8888);
+        double scale = 0.85;
+        Drawable maskDrawable;
+        if(IconPackUtil.getIconMask() != null){
+            maskDrawable = IconPackUtil.getIconMask();
+        }else
+            maskDrawable = ContextCompat.getDrawable(context, R.drawable.iconmask);
+        Bitmap mask = ((BitmapDrawable) maskDrawable).getBitmap();
+        Bitmap original = Bitmap.createScaledBitmap(((BitmapDrawable) image).getBitmap(),
+                (int) (mask.getWidth() * scale),
+                (int) (mask.getHeight() * scale), true);
+
+
+        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),
+                Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(result);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
-        canvas.drawBitmap(original, (canvas.getWidth() - original.getWidth())/2, (canvas.getHeight() - original.getHeight())/2, null);
+        canvas.drawBitmap(original, (canvas.getWidth() - original.getWidth()) / 2,
+                (canvas.getHeight() - original.getHeight()) / 2, null);
         canvas.drawBitmap(mask, 0, 0, paint);
         paint.setXfermode(null);
         return new BitmapDrawable(context.getResources(), result);

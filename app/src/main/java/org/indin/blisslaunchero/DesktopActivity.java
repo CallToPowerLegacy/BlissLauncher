@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.DragEvent;
 import android.view.Gravity;
@@ -227,7 +228,7 @@ public class DesktopActivity extends AppCompatActivity {
             }
         }
 
-        AppItem appItem = AppUtil.createAppItem(this, packageName);
+        AppItem appItem = AppUtil.createAppItem(this, packageName, iconWidth);
         if (appItem != null) {
             View view = prepareApp(appItem);
             int current = getCurrentAppsPageNumber();
@@ -256,7 +257,7 @@ public class DesktopActivity extends AppCompatActivity {
         // Cache icons before loading apps
         IconPackUtil.cacheIconsFromIconPack(this);
 
-        launchableApps = AppUtil.loadLaunchableApps(getApplicationContext());
+        launchableApps = AppUtil.loadLaunchableApps(getApplicationContext(), iconWidth);
         pinnedApps = AppUtil.getPinnedApps(this, launchableApps);
         launchableApps.removeAll(pinnedApps);
 
@@ -293,9 +294,9 @@ public class DesktopActivity extends AppCompatActivity {
         double screenInches = Math.sqrt(x + y);
         Log.d("debug", "Screen inches : " + screenInches);
 
-        if (screenInches <= 4.7) {
+        if (screenInches <= 4.5) {
             nRows = 4;
-        } else if (screenInches <= 5.4) {
+        } else if (screenInches <= 5.2) {
             nRows = 5;
         } else {
             nRows = 6;
@@ -316,7 +317,8 @@ public class DesktopActivity extends AppCompatActivity {
 
         hotBackground = getResources().getDrawable(R.drawable.rounded_corners_icon_hot, null);
         defaultBackground = getResources().getDrawable(R.drawable.rounded_corners_icon, null);
-        scrollCorner = getResources().getDimensionPixelSize(R.dimen.scrollCorner);
+        scrollCorner = getResources().getDimensionPixelSize(R.dimen.scrollCorner) * mPagerWidth
+                / 480;
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
         transparentBackground = getResources().getDrawable(R.drawable.transparent, null);
@@ -751,7 +753,7 @@ public class DesktopActivity extends AppCompatActivity {
                 }
             }
 
-            folderItem.setIcon(GraphicsUtil.generateFolderIcon(this, folderItem));
+            folderItem.setIcon(GraphicsUtil.generateFolderIcon(this, folderItem, iconWidth));
             //output = prepareApp(folderItem);
             return folderItem;
         } else {
@@ -799,6 +801,11 @@ public class DesktopActivity extends AppCompatActivity {
         final Intent intent = app.getIntent();
         icon.setImageDrawable(app.getIcon());
         label.setText(app.getLabel());
+        if (nRows < 6) {
+            label.setTextSize(12);
+        } else {
+            label.setTextSize(14);
+        }
         List<Object> tags = new ArrayList<>();
         tags.add(icon);
         tags.add(label);
@@ -1245,13 +1252,9 @@ public class DesktopActivity extends AppCompatActivity {
             activeFolder.getSubApps().remove(app);
             assert app != null;
             app.setBelongsToFolder(false);
-            Log.i(TAG, "removeAppFromFolder: Size:" + activeFolder.getSubApps().size());
 
-            if (activeFolder.getSubApps().size() == 1) {
-                AppItem item = activeFolder.getSubApps().get(0);
-                activeFolder.getSubApps().remove(item);
-                item.setBelongsToFolder(false);
-                View view = prepareApp(item);
+            if (activeFolder.getSubApps().size() == 0) {
+                View view = prepareApp(app);
                 if (folderFromDock) {
                     addToDock(view, dock.indexOfChild(activeFolderView));
                 } else {
@@ -1261,16 +1264,32 @@ public class DesktopActivity extends AppCompatActivity {
 
                 ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
             } else {
-                updateIcon(activeFolderView, activeFolder,
-                        GraphicsUtil.generateFolderIcon(this, activeFolder));
+                if (activeFolder.getSubApps().size() == 1) {
+                    AppItem item = activeFolder.getSubApps().get(0);
+                    activeFolder.getSubApps().remove(item);
+                    item.setBelongsToFolder(false);
+                    View view = prepareApp(item);
+                    if (folderFromDock) {
+                        addToDock(view, dock.indexOfChild(activeFolderView));
+                    } else {
+                        GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+                        addAppToPage(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
+                    }
+
+                    ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
+                } else {
+                    updateIcon(activeFolderView, activeFolder,
+                            GraphicsUtil.generateFolderIcon(this, activeFolder, iconWidth));
+                }
+                if (movingApp.getParent() != null) {
+                    ((ViewGroup) movingApp.getParent()).removeView(movingApp);
+                }
+                int current = getCurrentAppsPageNumber();
+                addAppToPage(pages.get(current), movingApp);
             }
+
             hideFolderWindowContainer();
-            if (movingApp.getParent() != null) {
-                ((ViewGroup) movingApp.getParent()).removeView(movingApp);
-            }
             movingApp.setVisibility(View.VISIBLE);
-            int current = getCurrentAppsPageNumber();
-            addAppToPage(pages.get(current), movingApp);
         }
 
     }
@@ -1329,7 +1348,7 @@ public class DesktopActivity extends AppCompatActivity {
         AppItem app1 = (AppItem) ((List<Object>) collidingApp.getTag()).get(2);
         AppItem app2 = (AppItem) ((List<Object>) movingApp.getTag()).get(2);
 
-        Drawable folderIcon = GraphicsUtil.generateFolderIcon(this,
+        Drawable folderIcon = GraphicsUtil.generateFolderIcon(this, iconWidth,
                 app1.getIcon(), app2.getIcon());
 
         AppItem folder;
@@ -1357,7 +1376,7 @@ public class DesktopActivity extends AppCompatActivity {
         } else {
             app2.setBelongsToFolder(true);
             app1.getSubApps().add(app2);
-            updateIcon(collidingApp, app1, GraphicsUtil.generateFolderIcon(this, app1));
+            updateIcon(collidingApp, app1, GraphicsUtil.generateFolderIcon(this, app1, iconWidth));
         }
 
 

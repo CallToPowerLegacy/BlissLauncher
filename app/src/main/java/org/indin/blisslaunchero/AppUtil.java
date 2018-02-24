@@ -22,34 +22,29 @@ public class AppUtil {
 
     /**
      * Uses the PackageManager to find all launchable apps.
-     * @param context
-     * @return
      */
-    public static List<AppItem> loadLaunchableApps(Context context) {
+    public static List<AppItem> loadLaunchableApps(Context context, int iconWidth) {
         PackageManager packageManager = context.getPackageManager();
 
         List<ApplicationInfo> apps = packageManager.getInstalledApplications(0);
         List<AppItem> launchableApps = new ArrayList<>();
-        for(ApplicationInfo app: apps) {
+        for (ApplicationInfo app : apps) {
             String packageName = app.packageName;
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
-            if(intent != null) {
+            if (intent != null) {
                 String componentName = intent.getComponent().toString();
 
                 boolean iconFromIconPack = true;
-                Drawable appIcon;
+                Drawable appIcon = null;
                 // Load icon from icon pack if present
-                if(IconPackUtil.iconPackPresent) {
+                if (IconPackUtil.iconPackPresent) {
                     appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
-                    if(appIcon == null) {
-                        appIcon = app.loadIcon(packageManager);
-                        iconFromIconPack = false;
-                        appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
-                        appIcon = GraphicsUtil.maskImage(context, appIcon);
-                    }
-                } else {
+                }
+                if (appIcon == null) {
                     appIcon = app.loadIcon(packageManager);
                     iconFromIconPack = false;
+                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f, iconWidth);
+                    appIcon = GraphicsUtil.maskImage(context, appIcon);
                 }
 
                 AppItem launchableApp = new AppItem(
@@ -77,10 +72,6 @@ public class AppUtil {
 
     /**
      * Currently picks four apps for the dock (Phone, SMS, Browser, Camera)
-     *
-     * @param context
-     * @param launchableApps
-     * @return
      */
     public static List<AppItem> getPinnedApps(Context context, List<AppItem> launchableApps) {
         PackageManager pm = context.getPackageManager();
@@ -92,10 +83,10 @@ public class AppUtil {
         };
 
         List<AppItem> pinnedApps = new ArrayList<>();
-        for(Intent intent:intents) {
+        for (Intent intent : intents) {
             String packageName = getPackageNameForIntent(intent, pm);
-            for(AppItem app:launchableApps) {
-                if(app.getPackageName().equals(packageName)) {
+            for (AppItem app : launchableApps) {
+                if (app.getPackageName().equals(packageName)) {
                     pinnedApps.add(app);
                     break;
                 }
@@ -108,7 +99,7 @@ public class AppUtil {
     private static String getPackageNameForIntent(Intent intent, PackageManager pm) {
         List<ResolveInfo> activities = pm.queryIntentActivities(intent,
                 PackageManager.MATCH_DEFAULT_ONLY);
-        if(activities.size() == 0) return null;
+        if (activities.size() == 0) return null;
         return activities.get(0).activityInfo.packageName;
     }
 
@@ -120,28 +111,26 @@ public class AppUtil {
 
     /**
      * Create an AppItem object given just a package name
-     * @param context
-     * @param packageName
-     * @return
      */
-    public static AppItem createAppItem(Context context, String packageName) {
+    public static AppItem createAppItem(Context context, String packageName, int iconWidth) {
         try {
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
 
-            if(intent == null)
+            if (intent == null) {
                 return null;
+            }
 
             String componentName = intent.getComponent().toString();
             Drawable appIcon;
             boolean iconFromIconPack = true;
-            if(IconPackUtil.iconPackPresent) {
+            if (IconPackUtil.iconPackPresent) {
                 appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
-                if(appIcon == null) {
+                if (appIcon == null) {
                     appIcon = appInfo.loadIcon(packageManager);
                     iconFromIconPack = false;
-                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
+                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f, iconWidth);
                     appIcon = GraphicsUtil.maskImage(context, appIcon);
                 }
             } else {

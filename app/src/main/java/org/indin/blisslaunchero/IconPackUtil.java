@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -85,12 +86,19 @@ public class IconPackUtil {
                     iconMapper.put(componentName, drawableId);
                 }
             }
+
             iconBackground1 = iconPackResources.getDrawable(
                     iconPackResources.getIdentifier("iconback_d", "drawable", ICON_PACK_PACKAGE),
                     null);
+            if(iconBackground1 == null){
+                iconBackground1 = ContextCompat.getDrawable(context, R.drawable.iconback_d);
+            }
             iconBackground2 = iconPackResources.getDrawable(
                     iconPackResources.getIdentifier("iconback_d", "drawable", ICON_PACK_PACKAGE),
                     null);
+            if(iconBackground2 == null){
+                iconBackground2 = ContextCompat.getDrawable(context, R.drawable.iconback_d);
+            }
             folderBackground = iconPackResources.getDrawable(
                     iconPackResources.getIdentifier("iconback_d", "drawable", ICON_PACK_PACKAGE),
                     null);
