@@ -36,6 +36,7 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -106,6 +107,7 @@ public class DesktopActivity extends AppCompatActivity {
     private int iconWidth;
     private int folderIconWidth;
     private boolean folderFromDock;
+    private int appIconMargin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -307,9 +309,9 @@ public class DesktopActivity extends AppCompatActivity {
         maxAppsPerPage = nRows * nCols;
 
         iconHeight = (mPagerHeight) / nRows;
-        iconWidth = (mPagerWidth - 10 * getResources().getDimensionPixelSize(
+        iconWidth = (mPagerWidth - 2 * getResources().getDimensionPixelSize(
                 R.dimen.app_col_margin)) / nCols;
-        folderIconWidth = (mPagerWidth - 10 * getResources().getDimensionPixelSize(
+        folderIconWidth = (mPagerWidth - 2 * getResources().getDimensionPixelSize(
                 R.dimen.app_col_margin)) / nCols;
 
         maxDistanceForFolderCreation = getResources()
@@ -697,10 +699,10 @@ public class DesktopActivity extends AppCompatActivity {
         GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-        iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+        /*iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
                 0,
                 getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                0);
+                0);*/
         iconLayoutParams.height = iconHeight;
         iconLayoutParams.width = iconWidth;
         view.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
@@ -713,10 +715,10 @@ public class DesktopActivity extends AppCompatActivity {
         GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-        iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+       /* iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
                 0,
                 getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                0);
+                0);*/
 
         iconLayoutParams.height = iconHeight;
         iconLayoutParams.width = iconWidth;
@@ -784,20 +786,26 @@ public class DesktopActivity extends AppCompatActivity {
      */
     private View prepareApp(final AppItem app) {
         final View v = getLayoutInflater().inflate(R.layout.app_view, null);
+        final TextView label = v.findViewById(R.id.app_label);
         final SquareImageView icon = v.findViewById(R.id.app_icon);
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
-        int margin = 0;
         if (nRows == 4) {
-            margin = getResources().getDimensionPixelSize(R.dimen.margin_inch1);
+            appIconMargin = getResources().getDimensionPixelSize(R.dimen.margin_inch1);
+            label.setPadding(getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0,
+                    getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0);
         } else if (nRows == 5) {
-            margin = getResources().getDimensionPixelSize(R.dimen.margin_inch2);
+            appIconMargin = getResources().getDimensionPixelSize(R.dimen.margin_inch2);
+            label.setPadding(getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0,
+                    getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0);
         } else if (nRows == 6) {
-            margin = getResources().getDimensionPixelSize(R.dimen.margin_inch3);
+            appIconMargin = getResources().getDimensionPixelSize(R.dimen.margin_inch3);
+            label.setPadding(getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0,
+                    getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0);
         }
-        layoutParams.leftMargin = margin;
-        layoutParams.rightMargin = margin;
 
-        final TextView label = v.findViewById(R.id.app_label);
+        layoutParams.leftMargin = appIconMargin;
+        layoutParams.rightMargin = appIconMargin;
+
         final Intent intent = app.getIntent();
         icon.setImageDrawable(app.getIcon());
         label.setText(app.getLabel());
@@ -905,16 +913,30 @@ public class DesktopActivity extends AppCompatActivity {
 
                 if (on) {
                     if (getGridFromPage(pages.get(i)).getChildAt(j).getAnimation() == null) {
+                        ViewGroup view = (ViewGroup) getGridFromPage(pages.get(i)).getChildAt(j);
+                        ImageView appIcon = view.findViewById(R.id.app_icon);
+
+                        ImageView imageView = new ImageView(this);
+                        imageView.setImageResource(R.drawable.ic_minus);
+                        imageView.setPadding(appIconMargin , 0, appIconMargin , appIconMargin -appIcon.getTop());
+
+                        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                        //layoutParams.rightMargin = appIconMargin -appIcon.getTop();
+                        layoutParams.gravity = Gravity.RIGHT | Gravity.TOP;
+                        view.addView(imageView, layoutParams);
+
                         if (j % 2 == 0) {
-                            getGridFromPage(pages.get(i)).getChildAt(j).startAnimation(
+                            view.startAnimation(
                                     wobbleAnimation);
                         } else {
-                            getGridFromPage(pages.get(i)).getChildAt(j).startAnimation(
+                            view.startAnimation(
                                     wobbleReverseAnimation);
                         }
                     }
                 } else {
-                    getGridFromPage(pages.get(i)).getChildAt(j).setAnimation(null);
+                    ViewGroup view = (ViewGroup) getGridFromPage(pages.get(i)).getChildAt(j);
+                    view.setAnimation(null);
                 }
             }
         }
@@ -924,14 +946,16 @@ public class DesktopActivity extends AppCompatActivity {
             }
             if (on) {
                 if (dock.getChildAt(i).getAnimation() == null) {
+                    ViewGroup view = (ViewGroup) dock.getChildAt(i);
                     if (i % 2 == 0) {
-                        dock.getChildAt(i).startAnimation(wobbleAnimation);
+                        view.startAnimation(wobbleAnimation);
                     } else {
-                        dock.getChildAt(i).startAnimation(wobbleReverseAnimation);
+                        view.startAnimation(wobbleReverseAnimation);
                     }
                 }
             } else {
-                dock.getChildAt(i).setAnimation(null);
+                ViewGroup view = (ViewGroup) dock.getChildAt(i);
+                view.setAnimation(null);
             }
         }
 
@@ -1315,10 +1339,10 @@ public class DesktopActivity extends AppCompatActivity {
         GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-        iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+        /*iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
                 0,
                 getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                0);
+                0);*/
         iconLayoutParams.height = iconHeight;
         iconLayoutParams.width = iconWidth;
         iconLayoutParams.setGravity(Gravity.CENTER);
