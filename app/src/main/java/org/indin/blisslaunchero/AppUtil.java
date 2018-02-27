@@ -23,13 +23,13 @@ public class AppUtil {
     /**
      * Uses the PackageManager to find all launchable apps.
      */
-    public static List<AppItem> loadLaunchableApps(Context context, int iconWidth) {
+    public static List<AppItem> loadLaunchableApps(Context context) {
         PackageManager packageManager = context.getPackageManager();
 
         List<ApplicationInfo> apps = packageManager.getInstalledApplications(0);
         List<AppItem> launchableApps = new ArrayList<>();
-        for (ApplicationInfo app : apps) {
-            String packageName = app.packageName;
+        for (ApplicationInfo appInfo : apps) {
+            String packageName = appInfo.packageName;
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
             if (intent != null) {
                 String componentName = intent.getComponent().toString();
@@ -41,19 +41,26 @@ public class AppUtil {
                     appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
                 }
                 if (appIcon == null) {
-                    appIcon = app.loadIcon(packageManager);
+                    appIcon = appInfo.loadIcon(packageManager);
                     iconFromIconPack = false;
-                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f, iconWidth);
+                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
                     appIcon = GraphicsUtil.maskImage(context, appIcon);
                 }
 
+                boolean isSystemApp = false;
+
+                if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                    isSystemApp = true;
+                }
+
                 AppItem launchableApp = new AppItem(
-                        app.loadLabel(packageManager),
+                        appInfo.loadLabel(packageManager),
                         packageName,
                         appIcon,
                         intent,
                         componentName,
-                        iconFromIconPack
+                        iconFromIconPack,
+                        isSystemApp
                 );
                 launchableApps.add(launchableApp);
             }
@@ -112,7 +119,7 @@ public class AppUtil {
     /**
      * Create an AppItem object given just a package name
      */
-    public static AppItem createAppItem(Context context, String packageName, int iconWidth) {
+    public static AppItem createAppItem(Context context, String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
@@ -130,7 +137,7 @@ public class AppUtil {
                 if (appIcon == null) {
                     appIcon = appInfo.loadIcon(packageManager);
                     iconFromIconPack = false;
-                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f, iconWidth);
+                    appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
                     appIcon = GraphicsUtil.maskImage(context, appIcon);
                 }
             } else {
@@ -138,13 +145,13 @@ public class AppUtil {
                 iconFromIconPack = false;
             }
 
-            AppItem appItem = new AppItem(appInfo.loadLabel(packageManager),
+            return new AppItem(appInfo.loadLabel(packageManager),
                     packageName,
                     appIcon,
                     intent,
                     componentName,
-                    iconFromIconPack);
-            return appItem;
+                    iconFromIconPack,
+                    (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }

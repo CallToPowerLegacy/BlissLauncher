@@ -77,9 +77,7 @@
             android:rowCount="4"
             android:minHeight="230dp"
             android:minWidth="240dp"
-            android:useDefaultMargins="true">
-
-        </GridLayout>
+            android:useDefaultMargins="true" />
 
     </RelativeLayout>
 

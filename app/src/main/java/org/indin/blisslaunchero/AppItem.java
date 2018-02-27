@@ -13,6 +13,7 @@ public class AppItem {
     private Intent intent;
     private String componentName;
     private boolean iconFromIconPack;
+    private boolean isSystemApp;
 
     // Folder specific
     private boolean belongsToFolder;
@@ -20,14 +21,16 @@ public class AppItem {
     private String folderID;
     private List<AppItem> subApps;
 
+
     public AppItem(CharSequence label, String packageName, Drawable icon,
-                   Intent intent, String componentName, boolean iconFromIconPack) {
+                   Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp) {
         this.label = label;
         this.packageName = packageName;
         this.icon = icon;
         this.intent = intent;
         this.componentName = componentName;
         this.iconFromIconPack = iconFromIconPack;
+        this.isSystemApp = isSystemApp;
     }
 
     public CharSequence getLabel() {
@@ -48,6 +51,14 @@ public class AppItem {
 
     public Drawable getIcon() {
         return icon;
+    }
+
+    public boolean isSystemApp(){
+        return isSystemApp;
+    }
+
+    public void setSystemApp(boolean isSystemApp){
+        this.isSystemApp = isSystemApp;
     }
 
     public void setIcon(Drawable icon) {

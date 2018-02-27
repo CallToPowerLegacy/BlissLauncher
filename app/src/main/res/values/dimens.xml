@@ -21,5 +21,6 @@
 
     <!--uninstall icon size -->
     <dimen name="uninstallIconSize">36dp</dimen>
+    <dimen name="dp_32">32dp</dimen>
 
 </resources>

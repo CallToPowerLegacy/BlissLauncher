@@ -12,9 +12,8 @@
         <org.indin.blisslaunchero.SquareImageView
             android:id="@+id/app_icon"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginBottom="4dp"
             android:background="@drawable/rounded_corners_icon"
             android:foreground="?attr/selectableItemBackground"
             android:scaleType="fitCenter" />
@@ -26,6 +25,7 @@
             android:ellipsize="end"
             android:gravity="center"
             android:maxLines="1"
+            android:layout_marginBottom="4dp"
             android:textColor="@color/app_label_color"
             android:textSize="@dimen/labelSize" />
     </LinearLayout>

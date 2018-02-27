@@ -42,7 +42,7 @@ public class GraphicsUtil {
      * Takes 1 or more drawables and merges them to form a single Drawable.
      * However, if more than 4 drawables are provided, only the first 4 are used.
      */
-    public static Drawable generateFolderIcon(Context context, int iconWidth, Drawable... sources) {
+    public static Drawable generateFolderIcon(Context context, Drawable... sources) {
         for (Drawable d : sources) {
             if (!(d instanceof BitmapDrawable)) {
                 Log.d(TAG, "Unknown type of icon found");
@@ -81,7 +81,7 @@ public class GraphicsUtil {
 
         Drawable output = new BitmapDrawable(context.getResources(), bitmap);
         if (IconPackUtil.iconPackPresent) {
-            output = GraphicsUtil.scaleImage(context, output, 1f, iconWidth);
+            output = GraphicsUtil.scaleImage(context, output, 1f);
             output = GraphicsUtil.maskImage(context, output);
         }
         return output;
@@ -91,19 +91,18 @@ public class GraphicsUtil {
      * A utility method that simplifies calls to the generateFolderIcon() method that
      * expects an array of Drawables.
      */
-    public static Drawable generateFolderIcon(Context context, AppItem app, int iconWidth) {
+    public static Drawable generateFolderIcon(Context context, AppItem app) {
         Drawable[] drawables = new Drawable[app.getSubApps().size()];
         for (int i = 0; i < app.getSubApps().size(); i++) {
             drawables[i] = app.getSubApps().get(i).getIcon();
         }
-        return generateFolderIcon(context, iconWidth, drawables);
+        return generateFolderIcon(context, drawables);
     }
 
     /**
      * Scales icons to match the icon pack
      */
-    public static Drawable scaleImage(Context context, Drawable image, float scaleFactor,
-            int iconWidth) {
+    public static Drawable scaleImage(Context context, Drawable image, float scaleFactor) {
         if ((image == null) || !(image instanceof BitmapDrawable)) {
             return image;
         }
