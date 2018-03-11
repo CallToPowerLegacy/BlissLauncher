@@ -14,6 +14,7 @@ public class AppItem {
     private String componentName;
     private boolean iconFromIconPack;
     private boolean isSystemApp;
+    private boolean isClock;
 
     // Folder specific
     private boolean belongsToFolder;
@@ -23,7 +24,8 @@ public class AppItem {
 
 
     public AppItem(CharSequence label, String packageName, Drawable icon,
-                   Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp) {
+            Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp,
+            boolean isClock) {
         this.label = label;
         this.packageName = packageName;
         this.icon = icon;
@@ -31,6 +33,7 @@ public class AppItem {
         this.componentName = componentName;
         this.iconFromIconPack = iconFromIconPack;
         this.isSystemApp = isSystemApp;
+        this.isClock = isClock;
     }
 
     public CharSequence getLabel() {
@@ -53,11 +56,15 @@ public class AppItem {
         return icon;
     }
 
-    public boolean isSystemApp(){
+    public boolean isSystemApp() {
         return isSystemApp;
     }
 
-    public void setSystemApp(boolean isSystemApp){
+    public boolean isClock() {
+        return isClock;
+    }
+
+    public void setSystemApp(boolean isSystemApp) {
         this.isSystemApp = isSystemApp;
     }
 
@@ -106,8 +113,9 @@ public class AppItem {
     }
 
     public List<AppItem> getSubApps() {
-        if(subApps == null)
+        if (subApps == null) {
             subApps = new ArrayList<>();
+        }
         return subApps;
     }
 

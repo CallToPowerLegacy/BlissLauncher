@@ -36,11 +36,16 @@ public class AppUtil {
 
                 boolean iconFromIconPack = true;
                 Drawable appIcon = null;
+                boolean isClock = false;
                 // Load icon from icon pack if present
                 if (IconPackUtil.iconPackPresent) {
-                    appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
+                    if (!IconPackUtil.isClock(componentName)) {
+                        appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
+                    } else {
+                        isClock = true;
+                    }
                 }
-                if (appIcon == null) {
+                if (appIcon == null && !isClock) {
                     appIcon = appInfo.loadIcon(packageManager);
                     iconFromIconPack = false;
                     appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
@@ -60,7 +65,8 @@ public class AppUtil {
                         intent,
                         componentName,
                         iconFromIconPack,
-                        isSystemApp
+                        isSystemApp,
+                        isClock
                 );
                 launchableApps.add(launchableApp);
             }
@@ -125,33 +131,35 @@ public class AppUtil {
             ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
 
-            if (intent == null) {
-                return null;
-            }
+            if (intent != null) {
+                String componentName = intent.getComponent().toString();
 
-            String componentName = intent.getComponent().toString();
-            Drawable appIcon;
-            boolean iconFromIconPack = true;
-            if (IconPackUtil.iconPackPresent) {
-                appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
+                boolean iconFromIconPack = true;
+                Drawable appIcon = null;
+                boolean isClock = false;
+                // Load icon from icon pack if present
+                if (IconPackUtil.iconPackPresent) {
+                    isClock = IconPackUtil.isClock(componentName);
+                    appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
+                }
                 if (appIcon == null) {
                     appIcon = appInfo.loadIcon(packageManager);
                     iconFromIconPack = false;
                     appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
                     appIcon = GraphicsUtil.maskImage(context, appIcon);
                 }
-            } else {
-                appIcon = appInfo.loadIcon(packageManager);
-                iconFromIconPack = false;
-            }
 
-            return new AppItem(appInfo.loadLabel(packageManager),
-                    packageName,
-                    appIcon,
-                    intent,
-                    componentName,
-                    iconFromIconPack,
-                    (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
+                return new AppItem(appInfo.loadLabel(packageManager),
+                        packageName,
+                        appIcon,
+                        intent,
+                        componentName,
+                        iconFromIconPack,
+                        (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0,
+                        isClock);
+            } else {
+                return null;
+            }
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }

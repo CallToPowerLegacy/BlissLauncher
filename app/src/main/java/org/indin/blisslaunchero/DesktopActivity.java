@@ -48,6 +48,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -111,7 +112,7 @@ public class DesktopActivity extends AppCompatActivity {
     private boolean longPressed;
     private int x;
     private int y;
-    private int appIconWidth;
+    public static int appIconWidth;
 
     private CountDownTimer mWobblingCountDownTimer;
     private long longPressedAt;
@@ -593,7 +594,7 @@ public class DesktopActivity extends AppCompatActivity {
                 if (appView != null) {
                     addToDock(appView, INVALID);
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -617,7 +618,7 @@ public class DesktopActivity extends AppCompatActivity {
                         addAppToPage(page, appView);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
 
         }
@@ -728,7 +729,8 @@ public class DesktopActivity extends AppCompatActivity {
                     null,
                     "FOLDER",
                     false,
-                    true);
+                    true,
+                    false);
             folderItem.setFolder(true);
             folderItem.setFolderID(currentItemData.getString("folderID"));
             JSONArray subAppData = currentItemData.getJSONArray("subApps");
@@ -776,9 +778,11 @@ public class DesktopActivity extends AppCompatActivity {
      * The View object also has all the required listeners attached to it.
      */
     private View prepareApp(final AppItem app) {
-        final View v = getLayoutInflater().inflate(R.layout.app_view, null);
+        final ViewGroup v = (ViewGroup) getLayoutInflater().inflate(R.layout.app_view, null);
         final TextView label = v.findViewById(R.id.app_label);
-        final SquareImageView icon = v.findViewById(R.id.app_icon);
+        final View icon = v.findViewById(R.id.app_icon);
+        final SquareImageView squareImageView = v.findViewById(R.id.icon_image_view);
+
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
         if (nRows == 4) {
             appIconMargin = getResources().getDimensionPixelSize(R.dimen.margin_inch1);
@@ -797,8 +801,20 @@ public class DesktopActivity extends AppCompatActivity {
         layoutParams.leftMargin = appIconMargin;
         layoutParams.rightMargin = appIconMargin;
 
+        appIconWidth = iconWidth - 2 * appIconMargin;
+        Log.i(TAG, "appIconWidth " + appIconWidth);
+        if (app.isClock()) {
+            final CustomAnalogClock analogClock = v.findViewById(R.id.icon_clock);
+            analogClock.setVisibility(View.VISIBLE);
+            squareImageView.setVisibility(View.GONE);
+            analogClock.setAutoUpdate(true);
+        }
+
+
         final Intent intent = app.getIntent();
-        icon.setImageDrawable(app.getIcon());
+        if (!app.isClock()) {
+            squareImageView.setImageDrawable(app.getIcon());
+        }
         label.setText(app.getLabel());
         if (nRows < 6) {
             label.setTextSize(12);
@@ -813,12 +829,13 @@ public class DesktopActivity extends AppCompatActivity {
 
         if (IconPackUtil.iconPackPresent) {
             if (app.isIconFromIconPack()) {
-                icon.setBackgroundResource(0);
+                squareImageView.setBackgroundResource(0);
             } else {
                 if (!app.isFolder()) {
-                    icon.setBackground(IconPackUtil.getIconBackground(app.getLabel().charAt(0)));
+                    squareImageView.setBackground(
+                            IconPackUtil.getIconBackground(app.getLabel().charAt(0)));
                 } else {
-                    icon.setBackground(IconPackUtil.folderBackground);
+                    squareImageView.setBackground(IconPackUtil.folderBackground);
                 }
             }
         }
@@ -865,7 +882,8 @@ public class DesktopActivity extends AppCompatActivity {
                         && System.currentTimeMillis() - longPressedAt > 200) {
                     longPressed = false;
                     movingApp = v;
-                    View.DragShadowBuilder dragShadowBuilder = new BlissDragShadowBuilder(icon);
+                    View.DragShadowBuilder dragShadowBuilder = new BlissDragShadowBuilder(
+                            icon);
                     v.startDrag(null, dragShadowBuilder, v, 0);
 
                     if (v.getParent().getParent() instanceof HorizontalPager) {
@@ -903,14 +921,6 @@ public class DesktopActivity extends AppCompatActivity {
                 }
             }
         });
-
-        icon.getViewTreeObserver().addOnGlobalLayoutListener(
-                new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        appIconWidth = icon.getWidth();
-                    }
-                });
 
         return v;
     }
@@ -965,7 +975,7 @@ public class DesktopActivity extends AppCompatActivity {
     /**
      * Toggle the wobbling animation.
      */
-    private void toggleWobbleAnimation(GridLayout gridLayout, boolean shouldPlayAnimation) {
+    private void toggleWobbleAnimation(GridLayout gridLayout, boolean shouldPlayAnimation){
         for (int i = 0; i < gridLayout.getChildCount(); i++) {
             ViewGroup viewGroup = (ViewGroup) gridLayout.getChildAt(i);
             if (shouldPlayAnimation) {
@@ -995,7 +1005,7 @@ public class DesktopActivity extends AppCompatActivity {
     private void addUninstallIcon(ViewGroup viewGroup) {
         final AppItem appItem = getAppDetails(viewGroup);
         if (!appItem.isSystemApp()) {
-            ImageView appIcon = viewGroup.findViewById(R.id.app_icon);
+            FrameLayout appIcon = viewGroup.findViewById(R.id.app_icon);
 
             int size = (appIcon.getRight() - appIcon.getLeft()) / 5;
             if (size > appIcon.getTop() || size > appIcon.getLeft()) {
@@ -1004,10 +1014,14 @@ public class DesktopActivity extends AppCompatActivity {
             int paddingRight = appIconMargin - size;
             int paddingLeft = paddingRight;
             int paddingTop = appIcon.getTop() - size;
-            int paddingBottom = (paddingLeft + paddingRight - paddingTop);
+            int paddingBottom =
+                    (2 * paddingLeft > paddingTop) ? (paddingLeft + paddingRight - paddingTop)
+                            : paddingTop;
+
+            Log.i(TAG, "paddingBottom: " + paddingBottom);
             ImageView imageView = new ImageView(this);
             imageView.setId(R.id.uninstall_app);
-            imageView.setImageResource(R.drawable.ic_minus);
+            imageView.setImageResource(R.drawable.remove_icon_72);
             imageView.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
 
             imageView.setOnClickListener(new View.OnClickListener() {
@@ -1444,7 +1458,8 @@ public class DesktopActivity extends AppCompatActivity {
                     null,
                     "FOLDER",
                     false,
-                    true);
+                    true,
+                    false);
             folder.setFolder(true);
             folder.setFolderID(UUID.randomUUID().toString());
 

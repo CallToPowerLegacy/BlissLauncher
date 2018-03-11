@@ -6,26 +6,41 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_gravity="center"
         android:gravity="center"
         android:orientation="vertical">
 
-        <org.indin.blisslaunchero.SquareImageView
+        <org.indin.blisslaunchero.SquareFrameLayout
             android:id="@+id/app_icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:background="@drawable/rounded_corners_icon"
-            android:foreground="?attr/selectableItemBackground"
-            android:scaleType="fitCenter" />
+            android:layout_gravity="center">
+
+            <org.indin.blisslaunchero.SquareImageView
+                android:id="@+id/icon_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="@drawable/rounded_corners_icon"
+                android:foreground="?attr/selectableItemBackground"
+                android:scaleType="fitCenter" />
+
+            <org.indin.blisslaunchero.CustomAnalogClock
+                android:id="@+id/icon_clock"
+                android:visibility="gone"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </org.indin.blisslaunchero.SquareFrameLayout>
 
         <TextView
             android:id="@+id/app_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:ellipsize="end"
             android:gravity="center"
             android:maxLines="1"
-            android:layout_marginBottom="4dp"
             android:textColor="@color/app_label_color"
             android:textSize="@dimen/labelSize" />
     </LinearLayout>

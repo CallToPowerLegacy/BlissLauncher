@@ -52,20 +52,29 @@ public class IconPackUtil {
         return true;
     }
 
+    public static boolean isClock(String componentName) {
+        return iconMapper.get(componentName) != null &&
+                iconMapper.get(componentName) == Constants.DEFAULT_CLOCK_ID;
+    }
+
     public static Drawable getIconFromIconPack(Context context, String componentName) {
-        if(iconMapper == null)
+        if (iconMapper == null) {
             return null;
-        if(iconMapper.containsKey(componentName))
+        }
+        if (iconMapper.containsKey(componentName)) {
             return iconPackResources.getDrawable(iconMapper.get(componentName), null);
+        }
         return null;
     }
 
     public static void cacheIconsFromIconPack(Context context) {
-        mContext  = context;
-        if(iconMapper != null)
+        mContext = context;
+        if (iconMapper != null) {
             return;
-        if(!iconPackExists(context.getPackageManager()))
+        }
+        if (!iconPackExists(context.getPackageManager())) {
             return;
+        }
 
         iconPackPresent = true;
         iconMapper = new HashMap<>();
@@ -77,12 +86,16 @@ public class IconPackUtil {
             InputStream stream = iconPackContext.getAssets().open("appfilter.xml");
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(stream);
             NodeList items = doc.getElementsByTagName("item");
-            for(int i=0;i<items.getLength();i++) {
+            for (int i = 0; i < items.getLength(); i++) {
                 Node item = items.item(i);
-                String componentName = item.getAttributes().getNamedItem("component").getTextContent();
-                String drawableName = item.getAttributes().getNamedItem("drawable").getTextContent();
-                int drawableId = iconPackResources.getIdentifier(drawableName, "drawable", ICON_PACK_PACKAGE);
-                if(drawableId>0) {
+                String componentName = item.getAttributes().getNamedItem(
+                        "component").getTextContent();
+                String drawableName = item.getAttributes().getNamedItem(
+                        "drawable").getTextContent();
+                int drawableId = drawableName.equals("clock") ? Constants.DEFAULT_CLOCK_ID
+                        : iconPackResources.getIdentifier(drawableName, "drawable",
+                                ICON_PACK_PACKAGE);
+                if (drawableId > 0) {
                     iconMapper.put(componentName, drawableId);
                 }
             }
@@ -90,13 +103,13 @@ public class IconPackUtil {
             iconBackground1 = iconPackResources.getDrawable(
                     iconPackResources.getIdentifier("iconback_d", "drawable", ICON_PACK_PACKAGE),
                     null);
-            if(iconBackground1 == null){
+            if (iconBackground1 == null) {
                 iconBackground1 = ContextCompat.getDrawable(context, R.drawable.iconback_d);
             }
             iconBackground2 = iconPackResources.getDrawable(
                     iconPackResources.getIdentifier("iconback_d", "drawable", ICON_PACK_PACKAGE),
                     null);
-            if(iconBackground2 == null){
+            if (iconBackground2 == null) {
                 iconBackground2 = ContextCompat.getDrawable(context, R.drawable.iconback_d);
             }
             folderBackground = iconPackResources.getDrawable(
@@ -123,11 +136,9 @@ public class IconPackUtil {
     /**
      * Allows for use of two different app icon backgrounds based on the
      * first character of the app label
-     * @param firstCharacter
-     * @return
      */
     public static Drawable getIconBackground(char firstCharacter) {
-        if(Character.toLowerCase(firstCharacter) % 2 == 0) {
+        if (Character.toLowerCase(firstCharacter) % 2 == 0) {
             return iconBackground1;
         } else {
             return iconBackground2;
@@ -135,7 +146,7 @@ public class IconPackUtil {
     }
 
     public static Bitmap getWallpaper() {
-        return ((BitmapDrawable)wallpaper).getBitmap();
+        return ((BitmapDrawable) wallpaper).getBitmap();
     }
 
     public static Drawable getIconMask() {
