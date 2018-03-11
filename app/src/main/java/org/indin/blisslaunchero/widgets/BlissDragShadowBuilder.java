@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.widgets;
 
 import android.graphics.Canvas;
 import android.graphics.Point;

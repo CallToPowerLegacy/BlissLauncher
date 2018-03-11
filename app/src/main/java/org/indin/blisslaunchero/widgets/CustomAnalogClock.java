@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.widgets;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -8,8 +8,10 @@ import android.os.Handler;
 import android.support.annotation.DrawableRes;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
+
+import org.indin.blisslaunchero.ui.DesktopActivity;
+import org.indin.blisslaunchero.R;
 
 import java.util.ArrayList;
 import java.util.Calendar;

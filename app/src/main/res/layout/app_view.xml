@@ -10,13 +10,13 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <org.indin.blisslaunchero.SquareFrameLayout
+        <org.indin.blisslaunchero.widgets.SquareFrameLayout
             android:id="@+id/app_icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center">
 
-            <org.indin.blisslaunchero.SquareImageView
+            <org.indin.blisslaunchero.widgets.SquareImageView
                 android:id="@+id/icon_image_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -25,13 +25,13 @@
                 android:foreground="?attr/selectableItemBackground"
                 android:scaleType="fitCenter" />
 
-            <org.indin.blisslaunchero.CustomAnalogClock
+            <org.indin.blisslaunchero.widgets.CustomAnalogClock
                 android:id="@+id/icon_clock"
                 android:visibility="gone"
                 android:layout_gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-        </org.indin.blisslaunchero.SquareFrameLayout>
+        </org.indin.blisslaunchero.widgets.SquareFrameLayout>
 
         <TextView
             android:id="@+id/app_label"

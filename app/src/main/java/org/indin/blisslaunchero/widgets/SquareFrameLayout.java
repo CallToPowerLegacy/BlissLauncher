@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.widgets;
 
 import android.content.Context;
 import android.support.annotation.NonNull;

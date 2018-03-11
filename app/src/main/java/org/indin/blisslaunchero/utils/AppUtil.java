@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.utils;
 
 import android.app.ActivityOptions;
 import android.content.Context;
@@ -11,6 +11,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+
+import org.indin.blisslaunchero.model.AppItem;
+import org.indin.blisslaunchero.R;
 
 import java.text.Collator;
 import java.util.ArrayList;

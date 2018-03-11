@@ -19,7 +19,7 @@
             android:src="@drawable/ic_search_black_24dp"
             android:tint="#888888"
             android:layout_marginLeft="5dp"/>
-        <org.indin.blisslaunchero.BlissInput
+        <org.indin.blisslaunchero.widgets.BlissInput
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search"

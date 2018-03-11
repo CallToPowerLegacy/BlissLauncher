@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.model;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;

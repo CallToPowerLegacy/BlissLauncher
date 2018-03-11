@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.db;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -6,13 +6,12 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
-import android.widget.LinearLayout;
 
+import org.indin.blisslaunchero.model.AppItem;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.acl.Group;
 import java.util.List;
 
 public class Storage {

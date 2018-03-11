@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.utils;
 
 /**
  * Created by falcon on 8/3/18.

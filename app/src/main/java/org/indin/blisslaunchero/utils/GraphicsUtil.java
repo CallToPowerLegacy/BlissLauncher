@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,6 +14,9 @@ import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
+import org.indin.blisslaunchero.model.AppItem;
+import org.indin.blisslaunchero.R;
 
 public class GraphicsUtil {
 

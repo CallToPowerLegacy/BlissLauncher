@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.widgets;
 
 /**
  * Created by falcon on 11/2/18.
@@ -19,6 +19,8 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.Scroller;
+
+import org.indin.blisslaunchero.R;
 
 import java.util.ArrayList;
 import java.util.HashSet;

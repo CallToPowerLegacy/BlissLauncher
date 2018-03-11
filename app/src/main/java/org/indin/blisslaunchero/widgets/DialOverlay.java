@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.widgets;
 
 
 import java.util.Calendar;

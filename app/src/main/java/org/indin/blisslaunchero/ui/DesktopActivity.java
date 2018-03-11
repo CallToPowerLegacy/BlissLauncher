@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero;
+package org.indin.blisslaunchero.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.DragEvent;
 import android.view.Gravity;
@@ -43,12 +42,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.db.Storage;
+import org.indin.blisslaunchero.model.AppItem;
+import org.indin.blisslaunchero.utils.AppUtil;
+import org.indin.blisslaunchero.utils.GraphicsUtil;
+import org.indin.blisslaunchero.utils.IconPackUtil;
+import org.indin.blisslaunchero.utils.ConverterUtil;
+import org.indin.blisslaunchero.widgets.BlissDragShadowBuilder;
+import org.indin.blisslaunchero.widgets.BlissInput;
+import org.indin.blisslaunchero.widgets.CustomAnalogClock;
+import org.indin.blisslaunchero.widgets.HorizontalPager;
+import org.indin.blisslaunchero.widgets.SquareImageView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -492,7 +502,7 @@ public class DesktopActivity extends AppCompatActivity {
                 // reappear when user swipes to the first apps page
                 if (currentPageNumber == 0) {
                     dock.animate().translationYBy(
-                            Utils.dp2Px(105, DesktopActivity.this)).setDuration(
+                            ConverterUtil.dp2Px(105, DesktopActivity.this)).setDuration(
                             100).withEndAction(new Runnable() {
                         @Override
                         public void run() {
