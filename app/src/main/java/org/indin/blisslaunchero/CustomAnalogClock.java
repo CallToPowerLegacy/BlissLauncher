@@ -170,7 +170,6 @@ public class CustomAnalogClock extends View {
         final int w = (int) (mDialWidth * sizeScale);
         final int h = (int) (mDialHeight * sizeScale);
 
-        Log.i(TAG, "w="+w+", h="+h+", aw="+availW+", ah="+availH);
         boolean scaled = false;
 
         if (availW < w || availH < h) {

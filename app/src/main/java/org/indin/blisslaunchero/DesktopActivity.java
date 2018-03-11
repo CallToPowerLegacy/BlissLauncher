@@ -92,7 +92,7 @@ public class DesktopActivity extends AppCompatActivity {
 
     private Animation wobbleAnimation;
     private Animation wobbleReverseAnimation;
-    private static String TAG = "BLISSLAUNCHER_HOME";
+
     private int scrollCorner;
 
     private Storage storage;
@@ -302,7 +302,6 @@ public class DesktopActivity extends AppCompatActivity {
         double y = Math.pow(mHeightPixels / dm.ydpi, 2);
         double screenInches = Math.sqrt(x + y);
 
-        Log.i(TAG, "prepareResources: " + screenInches);
         if (screenInches <= 4.5) {
             nRows = 4;
         } else if (screenInches <= 5.5) {
@@ -577,7 +576,6 @@ public class DesktopActivity extends AppCompatActivity {
      * Re-creates the launcher layout based on the data stored in the shared-preferences.
      */
     private void createUIFromStorage() {
-        Log.i(TAG, "createUIFromStorage: called");
         Storage.StorageData storageData = storage.load();
         int nPages = storageData.getNPages();
         pages = new ArrayList<>();
@@ -802,7 +800,6 @@ public class DesktopActivity extends AppCompatActivity {
         layoutParams.rightMargin = appIconMargin;
 
         appIconWidth = iconWidth - 2 * appIconMargin;
-        Log.i(TAG, "appIconWidth " + appIconWidth);
         if (app.isClock()) {
             final CustomAnalogClock analogClock = v.findViewById(R.id.icon_clock);
             analogClock.setVisibility(View.VISIBLE);
@@ -1151,8 +1148,6 @@ public class DesktopActivity extends AppCompatActivity {
 
             @Override
             public boolean onDrag(View view, DragEvent dragEvent) {
-                Log.d(TAG, "onDrag() called with: view = [" + view + "], dragEvent = [" + dragEvent
-                        + "]");
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
 
                     lastX = dragEvent.getX();
@@ -1284,7 +1279,6 @@ public class DesktopActivity extends AppCompatActivity {
                         // Drop functionality when the folder window container
                         // is not being shown -- default
                         if (!folderInterest) {
-                            Log.i(TAG, "onDrag: here");
                             if (movingApp.getParent() == null) {
                                 if (view instanceof HorizontalPager) {
                                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
