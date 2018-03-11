@@ -577,6 +577,7 @@ public class DesktopActivity extends AppCompatActivity {
      * Re-creates the launcher layout based on the data stored in the shared-preferences.
      */
     private void createUIFromStorage() {
+        Log.i(TAG, "createUIFromStorage: called");
         Storage.StorageData storageData = storage.load();
         int nPages = storageData.getNPages();
         pages = new ArrayList<>();
@@ -607,20 +608,22 @@ public class DesktopActivity extends AppCompatActivity {
                 for (int j = 0; j < pageData.length(); j++) {
                     JSONObject currentItemData = pageData.getJSONObject(j);
                     AppItem appItem = prepareAppFromJSON(currentItemData);
-                    if (appItem.isFolder()) {
-                        storedItems.addAll(appItem.getSubApps());
-                    } else {
-                        storedItems.add(appItem);
-                    }
+                    if(appItem !=null) {
+                        if (appItem.isFolder()) {
+                            storedItems.addAll(appItem.getSubApps());
+                        } else {
+                            storedItems.add(appItem);
+                        }
 
-                    View appView = prepareApp(appItem);
-                    if (appView != null) {
-                        addAppToPage(page, appView);
+                        View appView = prepareApp(appItem);
+                        if (appView != null) {
+                            addAppToPage(page, appView);
+                        }
                     }
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
         }
 
         launchableApps.removeAll(storedItems);
@@ -721,7 +724,6 @@ public class DesktopActivity extends AppCompatActivity {
      */
     private AppItem prepareAppFromJSON(JSONObject currentItemData) throws Exception {
         String componentName = currentItemData.getString("componentName");
-        View output = null;
         if (currentItemData.getBoolean("isFolder")) {
             AppItem folderItem = new AppItem(currentItemData.getString("folderName"),
                     "",
@@ -749,11 +751,9 @@ public class DesktopActivity extends AppCompatActivity {
             }
 
             folderItem.setIcon(GraphicsUtil.generateFolderIcon(this, folderItem));
-            //output = prepareApp(folderItem);
             return folderItem;
         } else {
-            AppItem appItem = prepareAppItemFromComponent(componentName);
-            return appItem;
+            return prepareAppItemFromComponent(componentName);
         }
     }
 
@@ -1018,7 +1018,6 @@ public class DesktopActivity extends AppCompatActivity {
                     (2 * paddingLeft > paddingTop) ? (paddingLeft + paddingRight - paddingTop)
                             : paddingTop;
 
-            Log.i(TAG, "paddingBottom: " + paddingBottom);
             ImageView imageView = new ImageView(this);
             imageView.setId(R.id.uninstall_app);
             imageView.setImageResource(R.drawable.remove_icon_72);
