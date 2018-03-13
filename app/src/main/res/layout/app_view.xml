@@ -27,10 +27,14 @@
 
             <org.indin.blisslaunchero.widgets.CustomAnalogClock
                 android:id="@+id/icon_clock"
-                android:visibility="gone"
-                android:layout_gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <include android:id="@+id/icon_calendar"
+                layout="@layout/calendar_icon"
+                android:visibility="gone"/>
         </org.indin.blisslaunchero.widgets.SquareFrameLayout>
 
         <TextView

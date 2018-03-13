@@ -56,6 +56,11 @@ public class IconPackUtil {
                 iconMapper.get(componentName) == Constants.DEFAULT_CLOCK_ID;
     }
 
+    public static boolean isCalendar(String componentName) {
+        return iconMapper.get(componentName) != null &&
+                iconMapper.get(componentName) == Constants.DEFAULT_CALENDAR_ID;
+    }
+
     public static Drawable getIconFromIconPack(Context context, String componentName) {
         if (iconMapper == null) {
             return null;
@@ -91,9 +96,14 @@ public class IconPackUtil {
                         "component").getTextContent();
                 String drawableName = item.getAttributes().getNamedItem(
                         "drawable").getTextContent();
-                int drawableId = drawableName.equals("clock") ? Constants.DEFAULT_CLOCK_ID
-                        : iconPackResources.getIdentifier(drawableName, "drawable",
-                                ICON_PACK_PACKAGE);
+
+                int drawableId = iconPackResources.getIdentifier(drawableName, "drawable",
+                        ICON_PACK_PACKAGE);
+                if (drawableName.equals("clock")) {
+                    Constants.DEFAULT_CLOCK_ID = drawableId;
+                } else if (drawableName.equals("calendar")) {
+                    Constants.DEFAULT_CALENDAR_ID = drawableId;
+                }
                 if (drawableId > 0) {
                     iconMapper.put(componentName, drawableId);
                 }

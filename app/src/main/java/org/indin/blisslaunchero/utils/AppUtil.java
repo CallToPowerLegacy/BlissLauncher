@@ -40,15 +40,15 @@ public class AppUtil {
                 boolean iconFromIconPack = true;
                 Drawable appIcon = null;
                 boolean isClock = false;
+                boolean isCalendar = false;
+
                 // Load icon from icon pack if present
                 if (IconPackUtil.iconPackPresent) {
-                    if (!IconPackUtil.isClock(componentName)) {
-                        appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
-                    } else {
-                        isClock = true;
-                    }
+                    isClock = IconPackUtil.isClock(componentName);
+                    isCalendar = IconPackUtil.isCalendar(componentName);
+                    appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
                 }
-                if (appIcon == null && !isClock) {
+                if (appIcon == null) {
                     appIcon = appInfo.loadIcon(packageManager);
                     iconFromIconPack = false;
                     appIcon = GraphicsUtil.scaleImage(context, appIcon, 1f);
@@ -69,8 +69,8 @@ public class AppUtil {
                         componentName,
                         iconFromIconPack,
                         isSystemApp,
-                        isClock
-                );
+                        isClock,
+                        isCalendar);
                 launchableApps.add(launchableApp);
             }
         }
@@ -140,9 +140,11 @@ public class AppUtil {
                 boolean iconFromIconPack = true;
                 Drawable appIcon = null;
                 boolean isClock = false;
+                boolean isCalendar = false;
                 // Load icon from icon pack if present
                 if (IconPackUtil.iconPackPresent) {
                     isClock = IconPackUtil.isClock(componentName);
+                    isCalendar = IconPackUtil.isCalendar(componentName);
                     appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
                 }
                 if (appIcon == null) {
@@ -159,7 +161,8 @@ public class AppUtil {
                         componentName,
                         iconFromIconPack,
                         (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0,
-                        isClock);
+                        isClock,
+                        isCalendar);
             } else {
                 return null;
             }

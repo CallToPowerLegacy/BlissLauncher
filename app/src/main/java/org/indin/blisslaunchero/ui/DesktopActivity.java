@@ -4,6 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.WallpaperManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -21,6 +23,8 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.DragEvent;
 import android.view.Gravity;
@@ -46,9 +50,9 @@ import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.db.Storage;
 import org.indin.blisslaunchero.model.AppItem;
 import org.indin.blisslaunchero.utils.AppUtil;
+import org.indin.blisslaunchero.utils.ConverterUtil;
 import org.indin.blisslaunchero.utils.GraphicsUtil;
 import org.indin.blisslaunchero.utils.IconPackUtil;
-import org.indin.blisslaunchero.utils.ConverterUtil;
 import org.indin.blisslaunchero.widgets.BlissDragShadowBuilder;
 import org.indin.blisslaunchero.widgets.BlissInput;
 import org.indin.blisslaunchero.widgets.CustomAnalogClock;
@@ -59,6 +63,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -126,6 +131,14 @@ public class DesktopActivity extends AppCompatActivity {
 
     private CountDownTimer mWobblingCountDownTimer;
     private long longPressedAt;
+    private AlarmManager alarmMgr;
+    private PendingIntent pendingIntent;
+    private TextView monthTextView;
+    private TextView dateTextView;
+
+    private static final String TAG = "DesktopActivity";
+    private BroadcastReceiver alarmReceiver;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -199,8 +212,28 @@ public class DesktopActivity extends AppCompatActivity {
                 recreate();
             }
         };
+        alarmReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                incrementCalendarDate();
+            }
+        };
+
+        registerReceiver(alarmReceiver, new IntentFilter("DAY_CHANGED"));
         registerReceiver(installReceiver, installFilter);
         registerReceiver(uninstallReceiver, uninstallFilter);
+    }
+
+    public void incrementCalendarDate() {
+        Log.d(TAG, "incrementCalendarDate() called");
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        if (monthTextView != null) {
+            monthTextView.setText(ConverterUtil.convertMonthToString(cal.get(Calendar.MONTH)));
+        }
+        if (dateTextView != null) {
+            dateTextView.setText(String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
+        }
     }
 
     @Override
@@ -224,6 +257,10 @@ public class DesktopActivity extends AppCompatActivity {
         super.onDestroy();
         unregisterReceiver(installReceiver);
         unregisterReceiver(uninstallReceiver);
+        if (alarmMgr != null) {
+            alarmMgr.cancel(pendingIntent);
+        }
+        unregisterReceiver(alarmReceiver);
     }
 
     private void addNewApp(String packageName) {
@@ -616,7 +653,7 @@ public class DesktopActivity extends AppCompatActivity {
                 for (int j = 0; j < pageData.length(); j++) {
                     JSONObject currentItemData = pageData.getJSONObject(j);
                     AppItem appItem = prepareAppFromJSON(currentItemData);
-                    if(appItem !=null) {
+                    if (appItem != null) {
                         if (appItem.isFolder()) {
                             storedItems.addAll(appItem.getSubApps());
                         } else {
@@ -740,6 +777,7 @@ public class DesktopActivity extends AppCompatActivity {
                     "FOLDER",
                     false,
                     true,
+                    false,
                     false);
             folderItem.setFolder(true);
             folderItem.setFolderID(currentItemData.getString("folderID"));
@@ -815,6 +853,35 @@ public class DesktopActivity extends AppCompatActivity {
             analogClock.setVisibility(View.VISIBLE);
             squareImageView.setVisibility(View.GONE);
             analogClock.setAutoUpdate(true);
+        } else if (app.isCalendar()) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(System.currentTimeMillis());
+
+            monthTextView = v.findViewById(R.id.calendar_month_textview);
+            monthTextView.getLayoutParams().height = appIconWidth * 40 / 192;
+            monthTextView.getLayoutParams().width = appIconWidth;
+            int monthPx = appIconWidth * 48 / 192;
+            monthTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, monthPx / 2);
+            monthTextView.setText(ConverterUtil.convertMonthToString(calendar.get(Calendar.MONTH)));
+
+            dateTextView = v.findViewById(R.id.calendar_date_textview);
+            int datePx = appIconWidth * 154 / 192;
+            dateTextView.getLayoutParams().height = appIconWidth * 152 / 192;
+            dateTextView.getLayoutParams().width = appIconWidth;
+            dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, datePx / 2);
+            dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
+            v.findViewById(R.id.icon_calendar).setVisibility(View.VISIBLE);
+            squareImageView.setVisibility(View.GONE);
+
+            alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent("DAY_CHANGED");
+            pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+
+            Calendar alarmCal = Calendar.getInstance();
+            alarmCal.setTimeInMillis(System.currentTimeMillis());
+            alarmCal.set(Calendar.HOUR_OF_DAY, 00);
+            alarmMgr.setInexactRepeating(AlarmManager.RTC, alarmCal.getTimeInMillis(),
+                    AlarmManager.INTERVAL_DAY, pendingIntent);
         }
 
 
@@ -982,7 +1049,7 @@ public class DesktopActivity extends AppCompatActivity {
     /**
      * Toggle the wobbling animation.
      */
-    private void toggleWobbleAnimation(GridLayout gridLayout, boolean shouldPlayAnimation){
+    private void toggleWobbleAnimation(GridLayout gridLayout, boolean shouldPlayAnimation) {
         for (int i = 0; i < gridLayout.getChildCount(); i++) {
             ViewGroup viewGroup = (ViewGroup) gridLayout.getChildAt(i);
             if (shouldPlayAnimation) {
@@ -1462,6 +1529,7 @@ public class DesktopActivity extends AppCompatActivity {
                     "FOLDER",
                     false,
                     true,
+                    false,
                     false);
             folder.setFolder(true);
             folder.setFolderID(UUID.randomUUID().toString());

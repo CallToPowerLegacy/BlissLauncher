@@ -5,5 +5,6 @@ package org.indin.blisslaunchero.utils;
  */
 
 public class Constants {
-    public static final int DEFAULT_CLOCK_ID = 971;
+    public static int DEFAULT_CLOCK_ID;
+    public static int DEFAULT_CALENDAR_ID;
 }

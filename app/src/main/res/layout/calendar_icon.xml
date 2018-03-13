@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<org.indin.blisslaunchero.widgets.SquareLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/calendar">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/calendar_top"
+        android:gravity="center"
+        android:textColor="#FFF"
+        android:textAllCaps="true"
+        android:id="@+id/calendar_month_textview"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:id="@+id/calendar_date_textview"
+        android:textColor="#000"
+        android:layout_gravity="center"/>
+
+</org.indin.blisslaunchero.widgets.SquareLinearLayout>

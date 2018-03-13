@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AppItem {
+
     private CharSequence label;
     private String packageName;
     private Drawable icon;
@@ -15,6 +16,7 @@ public class AppItem {
     private boolean iconFromIconPack;
     private boolean isSystemApp;
     private boolean isClock;
+    private boolean isCalendar;
 
     // Folder specific
     private boolean belongsToFolder;
@@ -25,7 +27,7 @@ public class AppItem {
 
     public AppItem(CharSequence label, String packageName, Drawable icon,
             Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp,
-            boolean isClock) {
+            boolean isClock, boolean isCalendar) {
         this.label = label;
         this.packageName = packageName;
         this.icon = icon;
@@ -34,6 +36,7 @@ public class AppItem {
         this.iconFromIconPack = iconFromIconPack;
         this.isSystemApp = isSystemApp;
         this.isClock = isClock;
+        this.isCalendar = isCalendar;
     }
 
     public CharSequence getLabel() {
@@ -62,6 +65,10 @@ public class AppItem {
 
     public boolean isClock() {
         return isClock;
+    }
+
+    public boolean isCalendar() {
+        return isCalendar;
     }
 
     public void setSystemApp(boolean isSystemApp) {
