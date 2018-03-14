@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
     defaultConfig {
         applicationId "org.indin.blisslauncher"
-        minSdkVersion 22
-        targetSdkVersion 26
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -18,25 +18,63 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // Always show the result of every unit test, even if it passes.
+    testOptions.unitTests.all {
+        testLogging {
+            events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
+        }
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
+
+    // Support Libs
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibraryVersion}"
+    implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportLibraryVersion}"
+
+    // Dagger
+    implementation "com.google.dagger:dagger:${rootProject.ext.daggerVersion}"
+    implementation "com.google.dagger:dagger-android:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-compiler:${rootProject.ext.daggerVersion}"
+    annotationProcessor "com.google.dagger:dagger-android-processor:${rootProject.ext.daggerVersion}"
+
+    // Rx Java and Android
+    implementation "io.reactivex.rxjava2:rxandroid:${rootProject.ext.rxAndroidVersion}"
+    implementation "io.reactivex.rxjava2:rxjava:${rootProject.ext.rxJavaVersion}"
+
+    // Rx Relay
+    implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
+
+    // Unit test dependencies
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.robolectricVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoVersion}"
+    testImplementation "org.hamcrest:hamcrest-core:${rootProject.ext.hamcrestVersion}"
+    testImplementation "org.hamcrest:hamcrest-library:${rootProject.ext.hamcrestVersion}"
+    testImplementation "org.hamcrest:hamcrest-integration:${rootProject.ext.hamcrestVersion}"
+
+    // Instrumentation tests dependencies
+    androidTestImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoVersion}"
+    androidTestImplementation "org.mockito:mockito-android:${rootProject.ext.mockitoVersion}"
+    androidTestImplementation "com.android.support:support-annotations:${rootProject.ext.supportLibraryVersion}"
+    androidTestImplementation("com.android.support.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}", {
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'recyclerview-v7'
+        exclude group: 'com.android.support', module: 'design'
     })
-    compile 'me.relex:circleindicator:1.2.2@aar'
-    compile 'com.android.support:appcompat-v7:26.1.0'
-    compile 'com.android.support:gridlayout-v7:26.1.0'
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
+    androidTestImplementation "com.android.support.test:runner:${rootProject.ext.runnerRulesVersion}"
+    androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
+
+    // Crashlytics
     compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
         transitive = true
     }
-
-    compile files('libs/bruce-utils.jar')
-
-    testCompile 'junit:junit:4.12'
-
-    compile 'org.lucasr.dspec:dspec:0.1.1'
 }
-
-apply plugin: 'com.jakewharton.hugo'
