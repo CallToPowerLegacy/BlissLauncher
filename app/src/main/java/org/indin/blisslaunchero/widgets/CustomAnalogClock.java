@@ -10,7 +10,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 
-import org.indin.blisslaunchero.ui.DesktopActivity;
+import org.indin.blisslaunchero.ui.LauncherActivity;
 import org.indin.blisslaunchero.R;
 
 import java.util.ArrayList;
@@ -203,7 +203,7 @@ public class CustomAnalogClock extends View {
     // from AnalogClock.java
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int size = DesktopActivity.appIconWidth;
+        int size = LauncherActivity.appIconWidth;
         setMeasuredDimension(size, size);
     }
 

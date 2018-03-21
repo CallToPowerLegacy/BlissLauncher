@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.db;
+package org.indin.blisslaunchero.data.db;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,7 +7,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
 
-import org.indin.blisslaunchero.model.AppItem;
+import org.indin.blisslaunchero.data.model.AppItem;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

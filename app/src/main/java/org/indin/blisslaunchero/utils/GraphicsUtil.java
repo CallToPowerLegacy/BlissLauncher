@@ -15,7 +15,7 @@ import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import org.indin.blisslaunchero.model.AppItem;
+import org.indin.blisslaunchero.data.model.AppItem;
 import org.indin.blisslaunchero.R;
 
 public class GraphicsUtil {

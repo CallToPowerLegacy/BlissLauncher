@@ -2,6 +2,7 @@ package org.indin.blisslaunchero.utils;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 
 import java.util.Calendar;
 
@@ -19,6 +20,10 @@ public class ConverterUtil {
     public static float px2sp(float px, Context context) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         return px / metrics.scaledDensity;
+    }
+
+    public static int spToPx(float sp, Context context) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
     }
 
     public static String convertMonthToString(int month) {
