@@ -2,4 +2,5 @@
 <resources>
     <item name="uninstall_app" type="id">uninstallApp</item>
     <item name="app_icon" type="id">app_icon</item>
+    <item name="notification_count" type="id">notification_count</item>
 </resources>

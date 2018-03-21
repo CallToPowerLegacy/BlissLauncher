@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="org.indin.blisslaunchero.ui.DesktopActivity">
+    tools:context="org.indin.blisslaunchero.ui.LauncherActivity">
 
     <org.indin.blisslaunchero.widgets.HorizontalPager
         android:id="@+id/pages_container"

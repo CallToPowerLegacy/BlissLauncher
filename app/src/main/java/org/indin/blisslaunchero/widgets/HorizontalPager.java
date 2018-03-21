@@ -27,8 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class HorizontalPager extends ViewGroup {
-    public static final String TAG = "HorizontalPager";
-
+    private static final String TAG = "HorizontalPager";
     private static final int INVALID_SCREEN = -1;
     public static final int SPEC_UNDEFINED = -1;
 
