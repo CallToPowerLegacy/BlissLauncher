@@ -32,28 +32,25 @@ public class Storage {
      * @param dock
      */
     public void save(final List<GridLayout> pages, final GridLayout dock) {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject data = new JSONObject();
-                JSONArray pagesData = new JSONArray();
-                JSONArray dockData = new JSONArray();
-                try {
-                    for (int i = 0; i < pages.size(); i++) {
-                        stuffData(pagesData, pages.get(i));
-                    }
-
-                    stuffData(dockData, dock);
-                    data.put("pages", pagesData);
-                    data.put("dock", dockData);
-
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString("LAYOUT", data.toString(4));
-                    editor.putBoolean("LAYOUT_PRESENT", true);
-                    editor.commit();
-                } catch(Exception e) {
-                    Log.e(TAG, "Couldn't save layout " + e);
+        AsyncTask.execute(() -> {
+            JSONObject data = new JSONObject();
+            JSONArray pagesData = new JSONArray();
+            JSONArray dockData = new JSONArray();
+            try {
+                for (int i = 0; i < pages.size(); i++) {
+                    stuffData(pagesData, pages.get(i));
                 }
+
+                stuffData(dockData, dock);
+                data.put("pages", pagesData);
+                data.put("dock", dockData);
+
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("LAYOUT", data.toString(4));
+                editor.putBoolean("LAYOUT_PRESENT", true);
+                editor.commit();
+            } catch(Exception e) {
+                Log.e(TAG, "Couldn't save layout " + e);
             }
         });
     }

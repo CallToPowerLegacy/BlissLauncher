@@ -5,7 +5,6 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
-import android.support.annotation.DrawableRes;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -83,8 +82,8 @@ public class CustomAnalogClock extends View {
         setFace(r.getDrawable(drawableRes));
     }
 
-    public void init(Context context, @DrawableRes int watchFace, @DrawableRes int hourHand,
-            @DrawableRes int minuteHand, @DrawableRes int secHand, int alpha, boolean is24,
+    public void init(Context context, int watchFace, int hourHand,
+            int minuteHand, int secHand, int alpha, boolean is24,
             boolean hourOnTop) {
         CustomAnalogClock.is24 = is24;
 

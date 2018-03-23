@@ -60,7 +60,7 @@
             android:background="@null"
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions"
-            android:text="Untitled"
+            android:text="@string/untitled"
             android:textAlignment="center"
             android:textColor="@android:color/white"
             android:textSize="18sp" />

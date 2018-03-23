@@ -1,6 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
-
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -72,9 +70,4 @@ dependencies {
     androidTestImplementation "com.android.support.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "com.android.support.test:runner:${rootProject.ext.runnerRulesVersion}"
     androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
-
-    // Crashlytics
-    compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
-        transitive = true
-    }
 }

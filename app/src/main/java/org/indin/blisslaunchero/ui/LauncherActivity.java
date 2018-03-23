@@ -42,10 +42,9 @@ import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.crashlytics.android.Crashlytics;
 
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.db.Storage;
@@ -62,6 +61,7 @@ import org.indin.blisslaunchero.widgets.BlissFrameLayout;
 import org.indin.blisslaunchero.widgets.BlissInput;
 import org.indin.blisslaunchero.widgets.CustomAnalogClock;
 import org.indin.blisslaunchero.widgets.HorizontalPager;
+import org.indin.blisslaunchero.widgets.SquareFrameLayout;
 import org.indin.blisslaunchero.widgets.SquareImageView;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -79,7 +79,7 @@ import java.util.UUID;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 
-public class LauncherActivity extends AppCompatActivity implements LauncherView {
+public class LauncherActivity extends AppCompatActivity {
 
     private HorizontalPager mHorizontalPager;
     private GridLayout mDock;
@@ -160,13 +160,13 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mHorizontalPager = findViewById(R.id.pages_container);
-        mDock = findViewById(R.id.dock);
-        mIndicator = findViewById(R.id.page_indicator);
-        mFolderWindowContainer = findViewById(R.id.folder_window_container);
-        mFolderApps = findViewById(R.id.folder_apps);
-        mBlissInput = findViewById(R.id.folder_title);
-        mProgressBar = findViewById(R.id.progressbar);
+        mHorizontalPager = (HorizontalPager) findViewById(R.id.pages_container);
+        mDock = (GridLayout) findViewById(R.id.dock);
+        mIndicator = (LinearLayout) findViewById(R.id.page_indicator);
+        mFolderWindowContainer = (ViewGroup) findViewById(R.id.folder_window_container);
+        mFolderApps = (GridLayout) findViewById(R.id.folder_apps);
+        mBlissInput = (BlissInput) findViewById(R.id.folder_title);
+        mProgressBar = (ProgressBar) findViewById(R.id.progressbar);
 
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -483,7 +483,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
                                 Toast.makeText(LauncherActivity.this, "Recreating Launcher",
                                         Toast.LENGTH_SHORT).show();
                                 e.printStackTrace();
-                                Crashlytics.logException(e);
                                 recreate();
                             }
 
@@ -794,7 +793,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
         mHorizontalPager.addView(layout, 0);
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
-        mSearchInput = layout.findViewById(R.id.search_input);
+        mSearchInput = (EditText) layout.findViewById(R.id.search_input);
         layout.setOnDragListener(null);
 
         mSearchInput.setOnFocusChangeListener((v, hasFocus) -> {
@@ -908,9 +907,9 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
         Log.d(TAG, "prepareApp() called with: app = [" + app + "]");
         final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(R.layout.app_view,
                 null);
-        final TextView label = v.findViewById(R.id.app_label);
+        final TextView label = (TextView) v.findViewById(R.id.app_label);
         final View icon = v.findViewById(R.id.app_icon);
-        final SquareImageView squareImageView = v.findViewById(R.id.icon_image_view);
+        final SquareImageView squareImageView = (SquareImageView) v.findViewById(R.id.icon_image_view);
 
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
         layoutParams.leftMargin = appIconMargin;
@@ -925,19 +924,19 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
         }
 
         if (app.isClock()) {
-            final CustomAnalogClock analogClock = v.findViewById(R.id.icon_clock);
+            final CustomAnalogClock analogClock = (CustomAnalogClock) v.findViewById(R.id.icon_clock);
             analogClock.setAutoUpdate(true);
             analogClock.setVisibility(View.VISIBLE);
             squareImageView.setVisibility(GONE);
         } else if (app.isCalendar()) {
 
-            TextView monthTextView = v.findViewById(R.id.calendar_month_textview);
+            TextView monthTextView = (TextView) v.findViewById(R.id.calendar_month_textview);
             monthTextView.getLayoutParams().height = appIconWidth * 40 / 192;
             monthTextView.getLayoutParams().width = appIconWidth;
             int monthPx = appIconWidth * 48 / 192;
             monthTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, monthPx / 2);
 
-            TextView dateTextView = v.findViewById(R.id.calendar_date_textview);
+            TextView dateTextView = (TextView) v.findViewById(R.id.calendar_date_textview);
             int datePx = appIconWidth * 154 / 192;
             dateTextView.getLayoutParams().height = appIconWidth * 152 / 192;
             dateTextView.getLayoutParams().width = appIconWidth;
@@ -1118,7 +1117,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
                 }
             } else {
                 // Remove uninstall icon
-                ImageView imageView = viewGroup.findViewById(R.id.uninstall_app);
+                ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
                 if (imageView != null) {
                     ((ViewGroup) imageView.getParent()).removeView(imageView);
                 }
@@ -1133,7 +1132,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
     private void addUninstallIcon(ViewGroup viewGroup) {
         final AppItem appItem = getAppDetails(viewGroup);
         if (!appItem.isSystemApp()) {
-            FrameLayout appIcon = viewGroup.findViewById(R.id.app_icon);
+            SquareFrameLayout appIcon = (SquareFrameLayout) viewGroup.findViewById(R.id.app_icon);
 
             int size = (appIcon.getRight() - appIcon.getLeft()) / 5;
             if (size > appIcon.getTop() || size > appIcon.getLeft()) {
@@ -1851,25 +1850,5 @@ public class LauncherActivity extends AppCompatActivity implements LauncherView 
                 }
             }
         }
-    }
-
-    @Override
-    public void showApps(List<AppItem> allAppItems, List<AppItem> pinnedAppItems) {
-
-    }
-
-    @Override
-    public void showNotificationBadges(Map<String, Integer> map) {
-
-    }
-
-    @Override
-    public void showLoading() {
-        mProgressBar.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void hideLoading() {
-        mProgressBar.setVisibility(View.GONE);
     }
 }
