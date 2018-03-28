@@ -31,6 +31,9 @@ android {
 
 dependencies {
 
+    compile 'me.relex:circleindicator:1.2.2@aar'
+    compile 'uk.co.chrisjenx:calligraphy:2.3.0'
+
     // Support Libs
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibraryVersion}"
     implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportLibraryVersion}"

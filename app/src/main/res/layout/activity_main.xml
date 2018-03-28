@@ -14,15 +14,15 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="16dp" />
 
     <LinearLayout
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/dock"
-        android:layout_marginTop="12dp"
         android:layout_marginBottom="12dp"
+        android:layout_marginTop="12dp"
         android:divider="@drawable/gap"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
@@ -38,9 +38,9 @@
         android:animateLayoutChanges="false"
         android:background="@color/dockColor"
         android:columnCount="@integer/col_count"
-        android:rowCount="1"
         android:paddingLeft="@dimen/app_grid_padding"
-        android:paddingRight="@dimen/app_grid_padding">
+        android:paddingRight="@dimen/app_grid_padding"
+        android:rowCount="1">
 
     </GridLayout>
 
@@ -53,31 +53,39 @@
 
         <org.indin.blisslaunchero.widgets.BlissInput
             android:id="@+id/folder_title"
-            android:layout_width="250dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/folder_apps"
+            android:layout_above="@+id/folder_apps_background"
             android:layout_centerHorizontal="true"
             android:background="@null"
             android:imeOptions="actionDone"
-            android:inputType="textNoSuggestions"
+            android:inputType="textNoSuggestions|textCapSentences"
             android:text="@string/untitled"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
             android:textAlignment="center"
             android:textColor="@android:color/white"
             android:textSize="18sp" />
-
-        <GridLayout
+        <LinearLayout
+            android:id="@+id/folder_apps_background"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_centerInParent="true"
+            android:background="@drawable/folder_window">
+        <android.support.v4.view.ViewPager
             android:id="@+id/folder_apps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_margin="16dp"
-            android:alignmentMode="alignBounds"
-            android:background="@drawable/folder_window"
-            android:columnCount="3"
-            android:rowCount="4"
-            android:minHeight="230dp"
-            android:minWidth="240dp"
-            android:useDefaultMargins="true" />
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"/>
+
+        <me.relex.circleindicator.CircleIndicator
+            android:id="@+id/indicator"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:paddingBottom="4dp"/>
+        </LinearLayout>
 
     </RelativeLayout>
 

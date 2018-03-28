@@ -21,6 +21,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.support.annotation.NonNull;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -28,6 +31,7 @@ import android.util.TypedValue;
 import android.view.Display;
 import android.view.DragEvent;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,6 +82,8 @@ import java.util.UUID;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
+import me.relex.circleindicator.CircleIndicator;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class LauncherActivity extends AppCompatActivity {
 
@@ -85,7 +91,7 @@ public class LauncherActivity extends AppCompatActivity {
     private GridLayout mDock;
     private LinearLayout mIndicator;
     private ViewGroup mFolderWindowContainer;
-    private GridLayout mFolderApps;
+    private ViewPager mFolderAppsViewPager;
     private BlissInput mBlissInput;
     private EditText mSearchInput;
     private View mProgressBar;
@@ -164,7 +170,7 @@ public class LauncherActivity extends AppCompatActivity {
         mDock = (GridLayout) findViewById(R.id.dock);
         mIndicator = (LinearLayout) findViewById(R.id.page_indicator);
         mFolderWindowContainer = (ViewGroup) findViewById(R.id.folder_window_container);
-        mFolderApps = (GridLayout) findViewById(R.id.folder_apps);
+        mFolderAppsViewPager = (ViewPager) findViewById(R.id.folder_apps);
         mBlissInput = (BlissInput) findViewById(R.id.folder_title);
         mProgressBar = (ProgressBar) findViewById(R.id.progressbar);
 
@@ -191,6 +197,10 @@ public class LauncherActivity extends AppCompatActivity {
                         createLauncher();
                     }
                 });
+    }
+
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(context));
     }
 
     public CompositeDisposable getCompositeDisposable() {
@@ -495,11 +505,14 @@ public class LauncherActivity extends AppCompatActivity {
 
     private void updateBadges(Set<String> appsWithNotifications) {
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
-            for (int i = 0; i < mFolderApps.getChildCount(); i++) {
-                BlissFrameLayout viewGroup =
-                        (BlissFrameLayout) mFolderApps.getChildAt(i);
-                final AppItem appItem = getAppDetails(viewGroup);
-                updateBadgeToApp(viewGroup, appItem, appsWithNotifications, true);
+            for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
+                GridLayout gridLayout = (GridLayout) mFolderAppsViewPager.getChildAt(i);
+                for(int j = 0; j<gridLayout.getChildCount(); j++){
+                    BlissFrameLayout viewGroup =
+                            (BlissFrameLayout) gridLayout.getChildAt(j);
+                    final AppItem appItem = getAppDetails(viewGroup);
+                    updateBadgeToApp(viewGroup, appItem, appsWithNotifications, true);
+                }
             }
         }
         for (int i = 0; i < pages.size(); i++) {
@@ -909,13 +922,16 @@ public class LauncherActivity extends AppCompatActivity {
                 null);
         final TextView label = (TextView) v.findViewById(R.id.app_label);
         final View icon = v.findViewById(R.id.app_icon);
-        final SquareImageView squareImageView = (SquareImageView) v.findViewById(R.id.icon_image_view);
+        final SquareImageView squareImageView = (SquareImageView) v.findViewById(
+                R.id.icon_image_view);
 
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
         layoutParams.leftMargin = appIconMargin;
         layoutParams.rightMargin = appIconMargin;
-        label.setPadding(getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0,
-                getResources().getDimensionPixelSize(R.dimen.app_col_margin), 0);
+        label.setPadding(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                (int) ConverterUtil.dp2Px(4, this),
+                getResources().getDimensionPixelSize(R.dimen.app_col_margin),
+                (int) ConverterUtil.dp2Px(4, this));
 
         if (app.isFolder()) {
             v.applyBadge(checkHasApp(app, mAppsWithNotifications), withText);
@@ -924,7 +940,8 @@ public class LauncherActivity extends AppCompatActivity {
         }
 
         if (app.isClock()) {
-            final CustomAnalogClock analogClock = (CustomAnalogClock) v.findViewById(R.id.icon_clock);
+            final CustomAnalogClock analogClock = (CustomAnalogClock) v.findViewById(
+                    R.id.icon_clock);
             analogClock.setAutoUpdate(true);
             analogClock.setVisibility(View.VISIBLE);
             squareImageView.setVisibility(GONE);
@@ -1055,25 +1072,80 @@ public class LauncherActivity extends AppCompatActivity {
     private BlissFrameLayout activeFolderView;
 
     private void displayFolder(AppItem app, BlissFrameLayout v) {
+
+        activeFolder = app;
+        activeFolderView = v;
+
         mFolderWindowContainer.setAlpha(0f);
         mFolderWindowContainer.setVisibility(View.VISIBLE);
         mFolderWindowContainer.animate().alpha(1.0f).setDuration(200);
 
         mBlissInput.setText(app.getLabel());
         mBlissInput.setCursorVisible(false);
-        mFolderApps.removeAllViews();
-        for (int i = 0; i < app.getSubApps().size(); i++) {
-            AppItem appItem = app.getSubApps().get(i);
-            BlissFrameLayout appView = prepareApp(appItem, true);
-            GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
-            GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
-            appView.setLayoutParams(new GridLayout.LayoutParams(rowSpec, colSpec));
-            appView.getLayoutParams().width = folderIconWidth;
-            appView.getLayoutParams().height = iconHeight;
-            mFolderApps.addView(appView);
+
+        mFolderAppsViewPager.setAdapter(new FolderAppsPagerAdapter(this));
+        mFolderAppsViewPager.getLayoutParams().width =
+                (int) (iconWidth * 3 + 2 * getResources().getDimensionPixelSize(
+                        R.dimen.app_grid_padding));
+        mFolderAppsViewPager.getLayoutParams().height =
+                (int) (iconHeight * 3);
+        ((CircleIndicator) findViewById(R.id.indicator)).setViewPager(mFolderAppsViewPager);
+        Log.d(TAG, "displayFolder() called with: app = [" + app + "], v = [" + v + "]");
+
+    }
+
+    public class FolderAppsPagerAdapter extends PagerAdapter {
+
+        private Context mContext;
+        private List<AppItem> mFolderAppItems;
+
+        public FolderAppsPagerAdapter(Context context) {
+            this.mContext = context;
+            this.mFolderAppItems = activeFolder.getSubApps();
         }
-        activeFolder = app;
-        activeFolderView = v;
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            Log.d(TAG,
+                    "instantiateItem() called with: container = [" + container + "], position = ["
+                            + position + "]");
+            GridLayout viewGroup = (GridLayout) LayoutInflater.from(mContext).inflate(
+                    R.layout.apps_page, container, false);
+            viewGroup.setRowCount(3);
+            viewGroup.setColumnCount(3);
+            int i = 0;
+            while (9 * position + i < mFolderAppItems.size() && i < 9) {
+                AppItem appItem = mFolderAppItems.get(9 * position + i);
+                BlissFrameLayout appView = prepareApp(appItem, true);
+                GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
+                iconLayoutParams.height = iconHeight;
+                iconLayoutParams.width = iconWidth;
+                appView.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
+                appView.setLayoutParams(iconLayoutParams);
+                viewGroup.addView(appView);
+                i++;
+            }
+            container.addView(viewGroup);
+            return viewGroup;
+        }
+
+        @Override
+        public int getCount() {
+            Log.d(TAG, "getCount() called " + Math.ceil((float) mFolderAppItems.size() / 9));
+            return (int) Math.ceil((float) mFolderAppItems.size() / 9);
+        }
+
+        @Override
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
+            return view == object;
+        }
+
+        @Override
+        public void destroyItem(@NonNull ViewGroup container, int position,
+                @NonNull Object object) {
+            container.removeView((View) object);
+        }
     }
 
     /**
@@ -1086,7 +1158,10 @@ public class LauncherActivity extends AppCompatActivity {
         isWobbling = shouldPlay;
 
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
-            toggleWobbleAnimation(mFolderApps, shouldPlay);
+            for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
+                toggleWobbleAnimation((GridLayout) mFolderAppsViewPager.getChildAt(i), shouldPlay);
+            }
+
         } else {
             for (int i = 0; i < pages.size(); i++) {
                 toggleWobbleAnimation(pages.get(i), shouldPlay);
@@ -1430,9 +1505,12 @@ public class LauncherActivity extends AppCompatActivity {
                         folderInterest = false;
                     } else {
                         // Drop functionality when the folder window is visible
-                        Rect bounds = new Rect((int) mFolderApps.getX(), (int) mFolderApps.getY(),
-                                (int) (mFolderApps.getWidth() + mFolderApps.getX()),
-                                (int) (mFolderApps.getHeight() + mFolderApps.getY()));
+                        Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
+                                (int) mFolderAppsViewPager.getY(),
+                                (int) (mFolderAppsViewPager.getWidth()
+                                        + mFolderAppsViewPager.getX()),
+                                (int) (mFolderAppsViewPager.getHeight()
+                                        + mFolderAppsViewPager.getY()));
                         if (!bounds.contains((int) lastX, (int) lastY)) {
                             removeAppFromFolder();
                         } else {
@@ -1469,6 +1547,7 @@ public class LauncherActivity extends AppCompatActivity {
         } else {
             AppItem app = getAppDetails(movingApp);
             activeFolder.getSubApps().remove(app);
+            mFolderAppsViewPager.getAdapter().notifyDataSetChanged();
             assert app != null;
             app.setBelongsToFolder(false);
 
@@ -1486,6 +1565,7 @@ public class LauncherActivity extends AppCompatActivity {
                 if (activeFolder.getSubApps().size() == 1) {
                     AppItem item = activeFolder.getSubApps().get(0);
                     activeFolder.getSubApps().remove(item);
+                    mFolderAppsViewPager.getAdapter().notifyDataSetChanged();
                     item.setBelongsToFolder(false);
                     BlissFrameLayout view = prepareApp(item, !folderFromDock);
                     if (folderFromDock) {

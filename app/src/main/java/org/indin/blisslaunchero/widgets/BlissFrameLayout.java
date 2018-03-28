@@ -94,7 +94,7 @@ public class BlissFrameLayout extends FrameLayout {
         int cellHeightPx;
         if (mWithText) {
             Paint.FontMetrics fm = mPaint.getFontMetrics();
-            cellHeightPx = mIconSize + (int) Math.ceil(fm.bottom - fm.top);
+            cellHeightPx = mIconSize + (int) Math.ceil(fm.bottom - fm.top)+(int) ConverterUtil.dp2Px(8, mContext);
         } else {
             cellHeightPx = mIconSize;
         }

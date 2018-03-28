@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.indin.blisslaunchero.widgets.BlissFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:ignore="MissingPrefix">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -32,18 +34,22 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
 
-            <include android:id="@+id/icon_calendar"
+            <include
+                android:id="@+id/icon_calendar"
                 layout="@layout/calendar_icon"
-                android:visibility="gone"/>
+                android:visibility="gone" />
         </org.indin.blisslaunchero.widgets.SquareFrameLayout>
 
         <TextView
             android:id="@+id/app_label"
+            fontPath="Roboto-Regular.ttf"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:gravity="center"
             android:maxLines="1"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:textColor="@color/app_label_color"
             android:textSize="@dimen/labelSize" />
     </LinearLayout>
