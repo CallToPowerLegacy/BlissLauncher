@@ -2,8 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
-
-LOCAL_PACKAGE_NAME := BlissLauncherO
+LOCAL_PACKAGE_NAME := BlissLauncher
 LOCAL_CERTIFICATE := platform
 LOCAL_DEX_PREOPT := false
 
@@ -28,7 +27,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
         android-support-v7-gridlayout \
         rxrelay \
         rxjava \
-        rxandroid 
+        rxandroid
 
 
 LOCAL_SDK_VERSION := current
@@ -51,4 +50,3 @@ include $(BUILD_MULTI_PREBUILT)
 
 # Use the following include to make our test apk.
 include $(call all-makefiles-under,$(LOCAL_PATH))
-
