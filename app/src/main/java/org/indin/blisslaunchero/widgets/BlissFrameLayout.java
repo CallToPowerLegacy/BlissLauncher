@@ -85,7 +85,7 @@ public class BlissFrameLayout extends FrameLayout {
     private void drawBadgeIfNecessary(Canvas canvas) {
         if (hasBadge) {
             getIconBounds(mTempIconBounds);
-            DotRenderer dotRenderer = new DotRenderer(LauncherActivity.appIconWidth);
+            DotRenderer dotRenderer = new DotRenderer(mContext, LauncherActivity.appIconWidth);
             dotRenderer.drawDot(canvas, mTempIconBounds);
         }
     }
