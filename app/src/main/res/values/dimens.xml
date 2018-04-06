@@ -17,7 +17,7 @@
     <!-- margin of app icon-->
     <dimen name="margin_inch1">14dp</dimen>
     <dimen name="margin_inch2">18dp</dimen>
-    <dimen name="margin_inch3">22dp</dimen>
+    <dimen name="margin_inch3">24dp</dimen>
 
     <!--uninstall icon size -->
     <dimen name="uninstallIconSize">36dp</dimen>

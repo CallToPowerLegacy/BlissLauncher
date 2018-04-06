@@ -41,9 +41,8 @@ public class DotRenderer {
                 R.drawable.notification_icon_72);
         Bitmap scaledBitmap = Bitmap.createScaledBitmap(myBitmap, mSize,mSize, true);
 
-        mPaint.setColor(Color.parseColor("#FF0800"));
         canvas.drawBitmap(scaledBitmap, iconBounds.left - scaledBitmap.getWidth() / 3,
-                iconBounds.top - scaledBitmap.getHeight() / 3, null);
+                iconBounds.top - scaledBitmap.getHeight() / 3, mPaint);
         //canvas.drawCircle(badgeCenterX, badgeCenterY, mSize/2, mPaint);
     }
 }

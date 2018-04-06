@@ -146,7 +146,7 @@ public class IconPackUtil {
      * Allows for use of two different app icon backgrounds based on the
      * first character of the app label
      */
-    public static Drawable getIconBackground(char firstCharacter) {
+    public static Drawable getIconBackground(Context context, char firstCharacter) {
         if (Character.toLowerCase(firstCharacter) % 2 == 0) {
             return iconBackground1;
         } else {

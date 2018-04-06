@@ -42,7 +42,7 @@
             </intent-filter>
         </service>
         <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="8fcf342f1b8ac74d6980872082b7216ef4682a29" />
+            android:name="com.bugsnag.android.API_KEY"
+            android:value="3c2e123c774b9328c800aa1c230e7a2d"/>
     </application>
 </manifest>

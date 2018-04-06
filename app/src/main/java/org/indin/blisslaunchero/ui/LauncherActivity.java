@@ -410,13 +410,13 @@ public class LauncherActivity extends AppCompatActivity {
                 R.dimen.app_col_margin)) / nCols;
 
         appIconWidth = iconWidth - 2 * appIconMargin;
+        Log.i(TAG, "prepareResources: "+appIconWidth);
         maxDistanceForFolderCreation = getResources()
                 .getDimensionPixelSize(R.dimen.maxDistanceForFolderCreation) * mPagerWidth / 540;
 
         hotBackground = getResources().getDrawable(R.drawable.rounded_corners_icon_hot, null);
         defaultBackground = getResources().getDrawable(R.drawable.rounded_corners_icon, null);
-        scrollCorner = getResources().getDimensionPixelSize(R.dimen.scrollCorner) * mPagerWidth
-                / 480;
+        scrollCorner = appIconWidth /2;
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
         transparentBackground = getResources().getDrawable(R.drawable.transparent, null);
@@ -871,7 +871,8 @@ public class LauncherActivity extends AppCompatActivity {
                     false,
                     true,
                     false,
-                    false);
+                    false,
+                    true);
             folderItem.setFolder(true);
             folderItem.setFolderID(currentItemData.getString("folderID"));
             JSONArray subAppData = currentItemData.getJSONArray("subApps");
@@ -889,7 +890,7 @@ public class LauncherActivity extends AppCompatActivity {
                 }
             }
 
-            folderItem.setIcon(GraphicsUtil.generateFolderIcon(this, folderItem));
+            folderItem.setIcon(new GraphicsUtil().generateFolderIcon(this, folderItem));
             return folderItem;
         } else {
             return prepareAppItemFromComponent(componentName);
@@ -924,7 +925,6 @@ public class LauncherActivity extends AppCompatActivity {
         final View icon = v.findViewById(R.id.app_icon);
         final SquareImageView squareImageView = (SquareImageView) v.findViewById(
                 R.id.icon_image_view);
-
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
         layoutParams.leftMargin = appIconMargin;
         layoutParams.rightMargin = appIconMargin;
@@ -968,7 +968,7 @@ public class LauncherActivity extends AppCompatActivity {
         }
 
         final Intent intent = app.getIntent();
-        if (!app.isClock()) {
+        if (!app.isClock()||!app.isCalendar()) {
             squareImageView.setImageDrawable(app.getIcon());
         }
         label.setText(app.getLabel());
@@ -983,12 +983,12 @@ public class LauncherActivity extends AppCompatActivity {
             if (app.isIconFromIconPack()) {
                 squareImageView.setBackgroundResource(0);
             } else {
-                if (!app.isFolder()) {
+                /*if (!app.isFolder()) {
                     squareImageView.setBackground(
-                            IconPackUtil.getIconBackground(app.getLabel().charAt(0)));
+                            IconPackUtil.getIconBackground(this, app.getLabel().charAt(0)));
                 } else {
                     squareImageView.setBackground(IconPackUtil.folderBackground);
-                }
+                }*/
             }
         }
 
@@ -1208,7 +1208,7 @@ public class LauncherActivity extends AppCompatActivity {
         final AppItem appItem = getAppDetails(viewGroup);
         if (!appItem.isSystemApp()) {
             SquareFrameLayout appIcon = (SquareFrameLayout) viewGroup.findViewById(R.id.app_icon);
-
+            Log.i(TAG, "addUninstallIcon: "+ (appIcon.getRight() - appIcon.getLeft()));
             int size = (appIcon.getRight() - appIcon.getLeft()) / 5;
             if (size > appIcon.getTop() || size > appIcon.getLeft()) {
                 size = Math.min(appIcon.getTop(), appIcon.getLeft());
@@ -1578,7 +1578,7 @@ public class LauncherActivity extends AppCompatActivity {
                     ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
                 } else {
                     updateIcon(activeFolderView, activeFolder,
-                            GraphicsUtil.generateFolderIcon(this, activeFolder), folderFromDock);
+                           new GraphicsUtil().generateFolderIcon(this, activeFolder), folderFromDock);
                 }
                 if (movingApp.getParent() != null) {
                     ((ViewGroup) movingApp.getParent()).removeView(movingApp);
@@ -1647,7 +1647,7 @@ public class LauncherActivity extends AppCompatActivity {
         AppItem app1 = (AppItem) ((List<Object>) collidingApp.getTag()).get(2);
         AppItem app2 = (AppItem) ((List<Object>) movingApp.getTag()).get(2);
 
-        Drawable folderIcon = GraphicsUtil.generateFolderIcon(this,
+        Drawable folderIcon = new GraphicsUtil().generateFolderIcon(this,
                 app1.getIcon(), app2.getIcon());
 
         AppItem folder;
@@ -1661,7 +1661,8 @@ public class LauncherActivity extends AppCompatActivity {
                     false,
                     true,
                     false,
-                    false);
+                    false,
+                    true);
             folder.setFolder(true);
             folder.setFolderID(UUID.randomUUID().toString());
 
@@ -1683,7 +1684,7 @@ public class LauncherActivity extends AppCompatActivity {
         } else {
             app2.setBelongsToFolder(true);
             app1.getSubApps().add(app2);
-            updateIcon(collidingApp, app1, GraphicsUtil.generateFolderIcon(this, app1),
+            updateIcon(collidingApp, app1, new GraphicsUtil().generateFolderIcon(this, app1),
                     folderFromDock);
         }
 
@@ -1732,7 +1733,7 @@ public class LauncherActivity extends AppCompatActivity {
                 if (appItem.isIconFromIconPack()) {
                     return transparentBackground;
                 } else {
-                    return IconPackUtil.getIconBackground(appItem.getLabel().charAt(0));
+                    return IconPackUtil.getIconBackground(this, appItem.getLabel().charAt(0));
                 }
             }
         } else {

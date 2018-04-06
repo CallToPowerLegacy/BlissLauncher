@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class AppItem {
 
     private CharSequence mLabel;
@@ -18,6 +19,7 @@ public class AppItem {
     private boolean mIsClock;
     private boolean mIsCalendar;
     private boolean isPinnedApp;
+    private boolean isAdaptive;
 
     // Folder specific
     private boolean mBelongsToFolder;
@@ -28,7 +30,7 @@ public class AppItem {
 
     public AppItem(CharSequence label, String packageName, Drawable icon,
             Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp,
-            boolean isClock, boolean isCalendar) {
+            boolean isClock, boolean isCalendar, boolean adaptive) {
         this.mLabel = label;
         this.mPackageName = packageName;
         this.mIcon = icon;
@@ -38,8 +40,16 @@ public class AppItem {
         this.mIsSystemApp = isSystemApp;
         this.mIsClock = isClock;
         this.mIsCalendar = isCalendar;
+        this.isAdaptive = adaptive;
     }
 
+    public boolean isAdaptive(){
+        return isAdaptive;
+    }
+
+    public void setAdaptive(boolean adaptive){
+        this.isAdaptive = adaptive;
+    }
     public CharSequence getLabel() {
         return mLabel;
     }
@@ -138,4 +148,5 @@ public class AppItem {
     public void setBelongsToFolder(boolean belongsToFolder) {
         this.mBelongsToFolder = belongsToFolder;
     }
+
 }

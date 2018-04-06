@@ -33,6 +33,10 @@ dependencies {
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
 
+    implementation 'com.bugsnag:bugsnag-android:4.+'
+
+    compile "com.android.support:palette-v7:${rootProject.ext.supportLibraryVersion}"
+
     // Support Libs
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibraryVersion}"
     implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportLibraryVersion}"

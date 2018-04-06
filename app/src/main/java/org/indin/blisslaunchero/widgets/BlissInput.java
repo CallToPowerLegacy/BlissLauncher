@@ -5,7 +5,7 @@ import android.util.AttributeSet;
 import android.view.DragEvent;
 import android.widget.EditText;
 
-public class BlissInput extends EditText {
+public class BlissInput extends android.support.v7.widget.AppCompatEditText {
     public BlissInput(Context context) {
         super(context);
     }
@@ -18,9 +18,6 @@ public class BlissInput extends EditText {
         super(context, attrs, defStyleAttr);
     }
 
-    public BlissInput(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-    }
 
     @Override
     public boolean onDragEvent(DragEvent event) {
