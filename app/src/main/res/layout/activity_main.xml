@@ -6,43 +6,39 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="org.indin.blisslaunchero.ui.LauncherActivity">
+    tools:context="org.indin.blisslaunchero.features.launcher.LauncherActivity">
 
-    <org.indin.blisslaunchero.widgets.HorizontalPager
+    <org.indin.blisslaunchero.framework.customviews.HorizontalPager
         android:id="@+id/pages_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="8dp"/>
 
-    <LinearLayout
+    <org.indin.blisslaunchero.features.launcher.PageIndicatorLinearLayout
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/dock"
-        android:layout_marginBottom="12dp"
-        android:layout_marginTop="12dp"
         android:divider="@drawable/gap"
-        android:gravity="center_horizontal"
+        android:gravity="center"
         android:orientation="horizontal"
         android:showDividers="middle">
 
-    </LinearLayout>
+    </org.indin.blisslaunchero.features.launcher.PageIndicatorLinearLayout>
 
-    <GridLayout
+    <org.indin.blisslaunchero.features.launcher.DockGridLayout
         android:id="@+id/dock"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dockHeight"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:animateLayoutChanges="false"
         android:background="@color/dockColor"
         android:columnCount="@integer/col_count"
         android:paddingLeft="@dimen/app_grid_padding"
         android:paddingRight="@dimen/app_grid_padding"
-        android:rowCount="1">
-
-    </GridLayout>
+        android:rowCount="1"/>
 
     <RelativeLayout
         android:id="@+id/folder_window_container"
@@ -51,7 +47,7 @@
         android:background="#E6000000"
         android:visibility="gone">
 
-        <org.indin.blisslaunchero.widgets.BlissInput
+        <org.indin.blisslaunchero.framework.customviews.BlissInput
             android:id="@+id/folder_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -76,9 +72,7 @@
         <android.support.v4.view.ViewPager
             android:id="@+id/folder_apps"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"/>
+            android:layout_height="wrap_content" />
 
         <me.relex.circleindicator.CircleIndicator
             android:id="@+id/indicator"
