@@ -17,10 +17,76 @@
     <!-- margin of app icon-->
     <dimen name="margin_inch1">14dp</dimen>
     <dimen name="margin_inch2">18dp</dimen>
-    <dimen name="margin_inch3">22dp</dimen>
+    <dimen name="margin_inch3">24dp</dimen>
 
     <!--uninstall icon size -->
     <dimen name="uninstallIconSize">36dp</dimen>
     <dimen name="dp_32">32dp</dimen>
+    <dimen name="page_indicator_dot_size">6dp</dimen>
+
+
+
+    <!-- Dimens from Pixel Launcher -->
+    <!-- Dynamic Grid -->
+    <dimen name="dynamic_grid_edge_margin">8dp</dimen>
+    <dimen name="dynamic_grid_page_indicator_height">28dp</dimen>
+    <dimen name="dynamic_grid_page_indicator_line_height">1dp</dimen>
+    <dimen name="dynamic_grid_page_indicator_gutter_width_left_nav_bar">38dp</dimen>
+    <dimen name="dynamic_grid_page_indicator_gutter_width_right_nav_bar">48dp</dimen>
+    <dimen name="dynamic_grid_icon_drawable_padding">8dp</dimen>
+    <dimen name="dynamic_grid_overview_min_icon_zone_height">80dp</dimen>
+    <dimen name="dynamic_grid_overview_max_icon_zone_height">120dp</dimen>
+    <dimen name="dynamic_grid_overview_bar_item_width">80dp</dimen>
+    <dimen name="dynamic_grid_overview_bar_spacer_width">25dp</dimen>
+    <dimen name="dynamic_grid_hotseat_height">88dp</dimen>
+    <dimen name="dynamic_grid_hotseat_top_padding">8dp</dimen>
+    <dimen name="dynamic_grid_hotseat_gutter_width">24dp</dimen>
+    <dimen name="dynamic_grid_workspace_top_padding">12dp</dimen>
+    <dimen name="dynamic_grid_workspace_page_spacing">8dp</dimen>
+    <!-- Minimum space between workspace and hotseat in spring loaded mode -->
+    <dimen name="dynamic_grid_min_spring_loaded_space">8dp</dimen>
+
+    <!-- Drop target bar -->
+    <dimen name="dynamic_grid_drop_target_size">48dp</dimen>
+    <dimen name="vert_drop_target_vertical_gap">20dp</dimen>
+    <dimen name="vert_drop_target_horizontal_gap">14dp</dimen>
+
+    <!-- App Widget resize frame -->
+    <dimen name="widget_handle_margin">13dp</dimen>
+    <dimen name="resize_frame_background_padding">24dp</dimen>
+
+    <!-- Container -->
+    <!-- Note: This needs to match the fixed insets for the search box. -->
+    <!-- Notes: container_bounds_inset - quantum_panel_outer_padding -->
+
+    <dimen name="container_fastscroll_thumb_min_width">5dp</dimen>
+    <dimen name="container_fastscroll_thumb_max_width">9dp</dimen>
+    <dimen name="container_fastscroll_thumb_height">72dp</dimen>
+    <dimen name="container_fastscroll_thumb_touch_inset">-24dp</dimen>
+    <dimen name="container_fastscroll_popup_size">72dp</dimen>
+    <dimen name="container_fastscroll_popup_text_size">48dp</dimen>
+
+    <!-- Dragging -->
+    <!-- Drag padding to add to the bottom of drop targets -->
+    <dimen name="drop_target_drag_padding">14dp</dimen>
+    <dimen name="drop_target_text_size">14sp</dimen>
+
+    <!-- the distance an icon must be dragged before button drop targets accept it -->
+    <dimen name="drag_distanceThreshold">30dp</dimen>
+
+    <!-- the area at the edge of the screen that makes the workspace go left
+         or right while you're dragging. -->
+    <dimen name="scroll_zone">20dp</dimen>
+
+    <!-- When dragging an item, how much bigger (fixed dps) the dragged view
+         should be. If 0, it will not be scaled at all. -->
+
+    <!-- Elevation for the drag view. It should be larger than elevation of all other drag sources
+         and drop targets like all-apps and folders -->
+    <dimen name="drag_elevation">30dp</dimen>
+
+    <dimen name="drag_flingToDeleteMinVelocity">-1500dp</dimen>
+
+    <dimen name="spring_loaded_panel_border">1dp</dimen>
 
 </resources>

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.indin.blisslaunchero.widgets.BlissFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.indin.blisslaunchero.framework.customviews.BlissFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:ignore="MissingPrefix">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,22 +13,21 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <org.indin.blisslaunchero.widgets.SquareFrameLayout
+        <org.indin.blisslaunchero.framework.customviews.SquareFrameLayout
             android:id="@+id/app_icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center">
 
-            <org.indin.blisslaunchero.widgets.SquareImageView
+            <org.indin.blisslaunchero.framework.customviews.SquareImageView
                 android:id="@+id/icon_image_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:background="@drawable/rounded_corners_icon"
-                android:foreground="?attr/selectableItemBackground"
-                android:scaleType="fitCenter" />
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true" />
 
-            <org.indin.blisslaunchero.widgets.CustomAnalogClock
+            <org.indin.blisslaunchero.framework.customviews.CustomAnalogClock
                 android:id="@+id/icon_clock"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -38,7 +38,8 @@
                 android:id="@+id/icon_calendar"
                 layout="@layout/calendar_icon"
                 android:visibility="gone" />
-        </org.indin.blisslaunchero.widgets.SquareFrameLayout>
+
+        </org.indin.blisslaunchero.framework.customviews.SquareFrameLayout>
 
         <TextView
             android:id="@+id/app_label"
@@ -48,9 +49,8 @@
             android:ellipsize="end"
             android:gravity="center"
             android:maxLines="1"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
+            android:layout_marginTop="4dp"
             android:textColor="@color/app_label_color"
             android:textSize="@dimen/labelSize" />
     </LinearLayout>
-</org.indin.blisslaunchero.widgets.BlissFrameLayout>
+</org.indin.blisslaunchero.framework.customviews.BlissFrameLayout>
