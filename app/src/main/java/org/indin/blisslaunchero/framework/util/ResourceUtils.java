@@ -6,6 +6,8 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.util.DisplayMetrics;
 
+import org.indin.blisslaunchero.framework.Utilities;
+
 import java.lang.reflect.InvocationTargetException;
 
 public class ResourceUtils {
@@ -35,12 +37,12 @@ public class ResourceUtils {
 
         Configuration configuration = resources.getConfiguration();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Utilities.ATLEAST_OREO) {
             AssetManager.class.getDeclaredMethod("setConfiguration", int.class, int.class, String.class, int.class, int.class,
                     int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class,
                     int.class, int.class, int.class, int.class)
                     .invoke(resources.getAssets(), configuration.mcc, configuration.mnc,
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? configuration.locale.toLanguageTag() : null,
+                            Utilities.ATLEAST_LOLLIPOP_MR1 ? configuration.locale.toLanguageTag() : null,
                             configuration.orientation, configuration.touchscreen, configuration.densityDpi,
                             configuration.keyboard, configuration.keyboardHidden, configuration.navigation,
                             width, height, configuration.smallestScreenWidthDp,
@@ -51,7 +53,7 @@ public class ResourceUtils {
                     int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class,
                     int.class, int.class, int.class)
                     .invoke(resources.getAssets(), configuration.mcc, configuration.mnc,
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? configuration.locale.toLanguageTag() : null,
+                            Utilities.ATLEAST_LOLLIPOP_MR1 ? configuration.locale.toLanguageTag() : null,
                             configuration.orientation, configuration.touchscreen, configuration.densityDpi,
                             configuration.keyboard, configuration.keyboardHidden, configuration.navigation,
                             width, height, configuration.smallestScreenWidthDp,

@@ -18,6 +18,7 @@ import android.util.Log;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.model.AppItem;
 import org.indin.blisslaunchero.features.launcher.AllAppsList;
+import org.indin.blisslaunchero.framework.AdaptiveIconProvider;
 import org.indin.blisslaunchero.framework.Utilities;
 import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
 
@@ -63,7 +64,7 @@ public class AppUtil {
                 }
                 if (appIcon == null) {
                     isAdaptive = true;
-                    appIcon = AdaptiveIconDrawableCompat.load(context, packageName);
+                    appIcon = new AdaptiveIconProvider().load(context, packageName);
                     if (appIcon == null) {
                         Drawable iconDrawable = appInfo.loadIcon(packageManager);
                         if (Utilities.ATLEAST_OREO
@@ -140,9 +141,13 @@ public class AppUtil {
                 }
                 if (appIcon == null) {
                     isAdaptive = true;
-                    appIcon = AdaptiveIconDrawableCompat.load(context, packageName);
+                    appIcon = new AdaptiveIconProvider().load(context, packageName);
                     if (appIcon == null) {
+                        Log.i(TAG, "appIconNull:  "+packageName);
                         Drawable iconDrawable = appInfo.loadIcon(packageManager);
+                        /*GraphicsUtil graphicsUtil = new GraphicsUtil(context);
+                        appIcon = graphicsUtil.convertToRoundedCorner(context,
+                                graphicsUtil.addBackground(iconDrawable, false));*/
                         if (Utilities.ATLEAST_OREO
                                 && iconDrawable instanceof AdaptiveIconDrawable) {
                             appIcon = new AdaptiveIconDrawableCompat(
@@ -254,12 +259,12 @@ public class AppUtil {
                 }
                 if (appIcon == null) {
                     isAdaptive = true;
-                    appIcon = AdaptiveIconDrawableCompat.load(context, packageName);
+                    appIcon = new AdaptiveIconProvider().load(context, packageName);
                     if (appIcon == null) {
-                        GraphicsUtil graphicsUtil = new GraphicsUtil(context);
+                        /*GraphicsUtil graphicsUtil = new GraphicsUtil(context);
                         appIcon = graphicsUtil.convertToRoundedCorner(context,
                                 graphicsUtil.addBackground(appInfo.loadIcon(packageManager),
-                                        false));
+                                        false));*/
                     }
                 }
 

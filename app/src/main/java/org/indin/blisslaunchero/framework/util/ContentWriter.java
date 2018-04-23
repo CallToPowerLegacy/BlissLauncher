@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Looper;
 import android.os.UserHandle;
-import android.support.v4.util.Preconditions;
 
 import org.indin.blisslaunchero.framework.LauncherSettings;
 import org.indin.blisslaunchero.framework.UserManagerCompat;

@@ -14,7 +14,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
-import org.indin.blisslaunchero.framework.customviews.AdaptiveIconUtils;
+import org.indin.blisslaunchero.framework.util.AdaptiveIconUtils;
 import org.indin.blisslaunchero.framework.customviews.PathParser;
 
 import java.util.ArrayList;

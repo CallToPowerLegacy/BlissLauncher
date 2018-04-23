@@ -18,20 +18,23 @@ public class Utilities {
 
     public static final String AUTHORITY = (BuildConfig.APPLICATION_ID + ".settings").intern();
 
+    /**
+     * Use hard coded values to compile with android source.
+     */
     public static final boolean ATLEAST_OREO =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+            Build.VERSION.SDK_INT >= 26;
 
     public static final boolean ATLEAST_NOUGAT_MR1 =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1;
+            Build.VERSION.SDK_INT >= 25;
 
     public static final boolean ATLEAST_NOUGAT =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+            Build.VERSION.SDK_INT >= 24;
 
     public static final boolean ATLEAST_MARSHMALLOW =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+            Build.VERSION.SDK_INT >= 23;
 
     public static final boolean ATLEAST_LOLLIPOP_MR1 =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1;
+            Build.VERSION.SDK_INT >=22;
 
     /**
      * Compresses the bitmap to a byte array for serialization.

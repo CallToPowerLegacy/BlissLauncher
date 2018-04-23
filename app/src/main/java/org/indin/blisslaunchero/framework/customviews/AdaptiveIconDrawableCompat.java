@@ -1,14 +1,10 @@
 package org.indin.blisslaunchero.framework.customviews;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.content.res.Resources.Theme;
 import android.content.res.TypedArray;
-import android.content.res.XmlResourceParser;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
@@ -24,17 +20,14 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
-import org.indin.blisslaunchero.framework.util.ResourceUtils;
+import org.indin.blisslaunchero.framework.util.AdaptiveIconUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -107,10 +100,6 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     private static final int BACKGROUND_ID = 0;
     private static final int FOREGROUND_ID = 1;
 
-    private static final String ANDROID_SCHEMA = "http://schemas.android.com/apk/res/android";
-    private static final String[] IC_DIRS = new String[]{"mipmap", "drawable"};
-    private static final String[] IC_CONFIGS = new String[]{"-anydpi-v26", "-v26", ""};
-
     /**
      * State variable that maintains the {@link ChildDrawable} array.
      */
@@ -134,10 +123,12 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
 
     private boolean mUseMyUglyWorkaround = true;
 
+    private static final String TAG = "AdaptiveIconDrawable";
+
     /**
      * Constructor used for xml inflation.
      */
-    public AdaptiveIconDrawableCompat() throws Exception {
+    public AdaptiveIconDrawableCompat() {
         this((LayerState) null, null);
     }
 
@@ -563,7 +554,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         final TypedValue value = new TypedValue();
         a.getValue(index, value);
         if (value.resourceId != 0) {
-            return a.getResources().getDrawableForDensity(value.resourceId, 480, null);
+            return a.getResources().getDrawableForDensity(value.resourceId, DisplayMetrics.DENSITY_DEFAULT, null);
         }
         return null;
     }
@@ -1100,163 +1091,6 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         public void invalidateCache() {
             mCheckedOpacity = false;
             mCheckedStateful = false;
-        }
-    }
-
-    public static AdaptiveIconDrawableCompat load(Context context, String packageName) {
-        if (context == null) {
-            throw new IllegalStateException(
-                    "Loader.with(Context) must be called before loading an icon.");
-        }
-
-        PackageManager packageManager = context.getPackageManager();
-        Drawable background = null, foreground = null;
-
-        try {
-            Resources resources = packageManager.getResourcesForApplication(packageName);
-            Resources.Theme theme = resources.newTheme();
-            ResourceUtils.setFakeConfig(resources, Build.VERSION_CODES.O);
-            AssetManager assetManager = resources.getAssets();
-
-            XmlResourceParser manifestParser = null;
-            String iconName = null;
-            try {
-                manifestParser = assetManager.openXmlResourceParser("AndroidManifest.xml");
-            } catch (Exception e) {
-            }
-
-            if (manifestParser != null) {
-                int event;
-                while ((event = manifestParser.getEventType()) != XmlPullParser.END_DOCUMENT) {
-                    if (event == XmlPullParser.START_TAG && manifestParser.getName().equals(
-                            "application")) {
-                        iconName = resources.getResourceName(
-                                manifestParser.getAttributeResourceValue(ANDROID_SCHEMA, "icon",
-                                        0));
-                        if (iconName.contains("/")) {
-                            iconName = iconName.split("/")[1];
-                        }
-                        break;
-                    }
-
-                    manifestParser.next();
-                }
-
-                manifestParser.close();
-            }
-
-            XmlResourceParser parser = null;
-            for (int dir = 0; dir < IC_DIRS.length && parser == null; dir++) {
-                for (int config = 0; config < IC_CONFIGS.length && parser == null; config++) {
-                    for (String name : iconName != null && !iconName.equals("ic_launcher")
-                            ? new String[]{iconName, "ic_launcher"} : new String[]{"ic_launcher"}) {
-                        try {
-                            parser = assetManager.openXmlResourceParser(
-                                    "res/" + IC_DIRS[dir] + IC_CONFIGS[config] + "/" + name
-                                            + ".xml");
-                        } catch (Exception e) {
-                            continue;
-                        }
-
-                        if (parser != null) {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            int backgroundRes = -1, foregroundRes = -1;
-            if (parser != null) {
-                int event;
-                while ((event = parser.getEventType()) != XmlPullParser.END_DOCUMENT) {
-                    if (event == XmlPullParser.START_TAG) {
-                        switch (parser.getName()) {
-                            case "background":
-                                for (int dir = 0; dir < IC_DIRS.length; dir++) {
-
-                                }
-                                try {
-                                    backgroundRes = parser.getAttributeResourceValue(
-                                            "http://schemas.android.com/apk/res/android",
-                                            "drawable", 0);
-                                } catch (Exception e) {
-                                    try {
-                                        backgroundRes = parser.getAttributeResourceValue(
-                                                "http://schemas.android.com/apk/res/android",
-                                                "mipmap", 0);
-                                    } catch (Exception e1) {
-                                    }
-                                }
-                                break;
-                            case "foreground":
-                                try {
-                                    foregroundRes = parser.getAttributeResourceValue(
-                                            "http://schemas.android.com/apk/res/android",
-                                            "drawable", 0);
-                                } catch (Exception e) {
-                                    try {
-                                        foregroundRes = parser.getAttributeResourceValue(
-                                                "http://schemas.android.com/apk/res/android",
-                                                "mipmap", 0);
-                                    } catch (Exception e1) {
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                    parser.next();
-                }
-
-                parser.close();
-            }
-
-            if (background == null && backgroundRes != 0) {
-                try {
-                    background = ResourcesCompat.getDrawable(resources, backgroundRes, theme);
-                } catch (Resources.NotFoundException e) {
-
-                    try {
-                        background = ResourcesCompat.getDrawable(resources,
-                                resources.getIdentifier("ic_launcher_background", "mipmap",
-                                        packageName), theme);
-                    } catch (Resources.NotFoundException e1) {
-                        try {
-                            background = ResourcesCompat.getDrawable(resources,
-                                    resources.getIdentifier("ic_launcher_background", "drawable",
-                                            packageName), theme);
-                        } catch (Resources.NotFoundException e2) {
-                            background = new ColorDrawable(Color.WHITE);
-                        }
-                    }
-                }
-            }
-
-            if (foreground == null) {
-                try {
-                    foreground = ResourcesCompat.getDrawable(resources, foregroundRes, theme);
-                } catch (Resources.NotFoundException e) {
-                    try {
-                        foreground = ResourcesCompat.getDrawable(resources,
-                                resources.getIdentifier("ic_launcher_foreground", "mipmap",
-                                        packageName), theme);
-                    } catch (Resources.NotFoundException e1) {
-                        try {
-                            foreground = ResourcesCompat.getDrawable(resources,
-                                    resources.getIdentifier("ic_launcher_foreground", "drawable",
-                                            packageName), theme);
-                        } catch (Resources.NotFoundException e2) {
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (foreground != null && background != null) {
-            return new AdaptiveIconDrawableCompat(background, foreground);
-        } else {
-            return null;
         }
     }
 }

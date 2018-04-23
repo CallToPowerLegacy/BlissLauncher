@@ -2,6 +2,7 @@ package org.indin.blisslaunchero.framework.util;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -21,6 +22,7 @@ public class GraphicsUtil {
 
     private static final String TAG = "BLISS_GRAPHICS";
     private Context mContext;
+    private String mPackageName;
     private int appIconWidth;
 
     public GraphicsUtil(Context context) {
@@ -140,17 +142,20 @@ public class GraphicsUtil {
     }
 
     public Bitmap addBackground(Bitmap bitmap, boolean isFolder) {
-        if (bitmap.getWidth() > appIconWidth) {
-            bitmap = Bitmap.createScaledBitmap(bitmap, appIconWidth,
-                    (appIconWidth * bitmap.getHeight() / bitmap.getWidth()),
-                    true);
-        }
+
         if (!ImageUtils.hasTransparency(bitmap)) {
             bitmap = Bitmap.createScaledBitmap(bitmap, appIconWidth,
                     (appIconWidth * bitmap.getHeight() / bitmap.getWidth()),
                     true);
             return bitmap;
         }
+
+        if (bitmap.getWidth() > appIconWidth) {
+            bitmap = Bitmap.createScaledBitmap(bitmap, appIconWidth,
+                    (appIconWidth * bitmap.getHeight() / bitmap.getWidth()),
+                    true);
+        }
+
         int width = appIconWidth;
         int height = width;
         Bitmap mergedBitmap = Bitmap.createBitmap(width, height, Bitmap
@@ -167,7 +172,16 @@ public class GraphicsUtil {
     }
 
     public Bitmap addBackground(Drawable appIcon, boolean isFolder) {
-        BitmapDrawable bitmapDrawable = ((BitmapDrawable) appIcon);
+        BitmapDrawable bitmapDrawable;
+        if(appIcon instanceof BitmapDrawable){
+            bitmapDrawable = ((BitmapDrawable) appIcon);
+        }else{
+            Bitmap bitmap = Bitmap.createBitmap(appIcon.getIntrinsicWidth(), appIcon.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            appIcon.draw(canvas);
+            bitmapDrawable = new BitmapDrawable(mContext.getResources(), bitmap);
+        }
+
         bitmapDrawable.setAntiAlias(true);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Log.i(TAG, "addBackground: "+bitmap.getWidth()+"*"+bitmap.getHeight());

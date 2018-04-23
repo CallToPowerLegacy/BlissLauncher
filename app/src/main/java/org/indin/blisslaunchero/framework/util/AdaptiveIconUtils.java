@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.framework.customviews;
+package org.indin.blisslaunchero.framework.util;
 
 public class AdaptiveIconUtils {
 

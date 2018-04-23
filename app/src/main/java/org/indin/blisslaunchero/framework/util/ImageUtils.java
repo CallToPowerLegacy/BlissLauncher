@@ -100,6 +100,10 @@ public class ImageUtils {
         return bitmap;
     }
 
+    public static int getDominantColor(Drawable drawable){
+        return getDominantColor(((BitmapDrawable)drawable).getBitmap());
+    }
+
     /**
      * Finds the color with the most occurrences inside of a bitmap.
      *
