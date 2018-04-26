@@ -261,10 +261,20 @@ public class AppUtil {
                     isAdaptive = true;
                     appIcon = new AdaptiveIconProvider().load(context, packageName);
                     if (appIcon == null) {
+                        Drawable iconDrawable = appInfo.loadIcon(packageManager);
                         /*GraphicsUtil graphicsUtil = new GraphicsUtil(context);
                         appIcon = graphicsUtil.convertToRoundedCorner(context,
-                                graphicsUtil.addBackground(appInfo.loadIcon(packageManager),
-                                        false));*/
+                                graphicsUtil.addBackground(iconDrawable, false));*/
+                        if (Utilities.ATLEAST_OREO
+                                && iconDrawable instanceof AdaptiveIconDrawable) {
+                            appIcon = new AdaptiveIconDrawableCompat(
+                                    ((AdaptiveIconDrawable) iconDrawable).getBackground(),
+                                    ((AdaptiveIconDrawable) iconDrawable).getForeground());
+                        } else {
+                            GraphicsUtil graphicsUtil = new GraphicsUtil(context);
+                            appIcon = graphicsUtil.convertToRoundedCorner(context,
+                                    graphicsUtil.addBackground(iconDrawable, false));
+                        }
                     }
                 }
 

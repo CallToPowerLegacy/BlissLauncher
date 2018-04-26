@@ -69,6 +69,15 @@ public class DeviceProfile {
     public int iconDrawablePaddingPx;
     public int iconDrawablePaddingOriginalPx;
 
+    // Calendar icon
+    public int dateTextSize;
+    public int monthTextSize;
+    public int dateTextviewHeight;
+    public int monthTextviewHeight;
+    public int calendarIconWidth;
+    public int dateTextBottomPadding;
+    public int dateTextTopPadding;
+
     //Uninstall icon
     public int uninstallIconSizePx;
     public int uninstallIconPadding;
@@ -216,9 +225,18 @@ public class DeviceProfile {
                         : tempUninstallIconSize;
         uninstallIconPadding = iconSizePx * 10 / 192;
 
-        Log.i(TAG, "iconDrawablePadding: " + iconDrawablePaddingPx / 2);
-        Log.i(TAG, "uninstallSIze: " + uninstallIconSizePx);
-        Log.i(TAG, "uninstallSIzePadding: " + uninstallIconPadding);
+        calendarIconWidth = iconSizePx;
+        monthTextviewHeight = iconSizePx * 40 / 192;
+        monthTextSize = iconSizePx * 48 / 192;
+        dateTextviewHeight = iconSizePx * 152 / 192;
+        dateTextSize = iconSizePx * 154 / 192;
+
+        dateTextTopPadding = (dateTextviewHeight - (int) (1.14 * Utilities.calculateTextHeight(
+                dateTextSize / 2))) / 2;
+        dateTextBottomPadding = (dateTextviewHeight - (int) (0.86 * Utilities.calculateTextHeight(
+                dateTextSize / 2))) / 2;
+
+        Log.i(TAG, "datepadding: " + dateTextTopPadding + "*" + dateTextBottomPadding);
 
         cellHeightWithoutPaddingPx = iconSizePx + Utilities.pxFromDp(4, dm)
                 + Utilities.calculateTextHeight(iconTextSizePx);
