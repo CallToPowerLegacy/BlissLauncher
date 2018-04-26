@@ -147,11 +147,10 @@ public class IconPackUtil {
      * first character of the app label
      */
     public static Drawable getIconBackground(Context context, char firstCharacter) {
-        if (Character.toLowerCase(firstCharacter) % 2 == 0) {
-            return iconBackground1;
-        } else {
-            return iconBackground2;
+        if (iconBackground1 == null) {
+            iconBackground1 = ContextCompat.getDrawable(context, R.drawable.iconback_d);
         }
+        return iconBackground1;
     }
 
     public static Bitmap getWallpaper() {

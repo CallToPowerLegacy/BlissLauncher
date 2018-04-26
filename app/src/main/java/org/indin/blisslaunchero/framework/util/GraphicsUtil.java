@@ -101,46 +101,6 @@ public class GraphicsUtil {
         return image;
     }
 
-    public Drawable maskImage(Context context, Drawable image) {
-        if ((image == null) || !(image instanceof BitmapDrawable)) {
-            return image;
-        }
-        double scale = 1;
-        Drawable maskDrawable;
-        if (IconPackUtil.getIconMask() != null) {
-            maskDrawable = IconPackUtil.getIconMask();
-        } else {
-            maskDrawable = ContextCompat.getDrawable(context, R.drawable.iconmask);
-        }
-        Bitmap orig_mask = ((BitmapDrawable) maskDrawable).getBitmap();
-        Bitmap mask = Bitmap.createScaledBitmap(orig_mask,
-                image.getIntrinsicWidth(),
-                image.getIntrinsicHeight(), true);
-        Log.i(TAG, "maskImage: " + mask.getHeight() + "*" + mask.getWidth());
-        Bitmap original = ((BitmapDrawable) image).getBitmap();
-        Bitmap bmp = original.copy(Bitmap.Config.RGB_565, true);
-
-
-        Bitmap result = Bitmap.createBitmap(mask.getWidth(), mask.getHeight(),
-                Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(result);
-
-        Paint paint = new Paint(
-                Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
-        paint.setColor(0XFF000000);
-        RectF rectf = new RectF(0, 0, mask.getWidth(), mask.getHeight());
-        int rx = (int) ConverterUtil.dp2Px(10, context);
-        canvas.drawRoundRect(rectf, rx, rx, paint);
-
-
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-        /*Shader shader = new BitmapShader(original, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-        paint.setShader(shader);*/
-        canvas.drawBitmap(original, 0, 0, paint);
-
-        return new BitmapDrawable(context.getResources(), result);
-    }
-
     public Bitmap addBackground(Bitmap bitmap, boolean isFolder) {
 
         if (!ImageUtils.hasTransparency(bitmap)) {

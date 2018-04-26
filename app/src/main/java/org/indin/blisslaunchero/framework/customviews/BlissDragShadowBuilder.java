@@ -10,13 +10,18 @@ import android.view.View;
 
 public class BlissDragShadowBuilder extends View.DragShadowBuilder {
 
+    private final int mX;
+    private final int mY;
     private Point mScaleFactor;
     // Defines the constructor for myDragShadowBuilder
-    public BlissDragShadowBuilder(View v) {
+    public BlissDragShadowBuilder(View v, float x, float y) {
 
         // Stores the View parameter passed to myDragShadowBuilder.
         super(v);
 
+
+        mX = (int) x;
+        mY = (int) y;
     }
 
     // Defines a callback that sends the drag shadow dimensions and touch point back to the
@@ -28,10 +33,10 @@ public class BlissDragShadowBuilder extends View.DragShadowBuilder {
         int height;
 
         // Sets the width of the shadow to half the width of the original View
-        width = (int) (getView().getWidth() * 1.2);
+        width = (int) (getView().getWidth() * 1);
 
         // Sets the height of the shadow to half the height of the original View
-        height = (int) (getView().getHeight() * 1.2);
+        height = (int) (getView().getHeight() * 1);
 
         // Sets the size parameter's width and height values. These get back to the system
         // through the size parameter.
@@ -40,7 +45,7 @@ public class BlissDragShadowBuilder extends View.DragShadowBuilder {
         mScaleFactor = size;
 
         // Sets the touch point's position to be in the middle of the drag shadow
-        touch.set(width/2, height/2);
+        touch.set(mX, mY);
     }
 
     @Override
