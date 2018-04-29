@@ -14,7 +14,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -55,11 +54,6 @@ import org.indin.blisslaunchero.features.notification.NotificationService;
 import org.indin.blisslaunchero.framework.Alarm;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 import org.indin.blisslaunchero.framework.SystemDragDriver;
-import org.indin.blisslaunchero.framework.Utilities;
-import org.indin.blisslaunchero.framework.util.AppUtil;
-import org.indin.blisslaunchero.framework.util.ConverterUtil;
-import org.indin.blisslaunchero.framework.util.GraphicsUtil;
-import org.indin.blisslaunchero.framework.util.IconPackUtil;
 import org.indin.blisslaunchero.framework.customviews.BlissDragShadowBuilder;
 import org.indin.blisslaunchero.framework.customviews.BlissFrameLayout;
 import org.indin.blisslaunchero.framework.customviews.BlissInput;
@@ -67,6 +61,10 @@ import org.indin.blisslaunchero.framework.customviews.CustomAnalogClock;
 import org.indin.blisslaunchero.framework.customviews.HorizontalPager;
 import org.indin.blisslaunchero.framework.customviews.SquareFrameLayout;
 import org.indin.blisslaunchero.framework.customviews.SquareImageView;
+import org.indin.blisslaunchero.framework.util.AppUtil;
+import org.indin.blisslaunchero.framework.util.ConverterUtil;
+import org.indin.blisslaunchero.framework.util.GraphicsUtil;
+import org.indin.blisslaunchero.framework.util.IconPackUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -884,7 +882,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             dateTextView.getLayoutParams().height = mDeviceProfile.dateTextviewHeight;
             dateTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
             int datePx = mDeviceProfile.dateTextSize;
-            dateTextView.setPadding(0,mDeviceProfile.dateTextTopPadding, 0, mDeviceProfile.dateTextBottomPadding);
+            dateTextView.setPadding(0, mDeviceProfile.dateTextTopPadding, 0,
+                    mDeviceProfile.dateTextBottomPadding);
 
             dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, datePx / 2);
 
@@ -903,7 +902,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         label.setText(app.getLabel());
         label.setTextSize(12);
         List<Object> tags = new ArrayList<>();
-        tags.add(icon);
+        tags.add(squareImageView);
         tags.add(label);
         tags.add(app);
         v.setTag(tags);
