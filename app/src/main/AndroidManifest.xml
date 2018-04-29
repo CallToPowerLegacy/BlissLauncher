@@ -36,8 +36,5 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <meta-data
-            android:name="com.bugsnag.android.API_KEY"
-            android:value="3c2e123c774b9328c800aa1c230e7a2d"/>
     </application>
 </manifest>

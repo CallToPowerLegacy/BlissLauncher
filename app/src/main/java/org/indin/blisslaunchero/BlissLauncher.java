@@ -13,6 +13,6 @@ public class BlissLauncher extends Application {
                 .setDefaultFontPath("Roboto-Regular.ttf")
                 .setFontAttrId(R.attr.fontPath)
                 .build());
-        //Bugsnag.init(this);
+
     }
 }
