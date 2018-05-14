@@ -15,4 +15,6 @@
     <color name="transparent_white">#afff</color>
 
     <color name="light_blue">#774888ef</color>
+    <color name="dark_grey">#66000000</color>
+    <color name="dark_grey_44">#44000000</color>
 </resources>

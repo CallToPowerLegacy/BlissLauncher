@@ -15,6 +15,7 @@
 
         <org.indin.blisslaunchero.framework.customviews.SquareFrameLayout
             android:id="@+id/app_icon"
+            android:hapticFeedbackEnabled="false"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center">

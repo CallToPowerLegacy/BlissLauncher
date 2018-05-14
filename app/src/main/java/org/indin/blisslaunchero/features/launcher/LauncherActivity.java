@@ -7,6 +7,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.app.WallpaperManager;
+import android.app.usage.UsageStats;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -23,6 +24,9 @@ import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -36,14 +40,16 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.db.Storage;
@@ -51,6 +57,10 @@ import org.indin.blisslaunchero.data.model.AppItem;
 import org.indin.blisslaunchero.data.model.CalendarIcon;
 import org.indin.blisslaunchero.features.notification.NotificationRepository;
 import org.indin.blisslaunchero.features.notification.NotificationService;
+import org.indin.blisslaunchero.features.suggestions.AutoCompleteAdapter;
+import org.indin.blisslaunchero.features.suggestions.AutoCompleteService;
+import org.indin.blisslaunchero.features.suggestions.AutoCompleteServiceResult;
+import org.indin.blisslaunchero.features.usagestats.AppUsageStats;
 import org.indin.blisslaunchero.framework.Alarm;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 import org.indin.blisslaunchero.framework.SystemDragDriver;
@@ -61,6 +71,7 @@ import org.indin.blisslaunchero.framework.customviews.CustomAnalogClock;
 import org.indin.blisslaunchero.framework.customviews.HorizontalPager;
 import org.indin.blisslaunchero.framework.customviews.SquareFrameLayout;
 import org.indin.blisslaunchero.framework.customviews.SquareImageView;
+import org.indin.blisslaunchero.framework.network.RetrofitService;
 import org.indin.blisslaunchero.framework.util.AppUtil;
 import org.indin.blisslaunchero.framework.util.ConverterUtil;
 import org.indin.blisslaunchero.framework.util.GraphicsUtil;
@@ -74,16 +85,24 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
-public class LauncherActivity extends AppCompatActivity implements LauncherContract.View {
+public class LauncherActivity extends AppCompatActivity implements LauncherContract.View,
+        AutoCompleteAdapter.OnSuggestionClickListener {
 
     private HorizontalPager mHorizontalPager;
     private DockGridLayout mDock;
@@ -91,7 +110,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     private ViewGroup mFolderWindowContainer;
     private ViewPager mFolderAppsViewPager;
     private BlissInput mBlissInput;
-    private EditText mSearchInput;
+    private BlissInput mSearchInput;
     private View mProgressBar;
 
     private BroadcastReceiver installReceiver;
@@ -185,6 +204,10 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     private LauncherContract.Presenter mPresenter;
     private DeviceProfile mDeviceProfile;
     private boolean mLongClickStartsDrag = true;
+    private boolean isDragging;
+    private RecyclerView mSuggestionRecyclerView;
+    private AutoCompleteAdapter mSuggestionAdapter;
+    private GridLayout suggestedAppsGridLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -275,7 +298,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         uninstallReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                recreate();
+                String packageName = intent.getData().getSchemeSpecificPart();
+                removePackageFromLauncher(packageName);
             }
         };
 
@@ -294,6 +318,78 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         registerReceiver(installReceiver, installFilter);
         registerReceiver(uninstallReceiver, uninstallFilter);
         registerReceiver(timeChangedReceiver, timeIntentFilter);
+    }
+
+    private void removePackageFromLauncher(String packageName) {
+        handleWobbling(false);
+
+        if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
+            Log.d(TAG,
+                    "here");
+            for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
+                GridLayout grid = (GridLayout) mFolderAppsViewPager.getChildAt(i);
+                for (int j = 0; j < grid.getChildCount(); j++) {
+                    AppItem app = getAppDetails(grid.getChildAt(j));
+                    if (app.getPackageName().equals(packageName)) {
+                        activeFolder.getSubApps().remove(app);
+                        launchableApps.remove(app);
+                        mFolderAppsViewPager.getAdapter().notifyDataSetChanged();
+
+                        if (activeFolder.getSubApps().size() == 0) {
+                            BlissFrameLayout view = prepareApp(app, !folderFromDock);
+                            if (folderFromDock) {
+                                addToDock(view, mDock.indexOfChild(activeFolderView));
+                            } else {
+                                GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+                                addAppToGrid(gridLayout, view,
+                                        gridLayout.indexOfChild(activeFolderView));
+                            }
+                            ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
+                            hideFolderWindowContainer();
+                        } else {
+                            if (activeFolder.getSubApps().size() == 1) {
+                                AppItem item = activeFolder.getSubApps().get(0);
+                                activeFolder.getSubApps().remove(item);
+                                mFolderAppsViewPager.getAdapter().notifyDataSetChanged();
+                                item.setBelongsToFolder(false);
+                                BlissFrameLayout view = prepareApp(item, !folderFromDock);
+
+                                if (folderFromDock) {
+                                    addToDock(view, mDock.indexOfChild(activeFolderView));
+                                } else {
+                                    GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+                                    addAppToGrid(gridLayout, view,
+                                            gridLayout.indexOfChild(activeFolderView));
+                                }
+
+                                ((ViewGroup) activeFolderView.getParent()).removeView(
+                                        activeFolderView);
+                                hideFolderWindowContainer();
+                            } else {
+                                updateIcon(activeFolderView, activeFolder,
+                                        new GraphicsUtil(this).generateFolderIcon(this,
+                                                activeFolder),
+                                        folderFromDock);
+                                hideFolderWindowContainer();
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < pages.size(); i++) {
+            GridLayout grid = getGridFromPage(pages.get(i));
+            for (int j = 0; j < grid.getChildCount(); j++) {
+                AppItem appItem = getAppDetails(grid.getChildAt(j));
+                if (appItem.getPackageName().equals(packageName)) {
+                    grid.removeViewAt(j);
+                    launchableApps.remove(appItem);
+                    break;
+                }
+            }
+        }
     }
 
     private void updateAllCalendarIcons(Calendar calendar) {
@@ -376,14 +472,13 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                 mIndicator.addView(dot);
                 mHorizontalPager.addView(pages.get(current));
             }
-            addAppToPage(pages.get(current), view);
+            addAppToGrid(pages.get(current), view);
             storage.save(pages, mDock);
         }
     }
 
     @Override
     public void showApps(List<AppItem> appItemList, List<AppItem> pinnedApps) {
-        Log.i(TAG, "showApps: " + appItemList.size());
         this.launchableApps = appItemList;
         this.pinnedApps = pinnedApps;
         showIconPackWallpaperFirstTime();
@@ -404,7 +499,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         new DisposableObserver<Set<String>>() {
                             @Override
                             public void onNext(Set<String> packages) {
-                                Log.d(TAG, "onNext() called with: packages = [" + packages + "]");
                                 mAppsWithNotifications = packages;
                                 updateBadges(mAppsWithNotifications);
                             }
@@ -575,6 +669,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         }
                     });
 
+                    refreshSuggestedApps();
                 } else {
                     if (mIndicator.getAlpha() != 1.0f) {
                         mIndicator.setVisibility(View.VISIBLE);
@@ -588,6 +683,26 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                 updateIndicator();
             }
         });
+    }
+
+    private void refreshSuggestedApps() {
+        AppUsageStats appUsageStats = new AppUsageStats(this);
+        List<UsageStats> usageStats = appUsageStats.getUsageStats();
+
+        if(usageStats.size()> 0){
+            if(suggestedAppsGridLayout != null && suggestedAppsGridLayout.getChildCount()>0){
+                suggestedAppsGridLayout.removeAllViews();
+            }
+            int i = 0;
+            while (suggestedAppsGridLayout.getChildCount() < 4) {
+                AppItem appItem = AppUtil.createAppItem(this, usageStats.get(i).getPackageName());
+                if (appItem != null) {
+                    BlissFrameLayout view = prepareApp(appItem, true);
+                    addAppToGrid(suggestedAppsGridLayout, view);
+                }
+                i++;
+            }
+        }
     }
 
     /**
@@ -611,7 +726,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         int count = 0;
         for (int i = 0; i < launchableApps.size(); i++) {
             BlissFrameLayout appView = prepareApp(launchableApps.get(i), true);
-            addAppToPage(pages.get(currentPageNumber), appView);
+            addAppToGrid(pages.get(currentPageNumber), appView);
             count++;
             if (count >= mDeviceProfile.maxAppsPerPage) {
                 count = 0;
@@ -658,10 +773,12 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             try {
                 JSONObject currentDockItemData = storageData.dock.getJSONArray(0).getJSONObject(i);
                 AppItem appItem = prepareAppFromJSON(currentDockItemData);
-                dockItems.add(appItem);
-                BlissFrameLayout appView = prepareApp(appItem, false);
-                if (appView != null) {
-                    addToDock(appView, INVALID);
+                if (appItem != null) {
+                    dockItems.add(appItem);
+                    BlissFrameLayout appView = prepareApp(appItem, false);
+                    if (appView != null) {
+                        addToDock(appView, INVALID);
+                    }
                 }
             } catch (Exception ignored) {
             }
@@ -685,7 +802,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
                         BlissFrameLayout appView = prepareApp(appItem, true);
                         if (appView != null) {
-                            addAppToPage(page, appView);
+                            addAppToGrid(page, appView);
                         }
                     }
                 }
@@ -701,13 +818,13 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             if (pages.get(pages.size() - 1).getChildCount() < mDeviceProfile.maxAppsPerPage) {
                 BlissFrameLayout appView = prepareApp(launchableApps.get(i), true);
                 if (appView != null) {
-                    addAppToPage(pages.get(pages.size() - 1), appView);
+                    addAppToGrid(pages.get(pages.size() - 1), appView);
                 }
             } else {
                 pages.add(preparePage());
                 BlissFrameLayout appView = prepareApp(launchableApps.get(i), true);
                 if (appView != null) {
-                    addAppToPage(pages.get(pages.size() - 1), appView);
+                    addAppToGrid(pages.get(pages.size() - 1), appView);
                 }
             }
         }
@@ -724,13 +841,86 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     }
 
     private void createWidgetsPage() {
-        LinearLayout layout = (LinearLayout) getLayoutInflater().inflate(R.layout.widgets_page,
-                null);
+        ScrollView layout = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
+                mHorizontalPager, false);
         mHorizontalPager.addView(layout, 0);
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
-        mSearchInput = (EditText) layout.findViewById(R.id.search_input);
+        mSearchInput = (BlissInput) layout.findViewById(R.id.search_input);
+        mSuggestionRecyclerView = layout.findViewById(R.id.suggestionRecyclerView);
+        mSuggestionAdapter = new AutoCompleteAdapter(this);
+        mSuggestionRecyclerView.setHasFixedSize(true);
+        mSuggestionRecyclerView.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mSuggestionRecyclerView.setAdapter(mSuggestionAdapter);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL);
+        mSuggestionRecyclerView.addItemDecoration(dividerItemDecoration);
         layout.setOnDragListener(null);
+        ImageView clearSuggestions = layout.findViewById(R.id.clearSuggestionImageView);
+        clearSuggestions.setOnClickListener(v -> {
+            mSearchInput.setText("");
+            mSearchInput.clearFocus();
+        });
+
+        layout.findViewById(R.id.used_apps_layout).setClipToOutline(true);
+
+        suggestedAppsGridLayout = layout.findViewById(R.id.suggestedAppGrid);
+        AppUsageStats appUsageStats = new AppUsageStats(this);
+        List<UsageStats> usageStats = appUsageStats.getUsageStats();
+        if(usageStats.size()> 0){
+            int i = 0;
+            while (suggestedAppsGridLayout.getChildCount() < 4) {
+                AppItem appItem = AppUtil.createAppItem(this, usageStats.get(i).getPackageName());
+                if (appItem != null) {
+                    BlissFrameLayout view = prepareApp(appItem, true);
+                    addAppToGrid(suggestedAppsGridLayout, view);
+                }
+                i++;
+            }
+        }
+
+        RxTextView.textChanges(mSearchInput)
+                .debounce(300, TimeUnit.MILLISECONDS)
+                .map(charSequence -> charSequence.toString())
+                .distinctUntilChanged()
+                .switchMap(
+                        (Function<CharSequence,
+                                ObservableSource<AutoCompleteServiceResult>>)
+                                charSequence1 -> {
+                                    if (charSequence1 != null && charSequence1.length() > 0) {
+                                        return searchForQuery(charSequence1);
+                                    } else {
+                                        return Observable.just(
+                                                new AutoCompleteServiceResult(new ArrayList<>(),
+                                                        charSequence1.toString()));
+                                    }
+                                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableObserver<AutoCompleteServiceResult>() {
+                    @Override
+                    public void onNext(
+                            AutoCompleteServiceResult autoCompleteServiceResults) {
+                        List<String> suggestions = new ArrayList<>();
+                        Log.d(TAG, "onNext() called with: autoCompleteServiceResults = ["
+                                + autoCompleteServiceResults + "]");
+                        for (int i = 0; i < (autoCompleteServiceResults.items.size() > 5 ? 5
+                                : autoCompleteServiceResults.items.size()); i++) {
+                            suggestions.add(autoCompleteServiceResults.items.get(i).getPhrase());
+                        }
+                        mSuggestionAdapter.updateSuggestions(suggestions,
+                                autoCompleteServiceResults.queryText);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
 
         mSearchInput.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
@@ -740,11 +930,48 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
         mSearchInput.setOnEditorActionListener((textView, action, keyEvent) -> {
             if (action == EditorInfo.IME_ACTION_SEARCH) {
+                hideKeyboard(mSearchInput);
                 runSearch(mSearchInput.getText().toString());
                 mSearchInput.setText("");
+                mSearchInput.clearFocus();
+                return true;
             }
             return false;
         });
+    }
+
+    private ObservableSource<AutoCompleteServiceResult> searchForQuery(
+            CharSequence charSequence) {
+        Log.d(TAG, "searchForQuery() called with: charSequence = [" + charSequence + "]");
+
+        AutoCompleteService autoCompleteService = RetrofitService.getInstance(
+                "https://duckduckgo.com").create(AutoCompleteService.class);
+        String query = charSequence.toString().toLowerCase(Locale.getDefault()).trim();
+
+        if (autoCompleteService != null) {
+            return autoCompleteService.query(query)
+                    .retryWhen(errors -> errors.flatMap(error -> {
+                        // For IOExceptions, we  retry
+                        if (error instanceof IOException) {
+                            return Observable.just(null);
+                        }
+                        // For anything else, don't retry
+                        return Observable.error(error);
+                    }))
+                    .onErrorReturn(throwable -> new ArrayList<>())
+                    .map(autoCompleteServiceRawResults -> new AutoCompleteServiceResult(
+                            autoCompleteServiceRawResults, query));
+        } else {
+            return Observable.just(new AutoCompleteServiceResult(new ArrayList<>(), query));
+        }
+    }
+
+    @Override
+    public void onClick(String suggestion) {
+        mSearchInput.setText(suggestion);
+        runSearch(suggestion);
+        mSearchInput.clearFocus();
+        mSearchInput.setText("");
     }
 
     private void runSearch(String query) {
@@ -759,11 +986,11 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         return currentPageNumber - 1;
     }
 
-    private void addAppToPage(GridLayout page, BlissFrameLayout view) {
-        addAppToPage(page, view, INVALID);
+    private void addAppToGrid(GridLayout page, BlissFrameLayout view) {
+        addAppToGrid(page, view, INVALID);
     }
 
-    private void addAppToPage(GridLayout page, BlissFrameLayout view, int index) {
+    private void addAppToGrid(GridLayout page, BlissFrameLayout view, int index) {
         GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
         GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
@@ -842,7 +1069,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * The View object also has all the required listeners attached to it.
      */
     private BlissFrameLayout prepareApp(final AppItem app, boolean withText) {
-        Log.d(TAG, "prepareApp() called with: app = [" + app + "]");
         final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(R.layout.app_view,
                 null);
         final TextView label = (TextView) v.findViewById(R.id.app_label);
@@ -914,48 +1140,76 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             return true;
         });
 
-        icon.setOnTouchListener((view, event) -> {
-            if (longPressed && event.getAction() == MotionEvent.ACTION_UP) {
-                longPressed = false;
+        icon.setOnTouchListener(new View.OnTouchListener() {
 
-                if (mWobblingCountDownTimer != null) {
-                    mWobblingCountDownTimer.cancel();
-                }
-                mLongClickStartsDrag = false;
-                mWobblingCountDownTimer = new CountDownTimer(25000, 1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
+            float touchX = 0;
+            float touchY = 0;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                if (longPressed && event.getAction() == MotionEvent.ACTION_UP) {
+                    longPressed = false;
+
+                    if (mWobblingCountDownTimer != null) {
+                        mWobblingCountDownTimer.cancel();
                     }
-
-                    @Override
-                    public void onFinish() {
-                        if (isWobbling) {
-                            mLongClickStartsDrag = true;
-                            handleWobbling(false);
+                    mLongClickStartsDrag = false;
+                    mWobblingCountDownTimer = new CountDownTimer(25000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
                         }
-                    }
-                }.start();
-                return true;
-            } else if ((longPressed || !mLongClickStartsDrag)
-                    && event.getAction() == MotionEvent.ACTION_MOVE
-                    && System.currentTimeMillis() - longPressedAt > 200) {
-                longPressed = false;
-                movingApp = v;
-                View.DragShadowBuilder dragShadowBuilder = new BlissDragShadowBuilder(
-                        icon, event.getX(), event.getY());
-                icon.startDrag(null, dragShadowBuilder, v, 0);
 
-                if (v.getParent().getParent() instanceof HorizontalPager) {
-                    parentPage = getCurrentAppsPageNumber();
-                } else {
-                    parentPage = -99;
+                        @Override
+                        public void onFinish() {
+                            if (isWobbling) {
+                                mLongClickStartsDrag = true;
+                                handleWobbling(false);
+                            }
+                        }
+                    }.start();
+                    return true;
+                } else if ((longPressed || !mLongClickStartsDrag)
+                        && event.getAction() == MotionEvent.ACTION_MOVE) {
+                    Log.i(TAG, "move: " + touchX + " " + touchY);
+                    Log.i(TAG, "x: " + (event.getX()));
+                    Log.i(TAG, "y: " + (event.getY()));
+                    if (Math.abs(event.getX() - touchX) >= mDeviceProfile.iconSizePx / 12
+                            || Math.abs(
+                            event.getY() - touchY) >= mDeviceProfile.iconSizePx / 12) {
+                        longPressed = false;
+                        movingApp = v;
+                        View.DragShadowBuilder dragShadowBuilder = new BlissDragShadowBuilder(
+                                icon, (event.getX() < 0 ? 0 : event.getX()),
+                                (event.getY() < 0 ? 0 : event.getY()));
+                        icon.startDrag(null, dragShadowBuilder, v, 0);
+                        /*Toast.makeText(LauncherActivity.this, "Drag started",
+                                Toast.LENGTH_SHORT).show();*/
+                        if (v.getParent().getParent() instanceof HorizontalPager) {
+                            parentPage = LauncherActivity.this.getCurrentAppsPageNumber();
+                        } else {
+                            parentPage = -99;
+                        }
+                        v.clearAnimation();
+                        v.setVisibility(View.INVISIBLE);
+                        dragDropEnabled = true;
+                        return true;
+                    }
+                } else if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    touchX = event.getX();
+                    touchY = event.getY();
+                    Log.i(TAG, "down: " + touchX + " " + touchY);
+                    return false;
+                } else if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
+                    Log.i(TAG, "onToucch outside");
+                    if (!isDragging) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+
                 }
-                v.clearAnimation();
-                v.setVisibility(View.INVISIBLE);
-                dragDropEnabled = true;
-                return true;
+                return false;
             }
-            return false;
         });
 
         icon.setOnClickListener(view -> {
@@ -1125,7 +1379,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         final AppItem appItem = getAppDetails(viewGroup);
         if (!appItem.isSystemApp()) {
             SquareFrameLayout appIcon = (SquareFrameLayout) viewGroup.findViewById(R.id.app_icon);
-            Log.i(TAG, "addUninstallIcon: " + (appIcon.getRight() - appIcon.getLeft()));
             int size = mDeviceProfile.uninstallIconSizePx;
             int topPadding = (appIcon.getTop() - mDeviceProfile.uninstallIconSizePx / 2
                     + mDeviceProfile.uninstallIconPadding > 0) ?
@@ -1172,8 +1425,11 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
             @Override
             public boolean onDrag(View view, DragEvent dragEvent) {
+                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
+                    isDragging = true;
+                }
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
-
+                    Log.i(TAG, "onDrag: of dock");
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
                     if (getAppDetails(movingApp).isBelongsToFolder()) {
@@ -1186,7 +1442,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     }
 
                     int index = getIndex(mDock, dragEvent.getX(), dragEvent.getY());
-                    Log.i(TAG, "onDock Drag: " + index);
                     // If hovering over self, ignore drag/drop
                     if (index == mDock.indexOfChild(movingApp)) {
                         latestIndex = INVALID;
@@ -1218,7 +1473,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                     dragEvent.getX(), dragEvent.getY());
                             if (latestFolderInterest != folderInterest) {
                                 folderInterest = latestFolderInterest;
-                                interestExpressedAt = System.currentTimeMillis();
                             }
                             if (folderInterest) {
                                 makeAppHot(collidingApp);
@@ -1249,11 +1503,9 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         latestIndex = index;
                         interestExpressedAt = System.currentTimeMillis();
                     }
-
-
+                    return true;
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
-                    Log.i(TAG, "onDrag: here");
-
+                    Log.i(TAG, "onDrop: of dock");
                     handleWobbling(false);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
                         // Drop functionality when the folder window container
@@ -1264,7 +1516,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
                                     if (gridLayout.getChildCount()
                                             < mDeviceProfile.maxAppsPerPage) {
-                                        addAppToPage(gridLayout, movingApp);
+                                        addAppToGrid(gridLayout, movingApp);
                                     }
                                 }
                                 if (view instanceof GridLayout && view.getId() == R.id.dock) {
@@ -1290,10 +1542,16 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     } else {
                         removeAppFromFolder();
                     }
+                    return true;
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                    Log.i(TAG, "onEnd: of dock");
 
                     if (!dragEvent.getResult()) {
                         movingApp.setVisibility(View.VISIBLE);
+                    }
+
+                    if (isDragging) {
+                        isDragging = false;
                     }
 
                     if (getCurrentAppsPageNumber() > 0 && getGridFromPage(
@@ -1302,7 +1560,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         pages.remove(getCurrentAppsPageNumber() - 1);
                         mIndicator.removeViewAt(getCurrentAppsPageNumber());
                         mHorizontalPager.removeViewAt(getCurrentAppsPageNumber());
-                        mHorizontalPager.scrollLeft();
+                        mHorizontalPager.scrollLeft(100);
                     }
 
 
@@ -1327,12 +1585,14 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
             @Override
             public boolean onDrag(View view, DragEvent dragEvent) {
-                /*if(dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED){
-                    parentPage = getCurrentAppsPageNumber();
-                }*/
+                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
+                    isDragging = true;
+                }
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     lastX = dragEvent.getX();
                     lastY = dragEvent.getY();
+                    Log.i(TAG, "onDrag: o pager");
+
 
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
@@ -1389,7 +1649,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
                                 if (latestFolderInterest != folderInterest) {
                                     folderInterest = latestFolderInterest;
-                                    interestExpressedAt = System.currentTimeMillis();
                                 }
                                 if (folderInterest) {
                                     makeAppHot(collidingApp);
@@ -1404,10 +1663,9 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                             if (elapsedTime > timeToSwap && !folderInterest
                                     && (page.getChildCount() < mDeviceProfile.maxAppsPerPage
                                     || parentPage == getCurrentAppsPageNumber())) {
-                                Log.i(TAG, "this done ");
                                 if (movingApp.getParent() != null) {
                                     ((ViewGroup) movingApp.getParent()).removeView(movingApp);
-                                    addAppToPage(page, movingApp, index);
+                                    addAppToGrid(page, movingApp, index);
                                 }
                                 //movingApp.setVisibility(View.VISIBLE);
                             }
@@ -1419,7 +1677,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         if (dragEvent.getX() > mDeviceProfile.availableWidthPx - scrollCorner) {
                             if (getCurrentAppsPageNumber() + 1 < pages.size()) {
                                 //removeAppFromPage(page, movingApp);
-                                mHorizontalPager.scrollRight();
+                                mHorizontalPager.scrollRight(100);
                             } else if (getCurrentAppsPageNumber() + 1 == pages.size()
                                     && getGridFromPage(page).getChildCount() > 1) {
                                 GridLayout layout = preparePage();
@@ -1440,7 +1698,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                             }
                             if (getCurrentAppsPageNumber() - 1 >= 0) {
                                 //removeAppFromPage(page, movingApp);
-                                mHorizontalPager.scrollLeft();
+                                mHorizontalPager.scrollLeft(100);
                             } else if (getCurrentAppsPageNumber() + 1 == pages.size() - 2
                                     && getGridFromPage(pages.get(pages.size() - 1)).getChildCount()
                                     <= 0) {
@@ -1451,6 +1709,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         }
                     }
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                    Log.i(TAG, "onDrop: of pager");
+
                     handleWobbling(false);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
                         // Drop functionality when the folder window container
@@ -1461,7 +1721,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
                                     if (gridLayout.getChildCount()
                                             < mDeviceProfile.maxAppsPerPage) {
-                                        addAppToPage(gridLayout, movingApp);
+                                        addAppToGrid(gridLayout, movingApp);
                                     }
                                 }
                                 if (view instanceof GridLayout && view.getId() == R.id.dock) {
@@ -1499,7 +1759,11 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         }
                     }
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                    Log.i(TAG, "onENd: of pager");
 
+                    if (isDragging) {
+                        isDragging = false;
+                    }
                     if (!dragEvent.getResult()) {
                         movingApp.setVisibility(View.VISIBLE);
                     }
@@ -1509,9 +1773,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         pages.remove(getCurrentAppsPageNumber() - 1);
                         mIndicator.removeViewAt(getCurrentAppsPageNumber());
                         mHorizontalPager.removeViewAt(getCurrentAppsPageNumber());
-                        mHorizontalPager.scrollLeft();
+                        mHorizontalPager.scrollLeft(100);
                     }
-
 
                     if (getCurrentAppsPageNumber() < pages.size() - 1 && getGridFromPage(
                             pages.get(getCurrentAppsPageNumber() + 1)).getChildCount() <= 0) {
@@ -1529,7 +1792,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * Remove app from the folder by dragging out of the folder view.
      */
     private void removeAppFromFolder() {
-        Log.d(TAG, "removeAppFromFolder() called");
         if (pages.get(getCurrentAppsPageNumber()).getChildCount()
                 >= mDeviceProfile.maxAppsPerPage) {
             Toast.makeText(this, "No more room in page", Toast.LENGTH_SHORT).show();
@@ -1547,7 +1809,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     addToDock(view, mDock.indexOfChild(activeFolderView));
                 } else {
                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
-                    addAppToPage(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
+                    addAppToGrid(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
                 }
 
                 ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
@@ -1562,7 +1824,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         addToDock(view, mDock.indexOfChild(activeFolderView));
                     } else {
                         GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
-                        addAppToPage(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
+                        addAppToGrid(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
                     }
 
                     ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
@@ -1575,7 +1837,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     ((ViewGroup) movingApp.getParent()).removeView(movingApp);
                 }
                 int current = getCurrentAppsPageNumber();
-                addAppToPage(pages.get(current), movingApp);
+                addAppToGrid(pages.get(current), movingApp);
             }
 
             hideFolderWindowContainer();
@@ -1668,7 +1930,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             if (fromDock) {
                 addToDock(folderView, index);
             } else {
-                addAppToPage(pages.get(getCurrentAppsPageNumber()), folderView, index);
+                addAppToGrid(pages.get(getCurrentAppsPageNumber()), folderView, index);
             }
 
             ((ViewGroup) collidingApp.getParent()).removeView(collidingApp);
@@ -1707,13 +1969,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         if (app == null) {
             return;
         }
-
-        List<Object> views = (List<Object>) app.getTag();
-        /*SquareFrameLayout squareFrameLayout = ((SquareFrameLayout) views.get(0));
-        int padding = (int) ConverterUtil.dp2Px(4, this);
-        squareFrameLayout.setPadding(padding, padding, padding, padding);
-        squareFrameLayout.setBackground(hotBackground);*/
-
+        Toast.makeText(this, "Size should be increased.", Toast.LENGTH_SHORT).show();
         app.setScaleX(1.2f);
         app.setScaleY(1.2f);
     }
@@ -1727,10 +1983,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         }
 
         List<Object> views = (List<Object>) app.getTag();
-        /*SquareFrameLayout squareFrameLayout = ((SquareFrameLayout) views.get(0));
-        int padding = (int) ConverterUtil.dp2Px(0, this);
-        squareFrameLayout.setPadding(padding, padding, padding, padding);
-        squareFrameLayout.setBackground(null);*/
+        //Toast.makeText(this, "Size should be reset.", Toast.LENGTH_SHORT).show();
         if (!fromDock) {
             ((View) views.get(1)).setVisibility(View.VISIBLE);
         } else {

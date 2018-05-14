@@ -9,7 +9,7 @@ import java.util.List;
 
 public class AppItem {
 
-    private CharSequence mLabel;
+    private String mLabel;
     private String mPackageName;
     private Drawable mIcon;
     private Intent mIntent;
@@ -28,7 +28,7 @@ public class AppItem {
     private List<AppItem> mSubApps;
 
 
-    public AppItem(CharSequence label, String packageName, Drawable icon,
+    public AppItem(String label, String packageName, Drawable icon,
             Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp,
             boolean isClock, boolean isCalendar, boolean adaptive) {
         this.mLabel = label;
@@ -54,7 +54,7 @@ public class AppItem {
         return mLabel;
     }
 
-    public void setLabel(CharSequence label) {
+    public void setLabel(String label) {
         this.mLabel = label;
     }
 
@@ -149,4 +149,10 @@ public class AppItem {
         this.mBelongsToFolder = belongsToFolder;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof AppItem){
+            return ((AppItem)obj).mPackageName.equals(this.mPackageName);
+        }else return false;
+    }
 }

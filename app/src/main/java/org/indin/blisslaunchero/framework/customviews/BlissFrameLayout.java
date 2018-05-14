@@ -77,7 +77,6 @@ public class BlissFrameLayout extends FrameLayout {
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        Log.d(TAG, "dispatchDraw() called with: canvas = [" + canvas + "]");
         drawBadgeIfNecessary(canvas);
     }
 
@@ -103,12 +102,10 @@ public class BlissFrameLayout extends FrameLayout {
         int left = (getWidth() - mIconSize) / 2;
         int right = left + mIconSize;
         int bottom = top + mIconSize;
-        Log.i(TAG, "top: " + top + " left: " + left + " right: " + right + " bottom: " + bottom);
         outBounds.set(left, top, right, bottom);
     }
 
     public void applyBadge(boolean isBadge, boolean withText) {
-        Log.d(TAG, "applyBadge() called with: isBadge = [" + isBadge + "]");
         mWithText = withText;
         boolean wasBadged = hasBadge;
         hasBadge = isBadge;

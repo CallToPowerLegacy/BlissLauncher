@@ -40,7 +40,8 @@ public class LauncherPresenter extends MvpPresenter<LauncherContract.View> imple
     public void loadApps(Context context) {
 
         checkViewAttached();
-        mCompositeDisposable.add(loadAppsAndIconCache(context).subscribeOn(Schedulers.io())
+        mCompositeDisposable.add(loadAppsAndIconCache(context)
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new DisposableObserver<AllAppsList>() {
                     @Override
