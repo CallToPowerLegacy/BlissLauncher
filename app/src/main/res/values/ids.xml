@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="uninstall_app" type="id">uninstallApp</item>
-    <item name="app_icon" type="id">app_icon</item>
-    <item name="notification_count" type="id">notification_count</item>
+    <item name="uninstall_app" type="id"/>
+    <item name="app_icon" type="id"/>
+    <item name="notification_count" type="id"/>
 </resources>

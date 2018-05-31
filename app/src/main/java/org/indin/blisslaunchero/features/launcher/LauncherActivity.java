@@ -1,6 +1,7 @@
 package org.indin.blisslaunchero.features.launcher;
 
 import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -10,7 +11,6 @@ import android.app.WallpaperManager;
 import android.app.usage.UsageStats;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -20,6 +20,8 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -44,13 +46,13 @@ import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
+import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.db.Storage;
 import org.indin.blisslaunchero.data.model.AppItem;
@@ -167,6 +169,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     public static final int REORDER_TIMEOUT = 350;
     private final Alarm mFolderCreationAlarm = new Alarm();
     private final Alarm mReorderAlarm = new Alarm();
+    private final Alarm mDockReorderAlarm = new Alarm();
 
     private BlissFrameLayout movingApp;
     private BlissFrameLayout collidingApp;
@@ -182,7 +185,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
     private boolean folderFromDock;
     private boolean isWobbling = false;
-    private boolean longPressed;
+    public static boolean longPressed;
     private int x;
     private int y;
 
@@ -208,12 +211,13 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     private RecyclerView mSuggestionRecyclerView;
     private AutoCompleteAdapter mSuggestionAdapter;
     private GridLayout suggestedAppsGridLayout;
+    private BlissDragShadowBuilder dragShadowBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mPresenter = new LauncherPresenter();
         storage = new Storage(getApplicationContext());
-        mDeviceProfile = new DeviceProfile(this);
+        mDeviceProfile = BlissLauncher.getApplication(this).getDeviceProfile();
         storage = new Storage(getApplicationContext());
 
         super.onCreate(savedInstanceState);
@@ -237,20 +241,20 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     }
 
     private void setupViews() {
-        mHorizontalPager = (HorizontalPager) mLauncherView.findViewById(R.id.pages_container);
-        mDock = (DockGridLayout) mLauncherView.findViewById(R.id.dock);
-        mIndicator = (PageIndicatorLinearLayout) mLauncherView.findViewById(R.id.page_indicator);
-        mFolderWindowContainer = (ViewGroup) mLauncherView.findViewById(
+        mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
+        mDock = mLauncherView.findViewById(R.id.dock);
+        mIndicator = mLauncherView.findViewById(R.id.page_indicator);
+        mFolderWindowContainer = mLauncherView.findViewById(
                 R.id.folder_window_container);
-        mFolderAppsViewPager = (ViewPager) mLauncherView.findViewById(R.id.folder_apps);
-        mBlissInput = (BlissInput) mLauncherView.findViewById(R.id.folder_title);
-        mProgressBar = (ProgressBar) mLauncherView.findViewById(R.id.progressbar);
+        mFolderAppsViewPager = mLauncherView.findViewById(R.id.folder_apps);
+        mBlissInput = mLauncherView.findViewById(R.id.folder_title);
+        mProgressBar = mLauncherView.findViewById(R.id.progressbar);
 
-        maxDistanceForFolderCreation = (int) (0.33f * mDeviceProfile.iconSizePx);
+        maxDistanceForFolderCreation = (int) (0.45f * mDeviceProfile.iconSizePx);
 
         hotBackground = getResources().getDrawable(R.drawable.rounded_corners_icon_hot, null);
         defaultBackground = getResources().getDrawable(R.drawable.rounded_corners_icon, null);
-        scrollCorner = mDeviceProfile.iconDrawablePaddingPx;
+        scrollCorner = mDeviceProfile.iconDrawablePaddingPx / 2;
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
         transparentBackground = getResources().getDrawable(R.drawable.transparent, null);
@@ -338,7 +342,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         if (activeFolder.getSubApps().size() == 0) {
                             BlissFrameLayout view = prepareApp(app, !folderFromDock);
                             if (folderFromDock) {
-                                addToDock(view, mDock.indexOfChild(activeFolderView));
+                                addAppToDock(view, mDock.indexOfChild(activeFolderView));
                             } else {
                                 GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
                                 addAppToGrid(gridLayout, view,
@@ -355,7 +359,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                 BlissFrameLayout view = prepareApp(item, !folderFromDock);
 
                                 if (folderFromDock) {
-                                    addToDock(view, mDock.indexOfChild(activeFolderView));
+                                    addAppToDock(view, mDock.indexOfChild(activeFolderView));
                                 } else {
                                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
                                     addAppToGrid(gridLayout, view,
@@ -641,46 +645,59 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      */
     private void createPageChangeListener() {
         mHorizontalPager.addOnScrollListener(new HorizontalPager.OnScrollListener() {
+
+            boolean isViewScrolling = true;
+
             @Override
             public void onScroll(int scrollX) {
-                dragDropEnabled = false;
+                if (isViewScrolling) {
+                    dragDropEnabled = false;
+                }
             }
 
             @Override
             public void onViewScrollFinished(int page) {
-                currentPageNumber = page;
+                isViewScrolling = false;
 
-                // Remove mIndicator and mDock from widgets page, and make them
-                // reappear when user swipes to the first apps page
-                if (currentPageNumber == 0) {
-                    mDock.animate().translationYBy(
-                            ConverterUtil.dp2Px(105, LauncherActivity.this)).setDuration(
-                            100).withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            mDock.setVisibility(GONE);
+                if (currentPageNumber != page) {
+
+                    currentPageNumber = page;
+                    // Remove mIndicator and mDock from widgets page, and make them
+                    // reappear when user swipes to the first apps page
+                    if (currentPageNumber == 0) {
+                        mDock.animate().translationYBy(
+                                ConverterUtil.dp2Px(105, LauncherActivity.this)).setDuration(
+                                100).withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                mDock.setVisibility(GONE);
+                            }
+                        });
+
+                        mIndicator.animate().alpha(0).setDuration(100).withEndAction(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mIndicator.setVisibility(GONE);
+                                    }
+                                });
+
+                        refreshSuggestedApps();
+                    } else {
+                        if (mIndicator.getAlpha() != 1.0f) {
+                            mIndicator.setVisibility(View.VISIBLE);
+                            mDock.setVisibility(View.VISIBLE);
+                            mIndicator.animate().alpha(1).setDuration(100);
+                            mDock.animate().translationY(0).setDuration(100);
                         }
-                    });
-
-                    mIndicator.animate().alpha(0).setDuration(100).withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            mIndicator.setVisibility(GONE);
-                        }
-                    });
-
-                    refreshSuggestedApps();
-                } else {
-                    if (mIndicator.getAlpha() != 1.0f) {
-                        mIndicator.setVisibility(View.VISIBLE);
-                        mDock.setVisibility(View.VISIBLE);
-                        mIndicator.animate().alpha(1).setDuration(100);
-                        mDock.animate().translationY(0).setDuration(100);
                     }
-                }
 
-                dragDropEnabled = true;
-                updateIndicator();
+                    Log.d(TAG, "onViewScrollFinished() called with: page = [" + page + "]");
+
+
+                    dragDropEnabled = true;
+                    updateIndicator();
+                }
             }
         });
     }
@@ -689,8 +706,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         AppUsageStats appUsageStats = new AppUsageStats(this);
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
 
-        if(usageStats.size()> 0){
-            if(suggestedAppsGridLayout != null && suggestedAppsGridLayout.getChildCount()>0){
+        if (usageStats.size() > 0) {
+            if (suggestedAppsGridLayout != null && suggestedAppsGridLayout.getChildCount() > 0) {
                 suggestedAppsGridLayout.removeAllViews();
             }
             int i = 0;
@@ -741,11 +758,10 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         mDock.setLayoutTransition(getDefaultLayoutTransition());
         for (int i = 0; i < pinnedApps.size(); i++) {
             BlissFrameLayout appView = prepareApp(pinnedApps.get(i), false);
-            addToDock(appView, INVALID);
+            addAppToDock(appView, INVALID);
         }
         mHorizontalPager.setUiCreated(true);
         mDock.setEnabled(true);
-        Log.i(TAG, "createUI: ");
     }
 
     private GridLayout preparePage() {
@@ -777,7 +793,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     dockItems.add(appItem);
                     BlissFrameLayout appView = prepareApp(appItem, false);
                     if (appView != null) {
-                        addToDock(appView, INVALID);
+                        addAppToDock(appView, INVALID);
                     }
                 }
             } catch (Exception ignored) {
@@ -809,6 +825,10 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            if (page.getChildCount() <= 0) {
+                pages.remove(page);
+            }
         }
 
         launchableApps.removeAll(storedItems);
@@ -838,6 +858,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         }
 
         currentPageNumber = 0;
+
     }
 
     private void createWidgetsPage() {
@@ -868,7 +889,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         suggestedAppsGridLayout = layout.findViewById(R.id.suggestedAppGrid);
         AppUsageStats appUsageStats = new AppUsageStats(this);
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
-        if(usageStats.size()> 0){
+        if (usageStats.size() > 0) {
             int i = 0;
             while (suggestedAppsGridLayout.getChildCount() < 4) {
                 AppItem appItem = AppUtil.createAppItem(this, usageStats.get(i).getPackageName());
@@ -975,9 +996,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     }
 
     private void runSearch(String query) {
-        Uri uri = Uri.parse("https://spot.eelo.me/?q=" + query
-                + "&time_range=&language=en-US&category_general=on&category_images=on"
-                + "&category_videos=on");
+        Uri uri = Uri.parse("https://spot.eelo.me/?q=" + query);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         AppUtil.startActivityWithAnimation(this, intent);
     }
@@ -1007,6 +1026,27 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     }
 
     /**
+     * Adds items to the mDock making sure that the GridLayout's parameters are
+     * not violated.
+     */
+    private void addAppToDock(BlissFrameLayout view, int index) {
+        view.findViewById(R.id.app_label).setVisibility(GONE);
+        GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
+        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
+        iconLayoutParams.height = mDeviceProfile.hotseatCellHeightPx;
+        iconLayoutParams.width = mDeviceProfile.cellWidthPx;
+        iconLayoutParams.setGravity(Gravity.CENTER);
+        view.setLayoutParams(iconLayoutParams);
+        view.setWithText(false);
+        if (index != INVALID) {
+            mDock.addView(view, index);
+        } else {
+            mDock.addView(view);
+        }
+    }
+
+    /**
      * Creates a View that can be displayed by the launcher using just stored
      * JSON data.
      */
@@ -1019,10 +1059,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     null,
                     "FOLDER",
                     false,
-                    true,
                     false,
-                    false,
-                    true);
+                    false);
             folderItem.setFolder(true);
             folderItem.setFolderID(currentItemData.getString("folderID"));
             JSONArray subAppData = currentItemData.getJSONArray("subApps");
@@ -1065,15 +1103,15 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     /**
      * Converts an AppItem into a View object that can be rendered inside
      * the pages and the mDock.
-     *
+     * <p>
      * The View object also has all the required listeners attached to it.
      */
     private BlissFrameLayout prepareApp(final AppItem app, boolean withText) {
         final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(R.layout.app_view,
                 null);
-        final TextView label = (TextView) v.findViewById(R.id.app_label);
+        final TextView label = v.findViewById(R.id.app_label);
         final SquareFrameLayout icon = v.findViewById(R.id.app_icon);
-        final SquareImageView squareImageView = (SquareImageView) v.findViewById(
+        final SquareImageView squareImageView = v.findViewById(
                 R.id.icon_image_view);
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
         layoutParams.leftMargin = mDeviceProfile.iconDrawablePaddingPx / 2;
@@ -1091,20 +1129,20 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         }
 
         if (app.isClock()) {
-            final CustomAnalogClock analogClock = (CustomAnalogClock) v.findViewById(
+            final CustomAnalogClock analogClock = v.findViewById(
                     R.id.icon_clock);
             analogClock.setAutoUpdate(true);
             analogClock.setVisibility(View.VISIBLE);
             squareImageView.setVisibility(GONE);
         } else if (app.isCalendar()) {
 
-            TextView monthTextView = (TextView) v.findViewById(R.id.calendar_month_textview);
+            TextView monthTextView = v.findViewById(R.id.calendar_month_textview);
             monthTextView.getLayoutParams().height = mDeviceProfile.monthTextviewHeight;
             monthTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
             int monthPx = mDeviceProfile.monthTextSize;
             monthTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, monthPx / 2);
 
-            TextView dateTextView = (TextView) v.findViewById(R.id.calendar_date_textview);
+            TextView dateTextView = v.findViewById(R.id.calendar_date_textview);
             dateTextView.getLayoutParams().height = mDeviceProfile.dateTextviewHeight;
             dateTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
             int datePx = mDeviceProfile.dateTextSize;
@@ -1136,56 +1174,30 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         icon.setOnLongClickListener(view -> {
             handleWobbling(true);
             longPressed = true;
-            longPressedAt = System.currentTimeMillis();
             return true;
         });
 
         icon.setOnTouchListener(new View.OnTouchListener() {
 
-            float touchX = 0;
-            float touchY = 0;
+            long iconPressedAt = 0l;
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
-                if (longPressed && event.getAction() == MotionEvent.ACTION_UP) {
-                    longPressed = false;
-
-                    if (mWobblingCountDownTimer != null) {
-                        mWobblingCountDownTimer.cancel();
+                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    if (!mLongClickStartsDrag) {
+                        iconPressedAt = System.currentTimeMillis();
                     }
-                    mLongClickStartsDrag = false;
-                    mWobblingCountDownTimer = new CountDownTimer(25000, 1000) {
-                        @Override
-                        public void onTick(long millisUntilFinished) {
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            if (isWobbling) {
-                                mLongClickStartsDrag = true;
-                                handleWobbling(false);
-                            }
-                        }
-                    }.start();
-                    return true;
-                } else if ((longPressed || !mLongClickStartsDrag)
-                        && event.getAction() == MotionEvent.ACTION_MOVE) {
-                    Log.i(TAG, "move: " + touchX + " " + touchY);
-                    Log.i(TAG, "x: " + (event.getX()));
-                    Log.i(TAG, "y: " + (event.getY()));
-                    if (Math.abs(event.getX() - touchX) >= mDeviceProfile.iconSizePx / 12
-                            || Math.abs(
-                            event.getY() - touchY) >= mDeviceProfile.iconSizePx / 12) {
+                } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                    if (longPressed || (!mLongClickStartsDrag
+                            && (System.currentTimeMillis() - iconPressedAt) > 150)) {
                         longPressed = false;
                         movingApp = v;
-                        View.DragShadowBuilder dragShadowBuilder = new BlissDragShadowBuilder(
+                        dragShadowBuilder = new BlissDragShadowBuilder(
                                 icon, (event.getX() < 0 ? 0 : event.getX()),
                                 (event.getY() < 0 ? 0 : event.getY()));
                         icon.startDrag(null, dragShadowBuilder, v, 0);
-                        /*Toast.makeText(LauncherActivity.this, "Drag started",
-                                Toast.LENGTH_SHORT).show();*/
                         if (v.getParent().getParent() instanceof HorizontalPager) {
-                            parentPage = LauncherActivity.this.getCurrentAppsPageNumber();
+                            parentPage = getCurrentAppsPageNumber();
                         } else {
                             parentPage = -99;
                         }
@@ -1194,25 +1206,13 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         dragDropEnabled = true;
                         return true;
                     }
-                } else if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    touchX = event.getX();
-                    touchY = event.getY();
-                    Log.i(TAG, "down: " + touchX + " " + touchY);
-                    return false;
-                } else if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
-                    Log.i(TAG, "onToucch outside");
-                    if (!isDragging) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-
                 }
                 return false;
             }
         });
 
         icon.setOnClickListener(view -> {
+            Log.i(TAG, "prepareApp: " + isWobbling);
             if (isWobbling) {
                 handleWobbling(false);
                 return;
@@ -1322,6 +1322,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * Handle the wobbling animation.
      */
     private void handleWobbling(boolean shouldPlay) {
+        Log.d(TAG, "handleWobbling() called with: shouldPlay = [" + shouldPlay + "]");
+
         if (mWobblingCountDownTimer != null && !shouldPlay) {
             mWobblingCountDownTimer.cancel();
         }
@@ -1332,13 +1334,12 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
                 toggleWobbleAnimation((GridLayout) mFolderAppsViewPager.getChildAt(i), shouldPlay);
             }
-
-        } else {
-            for (int i = 0; i < pages.size(); i++) {
-                toggleWobbleAnimation(pages.get(i), shouldPlay);
-            }
-            toggleWobbleAnimation(mDock, shouldPlay);
         }
+
+        for (int i = 0; i < pages.size(); i++) {
+            toggleWobbleAnimation(pages.get(i), shouldPlay);
+        }
+        toggleWobbleAnimation(mDock, shouldPlay);
 
         if (!shouldPlay) {
             storage.save(pages, mDock);
@@ -1351,9 +1352,19 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     private void toggleWobbleAnimation(GridLayout gridLayout, boolean shouldPlayAnimation) {
         for (int i = 0; i < gridLayout.getChildCount(); i++) {
             ViewGroup viewGroup = (ViewGroup) gridLayout.getChildAt(i);
+            makeAppWobble(viewGroup, shouldPlayAnimation, i);
+        }
+    }
+
+    private void makeAppWobble(ViewGroup viewGroup, boolean shouldPlayAnimation, int i) {
+
+        new Handler(Looper.getMainLooper()).post(() -> {
             if (shouldPlayAnimation) {
                 if (viewGroup.getAnimation() == null) {
-                    addUninstallIcon(viewGroup);
+                    ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
+                    if (imageView == null) {
+                        addUninstallIcon(viewGroup);
+                    }
 
                     if (i % 2 == 0) {
                         viewGroup.startAnimation(wobbleAnimation);
@@ -1362,14 +1373,14 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     }
                 }
             } else {
-                // Remove uninstall icon
                 ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
                 if (imageView != null) {
                     ((ViewGroup) imageView.getParent()).removeView(imageView);
                 }
                 viewGroup.setAnimation(null);
             }
-        }
+        });
+
     }
 
     /**
@@ -1377,7 +1388,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      */
     private void addUninstallIcon(ViewGroup viewGroup) {
         final AppItem appItem = getAppDetails(viewGroup);
-        if (!appItem.isSystemApp()) {
+        if (!appItem.isSystemApp() && !appItem.isFolder()) {
             SquareFrameLayout appIcon = (SquareFrameLayout) viewGroup.findViewById(R.id.app_icon);
             int size = mDeviceProfile.uninstallIconSizePx;
             int topPadding = (appIcon.getTop() - mDeviceProfile.uninstallIconSizePx / 2
@@ -1417,10 +1428,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         /*mHorizontalPager.setOnDragListener(new SystemDragDriver(workspaceEventListener));
         mDock.setOnDragListener(new SystemDragDriver(dockEventListener));*/
         mDock.setOnDragListener(new View.OnDragListener() {
-
-            private int latestIndex;
-            private long interestExpressedAt;
-            private final int timeToSwap = 100;
             private boolean latestFolderInterest;
 
             @Override
@@ -1429,7 +1436,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     isDragging = true;
                 }
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
-                    Log.i(TAG, "onDrag: of dock");
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
                     if (getAppDetails(movingApp).isBelongsToFolder()) {
@@ -1441,10 +1447,12 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         return true;
                     }
 
-                    int index = getIndex(mDock, dragEvent.getX(), dragEvent.getY());
+                    float cX = mDock.getX() + dragEvent.getX() - dragShadowBuilder.xOffset;
+                    float cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
+
+                    int index = getIndex(mDock, cX, cY);
                     // If hovering over self, ignore drag/drop
                     if (index == mDock.indexOfChild(movingApp)) {
-                        latestIndex = INVALID;
                         discardCollidingApp();
                         return true;
                     }
@@ -1458,10 +1466,13 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     // either move it or create a folder
                     // depending on time and distance
                     if (index != INVALID) {
-                        View latestCollidingApp = mDock.getChildAt(index);
+                        BlissFrameLayout latestCollidingApp =
+                                (BlissFrameLayout) mDock.getChildAt(index);
                         if (collidingApp != latestCollidingApp) {
-                            makeAppCold(collidingApp, true);
-                            collidingApp = (BlissFrameLayout) mDock.getChildAt(index);
+                            if(collidingApp != null){
+                                makeAppCold(collidingApp, !(collidingApp.getParent().getParent() instanceof HorizontalPager));
+                            }
+                            collidingApp = latestCollidingApp;
                             folderInterest = false;
                         }
 
@@ -1469,272 +1480,47 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         if (moveAppDetails.isFolder()) {
                             folderInterest = false;
                         } else {
-                            latestFolderInterest = checkIfFolderInterest(mDock, index,
-                                    dragEvent.getX(), dragEvent.getY());
+                            latestFolderInterest = checkIfFolderInterest(mDock, index, cX, cY);
                             if (latestFolderInterest != folderInterest) {
                                 folderInterest = latestFolderInterest;
                             }
                             if (folderInterest) {
+                                cleanupDockReorder(true);
+                                cleanupReorder(true);
                                 makeAppHot(collidingApp);
                             } else {
-                                makeAppCold(collidingApp,
-                                        !(collidingApp.getParent().getParent() instanceof
-                                                HorizontalPager));
+                                View app = collidingApp;
+                                Log.i(TAG, "onDrag: dock here");
+                                makeAppCold(app, !(app.getParent().getParent() instanceof HorizontalPager));
                             }
                         }
                     }
 
-                    if (index == latestIndex) {
-                        long elapsedTime = System.currentTimeMillis() - interestExpressedAt;
-
-                        if (elapsedTime > timeToSwap) {
-                            if (!folderInterest) {
-                                if (mDock.getChildCount() < mDeviceProfile.numColumns
-                                        || parentPage == -99) {
-                                    if (movingApp.getParent() != null) {
-                                        ((ViewGroup) movingApp.getParent()).removeView(movingApp);
-                                    }
-                                    parentPage = -99;
-                                    addToDock(movingApp, index);
-                                }
-                            }
-                        }
-                    } else {
-                        latestIndex = index;
-                        interestExpressedAt = System.currentTimeMillis();
+                    if (!folderInterest && !mDockReorderAlarm.alarmPending()) {
+                        DockReorderAlarmListener dockReorderAlarmListener =
+                                new DockReorderAlarmListener(index);
+                        mDockReorderAlarm.setOnAlarmListener(dockReorderAlarmListener);
+                        mDockReorderAlarm.setAlarm(REORDER_TIMEOUT);
                     }
                     return true;
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
-                    Log.i(TAG, "onDrop: of dock");
-                    handleWobbling(false);
+                    cleanupDockReorder(true);
+                    cleanupReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
                         // Drop functionality when the folder window container
                         // is not being shown -- default
                         if (!folderInterest) {
                             if (movingApp.getParent() == null) {
-                                if (view instanceof HorizontalPager) {
-                                    GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
-                                    if (gridLayout.getChildCount()
-                                            < mDeviceProfile.maxAppsPerPage) {
-                                        addAppToGrid(gridLayout, movingApp);
-                                    }
-                                }
-                                if (view instanceof GridLayout && view.getId() == R.id.dock) {
-                                    if (mDock.getChildCount() >= mDeviceProfile.numColumns) {
-                                        Toast.makeText(LauncherActivity.this,
-                                                "Dock is already full",
-                                                Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        addToDock(movingApp, INVALID);
-                                    }
+                                if (mDock.getChildCount() >= mDeviceProfile.numColumns) {
+                                    Toast.makeText(LauncherActivity.this,
+                                            "Dock is already full",
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    addAppToDock(movingApp, INVALID);
                                 }
                             }
                             movingApp.setVisibility(View.VISIBLE);
-                        } else {
-                            if (collidingApp.getParent().getParent() instanceof HorizontalPager) {
-                                createFolder(false);
-                            } else {
-                                createFolder(true);
-                            }
-
-                        }
-                        folderInterest = false;
-                    } else {
-                        removeAppFromFolder();
-                    }
-                    return true;
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
-                    Log.i(TAG, "onEnd: of dock");
-
-                    if (!dragEvent.getResult()) {
-                        movingApp.setVisibility(View.VISIBLE);
-                    }
-
-                    if (isDragging) {
-                        isDragging = false;
-                    }
-
-                    if (getCurrentAppsPageNumber() > 0 && getGridFromPage(
-                            pages.get(getCurrentAppsPageNumber() - 1)).getChildCount()
-                            <= 0) {
-                        pages.remove(getCurrentAppsPageNumber() - 1);
-                        mIndicator.removeViewAt(getCurrentAppsPageNumber());
-                        mHorizontalPager.removeViewAt(getCurrentAppsPageNumber());
-                        mHorizontalPager.scrollLeft(100);
-                    }
-
-
-                    if (getCurrentAppsPageNumber() < pages.size() - 1 && getGridFromPage(
-                            pages.get(getCurrentAppsPageNumber() + 1)).getChildCount() <= 0) {
-                        pages.remove(getCurrentAppsPageNumber() + 1);
-                        mIndicator.removeViewAt(getCurrentAppsPageNumber() + 2);
-                        mHorizontalPager.removeViewAt(getCurrentAppsPageNumber() + 2);
-                    }
-                }
-                return true;
-            }
-        });
-
-        mHorizontalPager.setOnDragListener(new View.OnDragListener() {
-            private int latestIndex;
-            private long interestExpressedAt;
-            private final int timeToSwap = 100;
-            private boolean latestFolderInterest;
-
-            private float lastX, lastY;
-
-            @Override
-            public boolean onDrag(View view, DragEvent dragEvent) {
-                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
-                    isDragging = true;
-                }
-                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
-                    lastX = dragEvent.getX();
-                    lastY = dragEvent.getY();
-                    Log.i(TAG, "onDrag: o pager");
-
-
-                    // Don't offer rearrange functionality when app is being dragged
-                    // out of folder window
-                    if (getAppDetails(movingApp).isBelongsToFolder()) {
-                        return true;
-                    }
-
-                    // Do nothing during scroll operations
-                    if (!dragDropEnabled) {
-                        return true;
-                    }
-
-                    GridLayout page = pages.get(getCurrentAppsPageNumber());
-                    if (dragEvent.getX() < mDeviceProfile.availableWidthPx - scrollCorner
-                            && dragEvent.getX() > scrollCorner) {
-                        int index = getIndex(page, dragEvent.getX(), dragEvent.getY());
-                        // If hovering over self, ignore drag/drop
-                        if (index == getGridFromPage(page).indexOfChild(movingApp)) {
-                            latestIndex = INVALID;
-                            discardCollidingApp();
-                            return true;
-                        }
-
-                        // If hovering over an empty location, ignore drag/drop
-                        if (index == INVALID) {
-                            discardCollidingApp();
-                        }
-
-                        // If hovering over another app icon
-                        // either move it or create a folder
-                        // depending on time and distance
-                        if (index != INVALID) {
-                            View latestCollidingApp = getGridFromPage(page).getChildAt(index);
-                            if (collidingApp != latestCollidingApp) {
-                                makeAppCold(collidingApp, false);
-                                collidingApp = (BlissFrameLayout) latestCollidingApp;
-                                folderInterest = false;
-                            }
-
-                            AppItem moveAppDetails = getAppDetails(movingApp);
-                            assert moveAppDetails != null;
-                            if (moveAppDetails.isFolder()) {
-                                folderInterest = false;
-                            } else {
-                                if (view instanceof HorizontalPager) {
-                                    latestFolderInterest = checkIfFolderInterest(
-                                            getGridFromPage(pages.get(getCurrentAppsPageNumber())),
-                                            index,
-                                            dragEvent.getX(), dragEvent.getY());
-                                } else {
-                                    latestFolderInterest = checkIfFolderInterest(mDock, index,
-                                            dragEvent.getX(), dragEvent.getY());
-                                }
-
-                                if (latestFolderInterest != folderInterest) {
-                                    folderInterest = latestFolderInterest;
-                                }
-                                if (folderInterest) {
-                                    makeAppHot(collidingApp);
-                                } else {
-                                    makeAppCold(collidingApp, false);
-                                }
-                            }
-                        }
-
-                        if (index == latestIndex) {
-                            long elapsedTime = System.currentTimeMillis() - interestExpressedAt;
-                            if (elapsedTime > timeToSwap && !folderInterest
-                                    && (page.getChildCount() < mDeviceProfile.maxAppsPerPage
-                                    || parentPage == getCurrentAppsPageNumber())) {
-                                if (movingApp.getParent() != null) {
-                                    ((ViewGroup) movingApp.getParent()).removeView(movingApp);
-                                    addAppToGrid(page, movingApp, index);
-                                }
-                                //movingApp.setVisibility(View.VISIBLE);
-                            }
-                        } else {
-                            latestIndex = index;
-                            interestExpressedAt = System.currentTimeMillis();
-                        }
-                    } else {
-                        if (dragEvent.getX() > mDeviceProfile.availableWidthPx - scrollCorner) {
-                            if (getCurrentAppsPageNumber() + 1 < pages.size()) {
-                                //removeAppFromPage(page, movingApp);
-                                mHorizontalPager.scrollRight(100);
-                            } else if (getCurrentAppsPageNumber() + 1 == pages.size()
-                                    && getGridFromPage(page).getChildCount() > 1) {
-                                GridLayout layout = preparePage();
-                                pages.add(layout);
-                                ImageView dot = new ImageView(LauncherActivity.this);
-                                dot.setImageDrawable(getDrawable(R.drawable.dot_off));
-                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                                        getResources().getDimensionPixelSize(R.dimen.dotSize),
-                                        getResources().getDimensionPixelSize(R.dimen.dotSize)
-                                );
-                                dot.setLayoutParams(params);
-                                mIndicator.addView(dot);
-                                mHorizontalPager.addView(layout);
-                            }
-                        } else if (dragEvent.getX() < scrollCorner) {
-                            if (getCurrentAppsPageNumber() == 0) {
-                                return true;
-                            }
-                            if (getCurrentAppsPageNumber() - 1 >= 0) {
-                                //removeAppFromPage(page, movingApp);
-                                mHorizontalPager.scrollLeft(100);
-                            } else if (getCurrentAppsPageNumber() + 1 == pages.size() - 2
-                                    && getGridFromPage(pages.get(pages.size() - 1)).getChildCount()
-                                    <= 0) {
-                                mIndicator.removeViewAt(pages.size());
-                                mHorizontalPager.removeViewAt(pages.size());
-                                pages.remove(pages.size() - 1);
-                            }
-                        }
-                    }
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
-                    Log.i(TAG, "onDrop: of pager");
-
-                    handleWobbling(false);
-                    if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
-                        // Drop functionality when the folder window container
-                        // is not being shown -- default
-                        if (!folderInterest) {
-                            if (movingApp.getParent() == null) {
-                                if (view instanceof HorizontalPager) {
-                                    GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
-                                    if (gridLayout.getChildCount()
-                                            < mDeviceProfile.maxAppsPerPage) {
-                                        addAppToGrid(gridLayout, movingApp);
-                                    }
-                                }
-                                if (view instanceof GridLayout && view.getId() == R.id.dock) {
-                                    if (mDock.getChildCount() >= mDeviceProfile.numColumns) {
-                                        Toast.makeText(LauncherActivity.this,
-                                                "Dock is already full",
-                                                Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        addToDock(movingApp, INVALID);
-                                    }
-                                }
-                            }
-                            movingApp.setVisibility(View.VISIBLE);
+                            makeAppWobble(movingApp, true, mDock.indexOfChild(movingApp));
                         } else {
                             if (collidingApp.getParent().getParent() instanceof HorizontalPager) {
                                 createFolder(false);
@@ -1752,28 +1538,235 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                         + mFolderAppsViewPager.getX()),
                                 (int) (mFolderAppsViewPager.getHeight()
                                         + mFolderAppsViewPager.getY()));
-                        if (!bounds.contains((int) lastX, (int) lastY)) {
+                        if (!bounds.contains((int) (dragEvent.getX() - dragShadowBuilder.xOffset),
+                                (int) (dragEvent.getY() - dragShadowBuilder.yOffset))) {
                             removeAppFromFolder();
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
+                            int currentItem = mFolderAppsViewPager.getCurrentItem();
+                            makeAppWobble(movingApp, true,
+                                    ((GridLayout) mFolderAppsViewPager.getChildAt(
+                                            currentItem)).indexOfChild(movingApp));
+                        }
+                    }
+                    return true;
+                }
+                return true;
+            }
+        });
+
+        mHorizontalPager.setOnDragListener(new View.OnDragListener() {
+            private boolean latestFolderInterest;
+
+            @Override
+            public boolean onDrag(View view, DragEvent dragEvent) {
+
+                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
+                    isDragging = true;
+                    if(mWobblingCountDownTimer != null){
+                        mWobblingCountDownTimer.cancel();
+                    }
+                }
+
+                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+
+                    float cX, cY;
+                    cX = dragEvent.getX() + dragShadowBuilder.xOffset;
+                    cY = ConverterUtil.dp2Px(8, LauncherActivity.this) + dragEvent.getY()
+                            + dragShadowBuilder.yOffset;
+
+                    // Don't offer rearrange functionality when app is being dragged
+                    // out of folder window
+                    if (getAppDetails(movingApp).isBelongsToFolder()) {
+                        return true;
+                    }
+
+                    // Do nothing during scroll operations
+                    if (!dragDropEnabled) {
+                        return true;
+                    }
+
+
+                    GridLayout page = pages.get(getCurrentAppsPageNumber());
+
+                    if (cX < mDeviceProfile.availableWidthPx - scrollCorner
+                            && cX > scrollCorner) {
+
+                        int index = getIndex(page, cX, cY);
+                        // If hovering over self, ignore drag/drop
+                        if (index == getGridFromPage(page).indexOfChild(movingApp)) {
+                            discardCollidingApp();
+                            return true;
+                        }
+
+                        // If hovering over an empty location, ignore drag/drop
+                        if (index == INVALID) {
+                            discardCollidingApp();
+                        }
+
+                        // If hovering over another app icon
+                        // either move it or create a folder
+                        // depending on time and distance
+                        if (index != INVALID) {
+                            View latestCollidingApp = getGridFromPage(page).getChildAt(index);
+                            if (collidingApp != latestCollidingApp ) {
+                                if(collidingApp != null){
+                                    makeAppCold(collidingApp, !(collidingApp.getParent().getParent() instanceof HorizontalPager));
+                                }
+                                collidingApp = (BlissFrameLayout) latestCollidingApp;
+                                folderInterest = false;
+                            }
+
+                            AppItem moveAppDetails = getAppDetails(movingApp);
+                            assert moveAppDetails != null;
+                            if (moveAppDetails.isFolder()) {
+                                folderInterest = false;
+                            } else {
+                                latestFolderInterest = checkIfFolderInterest(
+                                        getGridFromPage(pages.get(getCurrentAppsPageNumber())),
+                                        index, cX, cY);
+
+                                if (latestFolderInterest != folderInterest) {
+                                    folderInterest = latestFolderInterest;
+                                }
+                                if (folderInterest) {
+                                    cleanupReorder(true);
+                                    cleanupDockReorder(true);
+                                    makeAppHot(collidingApp);
+                                } else {
+                                    Log.i(TAG, "onDrag: pager here");
+                                    makeAppCold(collidingApp, !(collidingApp.getParent().getParent() instanceof HorizontalPager));
+                                }
+                            }
+                        }
+
+                        if (!folderInterest && !mReorderAlarm.alarmPending()) {
+                            ReorderAlarmListener reorderAlarmListener = new ReorderAlarmListener(
+                                    page, (ViewGroup) movingApp.getParent(), index);
+                            mReorderAlarm.setOnAlarmListener(reorderAlarmListener);
+                            mReorderAlarm.setAlarm(REORDER_TIMEOUT);
+                        }
+                    } else {
+                        if (cX > mDeviceProfile.availableWidthPx - scrollCorner) {
+                            if (getCurrentAppsPageNumber() + 1 < pages.size()) {
+                                mHorizontalPager.scrollRight(300);
+                            } else if (getCurrentAppsPageNumber() + 1 == pages.size()
+                                    && getGridFromPage(page).getChildCount() > 1) {
+                                GridLayout layout = preparePage();
+                                pages.add(layout);
+                                ImageView dot = new ImageView(LauncherActivity.this);
+                                dot.setImageDrawable(getDrawable(R.drawable.dot_off));
+                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                        getResources().getDimensionPixelSize(R.dimen.dotSize),
+                                        getResources().getDimensionPixelSize(R.dimen.dotSize)
+                                );
+                                dot.setLayoutParams(params);
+                                mIndicator.addView(dot);
+                                mHorizontalPager.addView(layout);
+                            }
+                        } else if (cX < scrollCorner) {
+                            if (getCurrentAppsPageNumber() == 0) {
+                                return true;
+                            }
+                            if (getCurrentAppsPageNumber() - 1 >= 0) {
+                                mHorizontalPager.scrollLeft(300);
+                            } else if (getCurrentAppsPageNumber() + 1 == pages.size() - 2
+                                    && getGridFromPage(pages.get(pages.size() - 1)).getChildCount()
+                                    <= 0) {
+                                mIndicator.removeViewAt(pages.size());
+                                mHorizontalPager.removeViewAt(pages.size());
+                                pages.remove(pages.size() - 1);
+                            }
+                        }
+                    }
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                    cleanupReorder(true);
+                    cleanupDockReorder(true);
+                    if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
+                        // Drop functionality when the folder window container
+                        // is not being shown -- default
+                        GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+                        if (!folderInterest) {
+                            if (movingApp.getParent() == null) {
+                                if (gridLayout.getChildCount()
+                                        < mDeviceProfile.maxAppsPerPage) {
+                                    addAppToGrid(gridLayout, movingApp);
+                                }
+                            }
+                            movingApp.setVisibility(View.VISIBLE);
+                            makeAppWobble(movingApp, true, gridLayout.indexOfChild(movingApp));
+                        } else {
+                            if (collidingApp.getParent().getParent() instanceof HorizontalPager) {
+                                createFolder(false);
+                            } else {
+                                createFolder(true);
+                            }
+
+                        }
+                        folderInterest = false;
+                    } else {
+                        // Drop functionality when the folder window is visible
+                        Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
+                                (int) mFolderAppsViewPager.getY(),
+                                (int) (mFolderAppsViewPager.getWidth()
+                                        + mFolderAppsViewPager.getX()),
+                                (int) (mFolderAppsViewPager.getHeight()
+                                        + mFolderAppsViewPager.getY()));
+                        if (!bounds.contains((int) (dragEvent.getX() - dragShadowBuilder.xOffset),
+                                (int) (dragEvent.getY() - dragShadowBuilder.yOffset))) {
+                            removeAppFromFolder();
+                        } else {
+                            movingApp.setVisibility(View.VISIBLE);
+                            int currentItem = mFolderAppsViewPager.getCurrentItem();
+                            makeAppWobble(movingApp, true,
+                                    ((GridLayout) mFolderAppsViewPager.getChildAt(
+                                            currentItem)).indexOfChild(movingApp));
                         }
                     }
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
-                    Log.i(TAG, "onENd: of pager");
-
                     if (isDragging) {
                         isDragging = false;
                     }
                     if (!dragEvent.getResult()) {
                         movingApp.setVisibility(View.VISIBLE);
+                        if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
+                            int currentItem = mFolderAppsViewPager.getCurrentItem();
+                            makeAppWobble(movingApp, true,
+                                    ((GridLayout) mFolderAppsViewPager.getChildAt(
+                                            currentItem)).indexOfChild(movingApp));
+                        } else if (movingApp.getParent().getParent() instanceof HorizontalPager) {
+                            GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+                            makeAppWobble(movingApp, true,
+                                    gridLayout.indexOfChild(movingApp));
+                        } else {
+                            makeAppWobble(movingApp, true, mDock.indexOfChild(movingApp));
+                        }
                     }
+
+                    if (mWobblingCountDownTimer != null) {
+                        mWobblingCountDownTimer.cancel();
+                    }
+                    mLongClickStartsDrag = false;
+                    mWobblingCountDownTimer = new CountDownTimer(25000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            if (isWobbling) {
+                                handleWobbling(false);
+                            }
+                        }
+                    }.start();
+
                     if (getCurrentAppsPageNumber() > 0 && getGridFromPage(
                             pages.get(getCurrentAppsPageNumber() - 1)).getChildCount()
                             <= 0) {
                         pages.remove(getCurrentAppsPageNumber() - 1);
                         mIndicator.removeViewAt(getCurrentAppsPageNumber());
                         mHorizontalPager.removeViewAt(getCurrentAppsPageNumber());
-                        mHorizontalPager.scrollLeft(100);
+                        mHorizontalPager.scrollLeft(300);
                     }
 
                     if (getCurrentAppsPageNumber() < pages.size() - 1 && getGridFromPage(
@@ -1782,10 +1775,24 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         mIndicator.removeViewAt(getCurrentAppsPageNumber() + 2);
                         mHorizontalPager.removeViewAt(getCurrentAppsPageNumber() + 2);
                     }
+
+                    storage.save(pages, mDock);
                 }
                 return true;
             }
         });
+    }
+
+    private void cleanupDockReorder(boolean cancelAlarm) {
+        if (cancelAlarm) {
+            mDockReorderAlarm.cancelAlarm();
+        }
+    }
+
+    private void cleanupReorder(boolean cancelAlarm) {
+        if (cancelAlarm) {
+            mReorderAlarm.cancelAlarm();
+        }
     }
 
     /**
@@ -1806,13 +1813,19 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             if (activeFolder.getSubApps().size() == 0) {
                 BlissFrameLayout view = prepareApp(app, !folderFromDock);
                 if (folderFromDock) {
-                    addToDock(view, mDock.indexOfChild(activeFolderView));
+                    int index = mDock.indexOfChild(activeFolderView);
+                    mDock.removeView(activeFolderView);
+                    addAppToDock(view, index);
+                    makeAppWobble(view, true, index);
                 } else {
                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
-                    addAppToGrid(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
+                    int index = gridLayout.indexOfChild(activeFolderView);
+                    activeFolderView.setAnimation(null);
+                    gridLayout.removeView(activeFolderView);
+                    addAppToGrid(gridLayout, view, index);
+                    makeAppWobble(view, true, index);
                 }
 
-                ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
             } else {
                 if (activeFolder.getSubApps().size() == 1) {
                     AppItem item = activeFolder.getSubApps().get(0);
@@ -1821,13 +1834,19 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     item.setBelongsToFolder(false);
                     BlissFrameLayout view = prepareApp(item, !folderFromDock);
                     if (folderFromDock) {
-                        addToDock(view, mDock.indexOfChild(activeFolderView));
+                        int index = mDock.indexOfChild(activeFolderView);
+                        activeFolderView.setAnimation(null);
+                        mDock.removeView(activeFolderView);
+                        addAppToDock(view, index);
+                        makeAppWobble(view, true, index);
                     } else {
                         GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
-                        addAppToGrid(gridLayout, view, gridLayout.indexOfChild(activeFolderView));
+                        int index = gridLayout.indexOfChild(activeFolderView);
+                        activeFolderView.setAnimation(null);
+                        gridLayout.removeView(activeFolderView);
+                        addAppToGrid(gridLayout, view, index);
+                        makeAppWobble(view, true, index);
                     }
-
-                    ((ViewGroup) activeFolderView.getParent()).removeView(activeFolderView);
                 } else {
                     updateIcon(activeFolderView, activeFolder,
                             new GraphicsUtil(this).generateFolderIcon(this, activeFolder),
@@ -1838,6 +1857,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                 }
                 int current = getCurrentAppsPageNumber();
                 addAppToGrid(pages.get(current), movingApp);
+                makeAppWobble(movingApp, true, pages.get(current).getChildCount() - 1);
             }
 
             hideFolderWindowContainer();
@@ -1859,40 +1879,16 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     }
 
     /**
-     * Adds items to the mDock making sure that the GridLayout's parameters are
-     * not violated.
-     */
-    private void addToDock(BlissFrameLayout view, int index) {
-        view.findViewById(R.id.app_label).setVisibility(GONE);
-        GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
-        GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
-        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-        /*iconLayoutParams.setMargins(getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                0,
-                getResources().getDimensionPixelSize(R.dimen.app_col_margin),
-                0);*/
-        iconLayoutParams.height = mDeviceProfile.hotseatCellHeightPx;
-        iconLayoutParams.width = mDeviceProfile.cellWidthPx;
-        iconLayoutParams.setGravity(Gravity.CENTER);
-        view.setLayoutParams(iconLayoutParams);
-        view.setWithText(false);
-        if (index != INVALID) {
-            mDock.addView(view, index);
-        } else {
-            mDock.addView(view);
-        }
-    }
-
-    /**
      * Creates/updates a folder using the tags associated with the app being dragged,
      * and the target app.
      */
     private void createFolder(boolean fromDock) {
         int index;
 
+        collidingApp.setAnimation(null);
+
         if (fromDock) {
-            index = mDock.indexOfChild(
-                    collidingApp);
+            index = mDock.indexOfChild(collidingApp);
         } else {
             index = getGridFromPage(pages.get(getCurrentAppsPageNumber())).indexOfChild(
                     collidingApp);
@@ -1913,10 +1909,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     null,
                     "FOLDER",
                     false,
-                    true,
                     false,
-                    false,
-                    true);
+                    false);
             folder.setFolder(true);
             folder.setFolderID(UUID.randomUUID().toString());
 
@@ -1927,19 +1921,25 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             subApps.add(app2);
 
             BlissFrameLayout folderView = prepareApp(folder, !fromDock);
+            makeAppWobble(collidingApp, false, index);
+            ((ViewGroup) collidingApp.getParent()).removeView(collidingApp);
+
             if (fromDock) {
-                addToDock(folderView, index);
+                addAppToDock(folderView, index);
             } else {
                 addAppToGrid(pages.get(getCurrentAppsPageNumber()), folderView, index);
             }
 
-            ((ViewGroup) collidingApp.getParent()).removeView(collidingApp);
+            makeAppWobble((ViewGroup) pages.get(getCurrentAppsPageNumber()).getChildAt(index), true,
+                    index);
 
         } else {
             app2.setBelongsToFolder(true);
             app1.getSubApps().add(app2);
             updateIcon(collidingApp, app1, new GraphicsUtil(this).generateFolderIcon(this, app1),
                     folderFromDock);
+            makeAppWobble(collidingApp, true,
+                    index);
         }
 
 
@@ -1969,7 +1969,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         if (app == null) {
             return;
         }
-        Toast.makeText(this, "Size should be increased.", Toast.LENGTH_SHORT).show();
         app.setScaleX(1.2f);
         app.setScaleY(1.2f);
     }
@@ -1977,13 +1976,12 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     /**
      * Makes an app look normal
      */
-    private void makeAppCold(View app, boolean fromDock) {
+    private synchronized void makeAppCold(View app, boolean fromDock) {
         if (app == null) {
             return;
         }
 
         List<Object> views = (List<Object>) app.getTag();
-        //Toast.makeText(this, "Size should be reset.", Toast.LENGTH_SHORT).show();
         if (!fromDock) {
             ((View) views.get(1)).setVisibility(View.VISIBLE);
         } else {
@@ -2010,9 +2008,14 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * between the dragged app and the dragged-over app
      */
     private boolean checkIfFolderInterest(ViewGroup view, int index, float x, float y) {
-        View v = view.getChildAt(index);
-        double distance = getDistance(x, y, v.getX() + v.getWidth() / 2,
-                v.getY() + v.getHeight() / 2);
+        View v = view.getChildAt(index).findViewById(R.id.app_icon);
+        Rect r = new Rect();
+        v.getGlobalVisibleRect(r);
+        float vx = r.left + (r.right - r.left) / 2;
+        float vy = r.top + (r.bottom - r.top) / 2;
+        Log.i(TAG, "cx: " + x + " cy: " + y + " vx: " + vx + " vy: " + vy);
+        double distance = getDistance(x, y, vx, vy);
+        Log.i(TAG, "checkIfFolderInterest: " + distance + " " + maxDistanceForFolderCreation);
         return distance < maxDistanceForFolderCreation;
     }
 
@@ -2031,21 +2034,26 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * Identifies the app that surrounds a given point
      */
     private int getIndex(ViewGroup page, float x, float y) {
+        Log.d(TAG,
+                "getIndex() called with: page = [" + page + "], x = [" + x + "], y = [" + y + "]");
 
         float minDistance = Float.MAX_VALUE;
         int index = INVALID;
 
+
         for (int i = 0; i < page.getChildCount(); i++) {
-            View v = page.getChildAt(i);
-            Rect r = new Rect((int) v.getX(), (int) v.getY(), (int) v.getX() + v.getWidth(),
-                    (int) v.getY() + v.getHeight());
+            View v = page.getChildAt(i).findViewById(R.id.app_icon);
+            Rect r = new Rect();
+            v.getGlobalVisibleRect(r);
             Rect r2 = new Rect((int) (x - mDeviceProfile.iconSizePx / 2),
                     (int) (y - mDeviceProfile.iconSizePx / 2),
                     (int) (x + mDeviceProfile.iconSizePx / 2),
                     (int) (y + mDeviceProfile.iconSizePx / 2));
+
+            Log.i(TAG, "both rect: "+r+" "+r2);
             if (Rect.intersects(r, r2)) {
-                float vx = v.getX() + mDeviceProfile.cellWidthPx / 2;
-                float vy = v.getY() + mDeviceProfile.cellHeightPx / 2;
+                float vx = r.left + (r.right - r.left) / 2;
+                float vy = r.top + (r.bottom - r.top) / 2;
                 float distance = (float) Math.hypot(vx - x, vy - y);
                 if (minDistance > distance) {
                     minDistance = distance;
@@ -2128,9 +2136,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     private void hideFolderWindowContainer() {
         storage.save(pages, mDock);
         mBlissInput.clearFocus();
-        if (isWobbling) {
-            handleWobbling(false);
-        }
         folderFromDock = false;
         mFolderWindowContainer.animate().alpha(0f)
                 .setDuration(200).setListener(new AnimatorListenerAdapter() {
@@ -2159,122 +2164,54 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         } else if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             hideFolderWindowContainer();
         } else {
-            if (currentPageNumber != 0 && currentPageNumber != 2) {
-                mHorizontalPager.setCurrentPage(1);
-                currentPageNumber = 1;
-            } else {
-                if (currentPageNumber == 0) {
-                    mHorizontalPager.scrollRight();
-                } else {
-                    mHorizontalPager.scrollLeft();
+            mHorizontalPager.setCurrentPage(1);
+        }
+    }
+
+    class ReorderAlarmListener implements Alarm.OnAlarmListener {
+
+        private GridLayout mPage;
+        private final ViewGroup mParent;
+        private final int mIndex;
+
+        public ReorderAlarmListener(GridLayout page, ViewGroup parent, int index) {
+            mPage = page;
+            mParent = parent;
+            mIndex = index;
+        }
+
+        public void onAlarm(Alarm alarm) {
+            GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
+            if (movingApp.getParent() != null && (parentPage == getCurrentAppsPageNumber()
+                    || gridLayout.getChildCount() < mDeviceProfile.maxAppsPerPage)) {
+                ((ViewGroup) movingApp.getParent()).removeView(movingApp);
+                if (gridLayout.getChildCount() < mDeviceProfile.maxAppsPerPage) {
+                    addAppToGrid(gridLayout, movingApp, mIndex);
+                    parentPage = getCurrentAppsPageNumber();
                 }
             }
         }
     }
 
-    public static LauncherActivity getLauncher(Context context) {
-        if (context instanceof LauncherActivity) {
-            return (LauncherActivity) context;
-        }
-        return ((LauncherActivity) ((ContextWrapper) context).getBaseContext());
-    }
+    class DockReorderAlarmListener implements Alarm.OnAlarmListener {
+        private final int mIndex;
 
-    public DeviceProfile getDeviceProfile() {
-        return mDeviceProfile;
-    }
-
-    /*void setDragMode(int dragMode) {
-        if (dragMode != mDragMode) {
-            if (dragMode == DRAG_MODE_NONE) {
-                cleanupAddToFolder();
-                // We don't want to cancel the re-order alarm every time the target cell changes
-                // as this feels to slow / unresponsive.
-                cleanupReorder(false);
-                cleanupFolderCreation();
-            } else if (dragMode == DRAG_MODE_ADD_TO_FOLDER) {
-                cleanupReorder(true);
-                cleanupFolderCreation();
-            } else if (dragMode == DRAG_MODE_CREATE_FOLDER) {
-                cleanupAddToFolder();
-                cleanupReorder(true);
-            } else if (dragMode == DRAG_MODE_REORDER) {
-                cleanupAddToFolder();
-                cleanupFolderCreation();
-            }
-            mDragMode = dragMode;
-        }
-    }
-
-    class FolderCreationAlarmListener implements Alarm.OnAlarmListener {
-        final CellLayout layout;
-        final int cellX;
-        final int cellY;
-
-        final PreviewBackground bg = new PreviewBackground();
-
-        public FolderCreationAlarmListener(CellLayout layout, int cellX, int cellY) {
-            this.layout = layout;
-            this.cellX = cellX;
-            this.cellY = cellY;
-
-            BubbleTextView cell = (BubbleTextView) layout.getChildAt(cellX, cellY);
-            bg.setup(mLauncher, null, cell.getMeasuredWidth(), cell.getPaddingTop());
-
-            // The full preview background should appear behind the icon
-            bg.isClipping = false;
+        public DockReorderAlarmListener(int index) {
+            mIndex = index;
         }
 
         public void onAlarm(Alarm alarm) {
-            mFolderCreateBg = bg;
-            mFolderCreateBg.animateToAccept(layout, cellX, cellY);
-            layout.clearDragOutlines();
-            setDragMode(DRAG_MODE_CREATE_FOLDER);
-        }
-    }
-
-
-    class ReorderAlarmListener implements Alarm.OnAlarmListener {
-        final float[] dragViewCenter;
-        final int minSpanX, minSpanY, spanX, spanY;
-        final DragObject dragObject;
-        final View child;
-
-        public ReorderAlarmListener(float[] dragViewCenter, int minSpanX, int minSpanY, int spanX,
-                int spanY, DragObject dragObject, View child) {
-            this.dragViewCenter = dragViewCenter;
-            this.minSpanX = minSpanX;
-            this.minSpanY = minSpanY;
-            this.spanX = spanX;
-            this.spanY = spanY;
-            this.child = child;
-            this.dragObject = dragObject;
-        }
-
-        public void onAlarm(Alarm alarm) {
-            int[] resultSpan = new int[2];
-            mTargetCell = findNearestArea((int) mDragViewVisualCenter[0],
-                    (int) mDragViewVisualCenter[1], minSpanX, minSpanY, mDragTargetLayout,
-                    mTargetCell);
-            mLastReorderX = mTargetCell[0];
-            mLastReorderY = mTargetCell[1];
-
-            mTargetCell = mDragTargetLayout.performReorder((int) mDragViewVisualCenter[0],
-                    (int) mDragViewVisualCenter[1], minSpanX, minSpanY, spanX, spanY,
-                    child, mTargetCell, resultSpan, CellLayout.MODE_DRAG_OVER);
-
-            if (mTargetCell[0] < 0 || mTargetCell[1] < 0) {
-                mDragTargetLayout.revertTempState();
-            } else {
-                setDragMode(DRAG_MODE_REORDER);
+            if (mDock.getChildCount() < mDeviceProfile.numColumns
+                    || parentPage == -99) {
+                if (movingApp.getParent() != null) {
+                    ((ViewGroup) movingApp.getParent()).removeView(movingApp);
+                }
+                parentPage = -99;
+                addAppToDock(movingApp, mIndex);
             }
 
-            boolean resize = resultSpan[0] != spanX || resultSpan[1] != spanY;
-            mDragTargetLayout.visualizeDropLocation(child, mOutlineProvider,
-                    mTargetCell[0], mTargetCell[1], resultSpan[0], resultSpan[1], resize,
-                    dragObject);
         }
     }
-*/
 
     SystemDragDriver.EventListener workspaceEventListener = new SystemDragDriver.EventListener() {
         @Override

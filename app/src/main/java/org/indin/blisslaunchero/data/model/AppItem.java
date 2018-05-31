@@ -1,5 +1,9 @@
 package org.indin.blisslaunchero.data.model;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Index;
+import android.arch.persistence.room.PrimaryKey;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 
@@ -7,19 +11,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@Entity(tableName = "apps", indices = {@Index(value = "package_name", unique = true)})
 public class AppItem {
 
+    @PrimaryKey
+    private int uid;
+
+    @ColumnInfo(name = "label")
     private String mLabel;
+
+    @ColumnInfo(name = "package_name")
     private String mPackageName;
+
+    @ColumnInfo(name = "icon")
+    private byte[] mIconArray;
+
     private Drawable mIcon;
+
+    @ColumnInfo(name = "intent_string")
+    private String mIntentString;
+
     private Intent mIntent;
+
+    @ColumnInfo(name = "component_name")
     private String mComponentName;
-    private boolean mIconFromIconPack;
+
+    @ColumnInfo(name = "is_system_app")
     private boolean mIsSystemApp;
+
+    @ColumnInfo(name = "is_clock_app")
     private boolean mIsClock;
+
+    @ColumnInfo(name = "is_calendar_app")
     private boolean mIsCalendar;
+
+    @ColumnInfo(name = "is_pinned_app")
     private boolean isPinnedApp;
-    private boolean isAdaptive;
 
     // Folder specific
     private boolean mBelongsToFolder;
@@ -29,27 +56,18 @@ public class AppItem {
 
 
     public AppItem(String label, String packageName, Drawable icon,
-            Intent intent, String componentName, boolean iconFromIconPack, boolean isSystemApp,
-            boolean isClock, boolean isCalendar, boolean adaptive) {
+            Intent intent, String componentName, boolean isSystemApp,
+            boolean isClock, boolean isCalendar) {
         this.mLabel = label;
         this.mPackageName = packageName;
         this.mIcon = icon;
         this.mIntent = intent;
         this.mComponentName = componentName;
-        this.mIconFromIconPack = iconFromIconPack;
         this.mIsSystemApp = isSystemApp;
         this.mIsClock = isClock;
         this.mIsCalendar = isCalendar;
-        this.isAdaptive = adaptive;
     }
 
-    public boolean isAdaptive(){
-        return isAdaptive;
-    }
-
-    public void setAdaptive(boolean adaptive){
-        this.isAdaptive = adaptive;
-    }
     public CharSequence getLabel() {
         return mLabel;
     }
@@ -104,14 +122,6 @@ public class AppItem {
 
     public void setComponentName(String componentName) {
         this.mComponentName = componentName;
-    }
-
-    public boolean isIconFromIconPack() {
-        return mIconFromIconPack;
-    }
-
-    public void setIconFromIconPack(boolean iconFromIconPack) {
-        this.mIconFromIconPack = iconFromIconPack;
     }
 
     public boolean isFolder() {

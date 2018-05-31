@@ -77,23 +77,4 @@ public class AppUsageStats {
 
         return usageStats;
     }
-
-    /**
-     * The {@link Comparator} to sort a collection of {@link UsageStats} sorted by the timestamp
-     * last time the app was used in the descendant order.
-     */
-    private static class ForegroundTimeComparatorDesc implements Comparator<String> {
-
-        private Map<String, UsageStats> mMap;
-
-        public ForegroundTimeComparatorDesc(Map<String, UsageStats> map) {
-            this.mMap = map;
-        }
-
-        @Override
-        public int compare(String left, String right) {
-            return Long.compare(mMap.get(right).getTotalTimeInForeground(),
-                    mMap.get(left).getTotalTimeInForeground());
-        }
-    }
 }

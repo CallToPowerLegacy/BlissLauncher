@@ -179,7 +179,6 @@ public class AdaptiveIconProvider {
         if (foreground != null && background != null) {
             return new AdaptiveIconDrawableCompat(background, foreground);
         } else {
-            Log.i(TAG, packageName + "load: " + (foreground == null) + " " + (background == null));
             return null;
         }
     }

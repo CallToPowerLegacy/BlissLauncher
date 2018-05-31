@@ -2,6 +2,8 @@ package org.indin.blisslaunchero.framework.customviews;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.Rect;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -12,22 +14,37 @@ public class BlissDragShadowBuilder extends View.DragShadowBuilder {
 
     private final int mX;
     private final int mY;
+
+    private static final String TAG = "BlissDragShadowBuilder";
+    public final float yOffset;
+    public final float xOffset;
+
     private Point mScaleFactor;
+
     // Defines the constructor for myDragShadowBuilder
     public BlissDragShadowBuilder(View v, float x, float y) {
 
-        // Stores the View parameter passed to myDragShadowBuilder.
+        // Stores the View parameter passed to DragShadowBuilder.
         super(v);
 
 
         mX = (int) x;
         mY = (int) y;
+
+        Rect r = new Rect();
+
+        v.getGlobalVisibleRect(r);
+        float globalMX = r.left + mX;
+        float globalMY = r.top + mY;
+
+        xOffset = (globalMX - (r.left + (r.right - r.left) / 2));
+        yOffset = (globalMY - (r.top + (r.bottom - r.top) / 2));
     }
 
     // Defines a callback that sends the drag shadow dimensions and touch point back to the
     // system.
     @Override
-    public void onProvideShadowMetrics (Point size, Point touch) {
+    public void onProvideShadowMetrics(Point size, Point touch) {
         // Defines local variables
         int width;
         int height;
@@ -50,9 +67,9 @@ public class BlissDragShadowBuilder extends View.DragShadowBuilder {
 
     @Override
     public void onDrawShadow(Canvas canvas) {
-
         // Draws the ColorDrawable in the Canvas passed in from the system.
-        canvas.scale(mScaleFactor.x/(float)getView().getWidth(), mScaleFactor.y/(float)getView().getHeight());
+        canvas.scale(mScaleFactor.x / (float) getView().getWidth(),
+                mScaleFactor.y / (float) getView().getHeight());
         getView().draw(canvas);
     }
 

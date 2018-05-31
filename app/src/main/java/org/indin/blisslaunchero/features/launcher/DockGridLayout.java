@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.GridLayout;
 
+import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 
 public class DockGridLayout extends GridLayout {
@@ -26,7 +27,7 @@ public class DockGridLayout extends GridLayout {
     @Override
     protected void onMeasure(int widthSpec, int heightSpec) {
         super.onMeasure(widthSpec, heightSpec);
-        DeviceProfile deviceProfile = LauncherActivity.getLauncher(mContext).getDeviceProfile();
+        DeviceProfile deviceProfile = BlissLauncher.getApplication(mContext).getDeviceProfile();
         setMeasuredDimension(deviceProfile.getAvailableWidthPx(), deviceProfile.hotseatCellHeightPx);
     }
 }

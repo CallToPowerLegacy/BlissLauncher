@@ -63,8 +63,8 @@ public class LauncherPresenter extends MvpPresenter<LauncherContract.View> imple
     }
 
     private Observable<AllAppsList> loadAppsAndIconCache(Context context) {
-        IconPackUtil.cacheIconsFromIconPack(context);
+        //IconPackUtil.cacheIconsFromIconPack(context);
         return Observable.defer(
-                () -> Observable.just(AppUtil.loadAllApps(context)));
+                () -> Observable.just(AppUtil.loadAll(context)));
     }
 }

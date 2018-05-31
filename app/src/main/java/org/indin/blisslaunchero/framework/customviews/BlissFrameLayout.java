@@ -9,6 +9,7 @@ import android.util.Log;
 import android.util.Property;
 import android.widget.FrameLayout;
 
+import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.features.notification.DotRenderer;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 import org.indin.blisslaunchero.features.launcher.LauncherActivity;
@@ -64,8 +65,8 @@ public class BlissFrameLayout extends FrameLayout {
 
     private void init() {
         setWillNotDraw(false);
-        mDotRenderer = new DotRenderer(mContext, LauncherActivity.getLauncher(mContext).getDeviceProfile().iconSizePx);
-        mDeviceProfile = LauncherActivity.getLauncher(mContext).getDeviceProfile();
+        mDeviceProfile = BlissLauncher.getApplication(mContext).getDeviceProfile();
+        mDotRenderer = new DotRenderer(mContext, mDeviceProfile.iconSizePx);
         mIconSize = mDeviceProfile.iconSizePx;
     }
 

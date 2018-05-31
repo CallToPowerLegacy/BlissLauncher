@@ -21,6 +21,7 @@ import android.view.ViewParent;
 import android.widget.Scroller;
 
 import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.LauncherActivity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -347,7 +348,7 @@ public class HorizontalPager extends ViewGroup {
         final float x = ev.getX();
         final float y = ev.getY();
 
-        if (mIsUiCreated) {
+        if (mIsUiCreated && !LauncherActivity.longPressed) {
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
                 /*
@@ -438,7 +439,7 @@ public class HorizontalPager extends ViewGroup {
         final int newX = getScrollXForPage(whichPage);
         final int delta = newX - getScrollX();
         //mScroller.startScroll(getScrollX(), 0, delta, 0, Math.abs(delta) * 2);
-        mScroller.startScroll(getScrollX(), 0, delta, 0, 400);
+        mScroller.startScroll(getScrollX(), 0, delta, 0, duration);
         invalidate();
     }
 
@@ -550,7 +551,7 @@ public class HorizontalPager extends ViewGroup {
     /**
      * Implement to receive events on scroll position and page snaps.
      */
-    public static interface OnScrollListener {
+    public interface OnScrollListener {
         /**
          * Receives the current scroll X value.  This value will be adjusted to assume the left edge
          * of the first
