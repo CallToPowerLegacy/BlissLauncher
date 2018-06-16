@@ -88,5 +88,7 @@
     <dimen name="drag_flingToDeleteMinVelocity">-1500dp</dimen>
 
     <dimen name="spring_loaded_panel_border">1dp</dimen>
+    <dimen name="forecast_icon_size">36dp</dimen>
+    <dimen name="forecast_item_padding_side">16dp</dimen>
 
 </resources>

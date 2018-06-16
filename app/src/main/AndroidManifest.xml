@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.indin.blisslaunchero">
+          package="org.indin.blisslaunchero">
 
-    <uses-permission android:name="android.permission.SET_WALLPAPER" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"/>
+
+    <!-- Weather -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+    <!-- General -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <protected-broadcast android:name="com.cyanogenmod.lockclock.action.FORCE_WEATHER_UPDATE"/>
+
+    <uses-permission android:name="cyanogenmod.permission.ACCESS_WEATHER_MANAGER"/>
+    <uses-permission android:name="cyanogenmod.permission.READ_WEATHER"/>
 
     <application
         android:name=".BlissLauncher"
@@ -20,13 +33,13 @@
             android:launchMode="singleTask"
             android:screenOrientation="nosensor"
             android:stateNotNeeded="true"
-            android:windowSoftInputMode="adjustPan"
-            android:theme="@style/HomeScreenTheme">
+            android:theme="@style/HomeScreenTheme"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
 
@@ -34,8 +47,22 @@
             android:name=".features.notification.NotificationService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
+                <action android:name="android.service.notification.NotificationListenerService"/>
             </intent-filter>
         </service>
+
+        <activity android:name=".features.weather.WeatherPreferences"
+                  android:theme="@style/AppTheme">
+        </activity>
+
+        <activity android:name=".features.weather.PermissionRequestActivity"
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar"
+                  android:excludeFromRecents="true"
+                  android:noHistory="true"
+                  android:exported="true"/>
+
+        <service android:name=".features.weather.WeatherUpdateService"/>
+        <service android:name=".features.weather.DeviceStatusService"/>
+        <service android:name=".features.weather.WeatherSourceListenerService"/>
     </application>
 </manifest>

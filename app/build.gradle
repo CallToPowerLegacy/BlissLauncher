@@ -45,11 +45,12 @@ android {
 }
 
 dependencies {
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
+
+    implementation 'org.cyanogenmod:platform.sdk:6.0'
 
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.2'
     implementation 'com.google.firebase:firebase-core:15.0.2'
@@ -74,13 +75,12 @@ dependencies {
     // Rx Java and Android
     implementation "io.reactivex.rxjava2:rxandroid:${rootProject.ext.rxAndroidVersion}"
     implementation "io.reactivex.rxjava2:rxjava:${rootProject.ext.rxJavaVersion}"
-
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
 
     // Retrofit
-    implementation "com.squareup.retrofit2:retrofit:2.3.0"
-    implementation "com.squareup.retrofit2:converter-gson:2.3.0"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:2.3.0"
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
 
     // Okhttp
     implementation 'com.squareup.okhttp3:logging-interceptor:3.8.0'
@@ -110,7 +110,6 @@ dependencies {
     androidTestImplementation "com.android.support.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "com.android.support.test:runner:${rootProject.ext.runnerRulesVersion}"
     androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
-
 }
 
 apply plugin: 'com.google.gms.google-services'

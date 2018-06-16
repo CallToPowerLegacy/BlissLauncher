@@ -3,14 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_marginTop="8dp"
-    android:background="@drawable/item_rounded_corner_card_background">
-
+    android:layout_marginTop="8dp">
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/app_suggestion"
-        android:background="@color/dark_grey"
+        android:background="@drawable/item_widget_top_round_corner"
         android:textSize="16sp"
         android:padding="8dp"
         android:textColor="#88FFFFFF"/>
@@ -18,7 +16,7 @@
         android:id="@+id/suggestedAppGrid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#44000000"
+        android:background="@drawable/item_widget_bottom_round_corner"
         android:columnCount="@integer/col_count"
         android:rowCount="1" />
 </LinearLayout>

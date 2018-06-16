@@ -67,7 +67,6 @@ public class DeviceProfile {
     public int iconSizePx;
     public int iconTextSizePx;
     public int iconDrawablePaddingPx;
-    public int iconDrawablePaddingOriginalPx;
 
     // Calendar icon
     public int dateTextSize;
@@ -247,8 +246,6 @@ public class DeviceProfile {
         // Hotseat
         hotseatCellHeightWithoutPaddingPx = iconSizePx;
         hotseatCellHeightPx = hotseatCellHeightWithoutPaddingPx + iconDrawablePaddingPx;
-
-        Log.i(TAG, "hotseatHeight:");
 
         numRows = (availableHeightPx - Utilities.pxFromDp(8, dm) - pageIndicatorTopPaddingPx
                 - pageIndicatorBottomPaddingPx

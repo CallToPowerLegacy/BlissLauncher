@@ -28,6 +28,9 @@ public class DockGridLayout extends GridLayout {
     protected void onMeasure(int widthSpec, int heightSpec) {
         super.onMeasure(widthSpec, heightSpec);
         DeviceProfile deviceProfile = BlissLauncher.getApplication(mContext).getDeviceProfile();
-        setMeasuredDimension(deviceProfile.getAvailableWidthPx(), deviceProfile.hotseatCellHeightPx);
+        setMeasuredDimension(deviceProfile.getAvailableWidthPx(),
+                deviceProfile.hotseatCellHeightPx);
+        this.setPadding(deviceProfile.iconDrawablePaddingPx / 2, 0,
+                deviceProfile.iconDrawablePaddingPx / 2, 0);
     }
 }

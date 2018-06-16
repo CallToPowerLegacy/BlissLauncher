@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@color/dark_grey_44"
     android:orientation="vertical">
 
     <LinearLayout
@@ -54,6 +53,8 @@
 
         <include layout="@layout/layout_used_apps"
             android:id="@+id/used_apps_layout"/>
+        <include layout="@layout/layout_weather_info"
+        android:id="@+id/weather_info_layout"/>
     </LinearLayout>
 
 </ScrollView>

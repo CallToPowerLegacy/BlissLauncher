@@ -348,7 +348,7 @@ public class HorizontalPager extends ViewGroup {
         final float x = ev.getX();
         final float y = ev.getY();
 
-        if (mIsUiCreated && !LauncherActivity.longPressed) {
+        if (mIsUiCreated) {
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
                 /*

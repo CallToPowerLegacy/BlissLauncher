@@ -31,14 +31,13 @@ public class BlissDragShadowBuilder extends View.DragShadowBuilder {
         mX = (int) x;
         mY = (int) y;
 
-        Rect r = new Rect();
+        Log.i(TAG, "Touchpoint: "+mX+" "+mY);
 
-        v.getGlobalVisibleRect(r);
-        float globalMX = r.left + mX;
-        float globalMY = r.top + mY;
+        xOffset = mX - v.getWidth()/2;
+        yOffset = (mY - v.getHeight()/2);
 
-        xOffset = (globalMX - (r.left + (r.right - r.left) / 2));
-        yOffset = (globalMY - (r.top + (r.bottom - r.top) / 2));
+        Log.i(TAG, "Offset: "+xOffset+" "+yOffset);
+
     }
 
     // Defines a callback that sends the drag shadow dimensions and touch point back to the

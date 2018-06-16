@@ -3,6 +3,11 @@ package org.indin.blisslaunchero.features.launcher;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
@@ -23,6 +28,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -63,8 +69,13 @@ import org.indin.blisslaunchero.features.suggestions.AutoCompleteAdapter;
 import org.indin.blisslaunchero.features.suggestions.AutoCompleteService;
 import org.indin.blisslaunchero.features.suggestions.AutoCompleteServiceResult;
 import org.indin.blisslaunchero.features.usagestats.AppUsageStats;
+import org.indin.blisslaunchero.features.weather.ForecastBuilder;
+import org.indin.blisslaunchero.features.weather.WeatherIconUtils;
+import org.indin.blisslaunchero.features.weather.WeatherPreferences;
+import org.indin.blisslaunchero.features.weather.WeatherUpdateService;
 import org.indin.blisslaunchero.framework.Alarm;
 import org.indin.blisslaunchero.framework.DeviceProfile;
+import org.indin.blisslaunchero.framework.Preferences;
 import org.indin.blisslaunchero.framework.SystemDragDriver;
 import org.indin.blisslaunchero.framework.customviews.BlissDragShadowBuilder;
 import org.indin.blisslaunchero.framework.customviews.BlissFrameLayout;
@@ -93,6 +104,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import cyanogenmod.weather.WeatherInfo;
+import cyanogenmod.weather.util.WeatherUtils;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -212,6 +225,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     private AutoCompleteAdapter mSuggestionAdapter;
     private GridLayout suggestedAppsGridLayout;
     private BlissDragShadowBuilder dragShadowBuilder;
+    private View mWeatherPanel;
+    private View mWeatherSetupTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -235,6 +250,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         // Start NotificationService to add count badge to Icons
         notificationServiceIntent = new Intent(this, NotificationService.class);
         startService(notificationServiceIntent);
+
         mPresenter.attachView(this);
         mProgressBar.setVisibility(View.VISIBLE);
         mPresenter.loadApps(this);
@@ -418,6 +434,9 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
     protected void onResume() {
         super.onResume();
         overridePendingTransition(R.anim.reenter, R.anim.releave);
+        if(mWeatherPanel != null && mWeatherSetupTextView != null){
+            createOrUpdateWeatherPanel();
+        }
     }
 
     @Override
@@ -431,6 +450,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         unregisterReceiver(installReceiver);
         unregisterReceiver(uninstallReceiver);
         unregisterReceiver(timeChangedReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
         getCompositeDisposable().dispose();
     }
 
@@ -459,8 +479,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         if (appItem != null) {
             BlissFrameLayout view = prepareApp(appItem, true);
             int current = getCurrentAppsPageNumber();
-            while (current < pages.size() && pages.get(current).getChildCount()
-                    == mDeviceProfile.maxAppsPerPage) {
+            while (current == -1 ||(current < pages.size() && pages.get(current).getChildCount()
+                    == mDeviceProfile.maxAppsPerPage)) {
                 current++;
             }
 
@@ -683,6 +703,9 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                 });
 
                         refreshSuggestedApps();
+                        if(mWeatherPanel != null && mWeatherSetupTextView != null){
+                            createOrUpdateWeatherPanel();
+                        }
                     } else {
                         if (mIndicator.getAlpha() != 1.0f) {
                             mIndicator.setVisibility(View.VISIBLE);
@@ -756,6 +779,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         currentPageNumber = 0;
 
         mDock.setLayoutTransition(getDefaultLayoutTransition());
+        mDock.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2, 0,
+                mDeviceProfile.iconDrawablePaddingPx / 2, 0);
         for (int i = 0; i < pinnedApps.size(); i++) {
             BlissFrameLayout appView = prepareApp(pinnedApps.get(i), false);
             addAppToDock(appView, INVALID);
@@ -959,7 +984,120 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
             }
             return false;
         });
+
+        findViewById(R.id.weather_setting_imageview).setOnClickListener(
+                v -> startActivity(new Intent(this, WeatherPreferences.class)));
+
+        mWeatherSetupTextView = findViewById(R.id.weather_setup_textview);
+        mWeatherPanel = findViewById(R.id.weather_panel);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mWeatherReceiver, new IntentFilter(
+                WeatherUpdateService.ACTION_UPDATE_FINISHED));
+        startService(new Intent(this, WeatherUpdateService.class)
+                .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+        createOrUpdateWeatherPanel();
     }
+
+    private void createOrUpdateWeatherPanel() {
+        if (!Preferences.showWeather(this) || Preferences.getCachedWeatherInfo(this) == null) {
+            mWeatherSetupTextView.setVisibility(VISIBLE);
+            mWeatherPanel.setVisibility(GONE);
+            mWeatherSetupTextView.setOnClickListener(
+                    v -> startActivity(new Intent(LauncherActivity.this, WeatherPreferences.class)));
+        } else{
+            mWeatherSetupTextView.setVisibility(GONE);
+            new Handler(Looper.getMainLooper()).post(() -> updateWeatherPanel(Preferences.getCachedWeatherInfo(this)));
+        }
+    }
+
+    private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive() called with: context = [" + context + "], intent = [" + intent
+                    + "]");
+            if(!intent.getBooleanExtra(WeatherUpdateService.EXTRA_UPDATE_CANCELLED, false)){
+                WeatherInfo w = Preferences.getCachedWeatherInfo(LauncherActivity.this);
+                if(w == null){
+                    Toast.makeText(LauncherActivity.this, "Weather info can not be fetched", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                new Handler(Looper.getMainLooper()).post(() -> updateWeatherPanel(w));
+            }
+        }
+    };
+
+    private void updateWeatherPanel(WeatherInfo w) {
+        if(mWeatherSetupTextView.getVisibility() == VISIBLE){
+            mWeatherSetupTextView.setVisibility(GONE);
+        }
+
+        mWeatherPanel.setVisibility(VISIBLE);
+        int color = Preferences.weatherFontColor(this);
+        final boolean useMetric = Preferences.useMetricUnits(this);
+        double temp = w.getTemperature();
+        double todaysLow = w.getTodaysLow();
+        double todaysHigh = w.getTodaysHigh();
+
+        int tempUnit = w.getTemperatureUnit();
+        if (tempUnit == FAHRENHEIT && useMetric) {
+            temp = WeatherUtils.fahrenheitToCelsius(temp);
+            todaysLow = WeatherUtils.fahrenheitToCelsius(todaysLow);
+            todaysHigh = WeatherUtils.fahrenheitToCelsius(todaysHigh);
+            tempUnit = CELSIUS;
+        } else if (tempUnit == CELSIUS && !useMetric) {
+            temp = WeatherUtils.celsiusToFahrenheit(temp);
+            todaysLow = WeatherUtils.celsiusToFahrenheit(todaysLow);
+            todaysHigh = WeatherUtils.celsiusToFahrenheit(todaysHigh);
+            tempUnit = FAHRENHEIT;
+        }
+
+        // Set the current conditions
+        // Weather Image
+        ImageView weatherImage = (ImageView) mWeatherPanel.findViewById(R.id.weather_image);
+        String iconsSet = Preferences.getWeatherIconSet(this);
+        weatherImage.setImageBitmap(
+                WeatherIconUtils.getWeatherIconBitmap(this, iconsSet, color,
+                        w.getConditionCode(), WeatherIconUtils.getNextHigherDensity(this)));
+
+        // City
+        TextView city = (TextView) mWeatherPanel.findViewById(R.id.weather_city);
+        city.setText(w.getCity());
+
+        // Weather Condition
+        TextView weatherCondition = (TextView) mWeatherPanel.findViewById(R.id.weather_condition);
+        weatherCondition.setText(org.indin.blisslaunchero.features.weather.WeatherUtils.resolveWeatherCondition(this, w.getConditionCode()));
+
+        // Weather Temps
+        TextView weatherTemp = (TextView) mWeatherPanel.findViewById(R.id.weather_current_temperature);
+        weatherTemp.setText(WeatherUtils.formatTemperature(temp, tempUnit));
+
+        // Weather Temps Panel additional items
+        final String low = WeatherUtils.formatTemperature(todaysLow, tempUnit);
+        final String high = WeatherUtils.formatTemperature(todaysHigh, tempUnit);
+        TextView weatherLowHigh = (TextView) mWeatherPanel.findViewById(R.id.weather_low_high);
+        weatherLowHigh.setText(low + " / " + high);
+
+        double windSpeed = w.getWindSpeed();
+        int windSpeedUnit = w.getWindSpeedUnit();
+        if (windSpeedUnit == MPH && useMetric) {
+            windSpeedUnit = KPH;
+            windSpeed = org.indin.blisslaunchero.features.weather.WeatherUtils.milesToKilometers(windSpeed);
+        } else if (windSpeedUnit == KPH && !useMetric) {
+            windSpeedUnit = MPH;
+            windSpeed = org.indin.blisslaunchero.features.weather.WeatherUtils.kilometersToMiles(windSpeed);
+        }
+
+
+        // Humidity and Wind
+        TextView weatherHumWind = (TextView) mWeatherPanel.findViewById(R.id.weather_chance_rain);
+        weatherHumWind.setText(org.indin.blisslaunchero.features.weather.WeatherUtils.formatHumidity(w.getHumidity()) + ", "
+                + org.indin.blisslaunchero.features.weather.WeatherUtils.formatWindSpeed(this, windSpeed, windSpeedUnit) + " "
+                + org.indin.blisslaunchero.features.weather.WeatherUtils.resolveWindDirection(this, w.getWindDirection()));
+        LinearLayout forecastView = (LinearLayout) mWeatherPanel.findViewById(R.id.forecast_view);
+
+        ForecastBuilder.buildSmallPanel(this, forecastView, w);
+    }
+
 
     private ObservableSource<AutoCompleteServiceResult> searchForQuery(
             CharSequence charSequence) {
@@ -1329,6 +1467,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         }
         isWobbling = shouldPlay;
         mLongClickStartsDrag = !shouldPlay;
+        longPressed = false;
 
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
@@ -1358,28 +1497,28 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
     private void makeAppWobble(ViewGroup viewGroup, boolean shouldPlayAnimation, int i) {
 
-        new Handler(Looper.getMainLooper()).post(() -> {
-            if (shouldPlayAnimation) {
-                if (viewGroup.getAnimation() == null) {
-                    ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
-                    if (imageView == null) {
-                        addUninstallIcon(viewGroup);
-                    }
-
-                    if (i % 2 == 0) {
-                        viewGroup.startAnimation(wobbleAnimation);
-                    } else {
-                        viewGroup.startAnimation(wobbleReverseAnimation);
-                    }
-                }
-            } else {
+        if (shouldPlayAnimation) {
+            if (viewGroup.getAnimation() == null) {
                 ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
-                if (imageView != null) {
-                    ((ViewGroup) imageView.getParent()).removeView(imageView);
+                if (imageView == null) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        addUninstallIcon(viewGroup);
+                    });
                 }
-                viewGroup.setAnimation(null);
+
+                if (i % 2 == 0) {
+                    viewGroup.startAnimation(wobbleAnimation);
+                } else {
+                    viewGroup.startAnimation(wobbleReverseAnimation);
+                }
             }
-        });
+        } else {
+            ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
+            if (imageView != null) {
+                ((ViewGroup) imageView.getParent()).removeView(imageView);
+            }
+            viewGroup.setAnimation(null);
+        }
 
     }
 
@@ -1428,12 +1567,17 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         /*mHorizontalPager.setOnDragListener(new SystemDragDriver(workspaceEventListener));
         mDock.setOnDragListener(new SystemDragDriver(dockEventListener));*/
         mDock.setOnDragListener(new View.OnDragListener() {
+            public float cX;
+            public float cY;
             private boolean latestFolderInterest;
 
             @Override
             public boolean onDrag(View view, DragEvent dragEvent) {
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
                     isDragging = true;
+                    if (mWobblingCountDownTimer != null) {
+                        mWobblingCountDownTimer.cancel();
+                    }
                 }
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     // Don't offer rearrange functionality when app is being dragged
@@ -1447,8 +1591,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         return true;
                     }
 
-                    float cX = mDock.getX() + dragEvent.getX() - dragShadowBuilder.xOffset;
-                    float cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
+                    cX = dragEvent.getX() - dragShadowBuilder.xOffset;
+                    cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
 
                     int index = getIndex(mDock, cX, cY);
                     // If hovering over self, ignore drag/drop
@@ -1469,8 +1613,10 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         BlissFrameLayout latestCollidingApp =
                                 (BlissFrameLayout) mDock.getChildAt(index);
                         if (collidingApp != latestCollidingApp) {
-                            if(collidingApp != null){
-                                makeAppCold(collidingApp, !(collidingApp.getParent().getParent() instanceof HorizontalPager));
+                            if (collidingApp != null) {
+                                makeAppCold(collidingApp,
+                                        !(collidingApp.getParent().getParent() instanceof
+                                                HorizontalPager));
                             }
                             collidingApp = latestCollidingApp;
                             folderInterest = false;
@@ -1491,7 +1637,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                             } else {
                                 View app = collidingApp;
                                 Log.i(TAG, "onDrag: dock here");
-                                makeAppCold(app, !(app.getParent().getParent() instanceof HorizontalPager));
+                                makeAppCold(app,
+                                        !(app.getParent().getParent() instanceof HorizontalPager));
                             }
                         }
                     }
@@ -1531,6 +1678,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         }
                         folderInterest = false;
                     } else {
+                        cX = dragEvent.getX() - dragShadowBuilder.xOffset;
+                        cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
                         // Drop functionality when the folder window is visible
                         Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
                                 (int) mFolderAppsViewPager.getY(),
@@ -1538,8 +1687,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                         + mFolderAppsViewPager.getX()),
                                 (int) (mFolderAppsViewPager.getHeight()
                                         + mFolderAppsViewPager.getY()));
-                        if (!bounds.contains((int) (dragEvent.getX() - dragShadowBuilder.xOffset),
-                                (int) (dragEvent.getY() - dragShadowBuilder.yOffset))) {
+
+                        if (!bounds.contains((int) cX, (int) cY)) {
                             removeAppFromFolder();
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
@@ -1556,6 +1705,8 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         });
 
         mHorizontalPager.setOnDragListener(new View.OnDragListener() {
+            public float cY;
+            public float cX;
             private boolean latestFolderInterest;
 
             @Override
@@ -1563,17 +1714,15 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
                     isDragging = true;
-                    if(mWobblingCountDownTimer != null){
+                    if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
                 }
 
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
-
-                    float cX, cY;
-                    cX = dragEvent.getX() + dragShadowBuilder.xOffset;
-                    cY = ConverterUtil.dp2Px(8, LauncherActivity.this) + dragEvent.getY()
-                            + dragShadowBuilder.yOffset;
+                    cX = dragEvent.getX() - dragShadowBuilder.xOffset;
+                    cY = mHorizontalPager.getY() + dragEvent.getY()
+                            - dragShadowBuilder.yOffset;
 
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
@@ -1609,9 +1758,11 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         // depending on time and distance
                         if (index != INVALID) {
                             View latestCollidingApp = getGridFromPage(page).getChildAt(index);
-                            if (collidingApp != latestCollidingApp ) {
-                                if(collidingApp != null){
-                                    makeAppCold(collidingApp, !(collidingApp.getParent().getParent() instanceof HorizontalPager));
+                            if (collidingApp != latestCollidingApp) {
+                                if (collidingApp != null) {
+                                    makeAppCold(collidingApp,
+                                            !(collidingApp.getParent().getParent() instanceof
+                                                    HorizontalPager));
                                 }
                                 collidingApp = (BlissFrameLayout) latestCollidingApp;
                                 folderInterest = false;
@@ -1635,7 +1786,9 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                     makeAppHot(collidingApp);
                                 } else {
                                     Log.i(TAG, "onDrag: pager here");
-                                    makeAppCold(collidingApp, !(collidingApp.getParent().getParent() instanceof HorizontalPager));
+                                    makeAppCold(collidingApp,
+                                            !(collidingApp.getParent().getParent() instanceof
+                                                    HorizontalPager));
                                 }
                             }
                         }
@@ -1705,6 +1858,10 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                         }
                         folderInterest = false;
                     } else {
+                        cX = dragEvent.getX() - dragShadowBuilder.xOffset;
+                        cY = mHorizontalPager.getY() + dragEvent.getY()
+                                - dragShadowBuilder.yOffset;
+
                         // Drop functionality when the folder window is visible
                         Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
                                 (int) mFolderAppsViewPager.getY(),
@@ -1712,10 +1869,10 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                                         + mFolderAppsViewPager.getX()),
                                 (int) (mFolderAppsViewPager.getHeight()
                                         + mFolderAppsViewPager.getY()));
-                        if (!bounds.contains((int) (dragEvent.getX() - dragShadowBuilder.xOffset),
-                                (int) (dragEvent.getY() - dragShadowBuilder.yOffset))) {
+                        if (!bounds.contains((int) cX, (int) cY)) {
                             removeAppFromFolder();
                         } else {
+                            Log.i(TAG, "here comes  ");
                             movingApp.setVisibility(View.VISIBLE);
                             int currentItem = mFolderAppsViewPager.getCurrentItem();
                             makeAppWobble(movingApp, true,
@@ -1799,10 +1956,15 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * Remove app from the folder by dragging out of the folder view.
      */
     private void removeAppFromFolder() {
+        Log.d(TAG, "removeAppFromFolder() called");
         if (pages.get(getCurrentAppsPageNumber()).getChildCount()
                 >= mDeviceProfile.maxAppsPerPage) {
             Toast.makeText(this, "No more room in page", Toast.LENGTH_SHORT).show();
             movingApp.setVisibility(View.VISIBLE);
+            int currentItem = mFolderAppsViewPager.getCurrentItem();
+            makeAppWobble(movingApp, true,
+                    ((GridLayout) mFolderAppsViewPager.getChildAt(
+                            currentItem)).indexOfChild(movingApp));
         } else {
             AppItem app = getAppDetails(movingApp);
             activeFolder.getSubApps().remove(app);
@@ -1926,12 +2088,12 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
 
             if (fromDock) {
                 addAppToDock(folderView, index);
+
             } else {
                 addAppToGrid(pages.get(getCurrentAppsPageNumber()), folderView, index);
             }
+            makeAppWobble(folderView, true, index);
 
-            makeAppWobble((ViewGroup) pages.get(getCurrentAppsPageNumber()).getChildAt(index), true,
-                    index);
 
         } else {
             app2.setBelongsToFolder(true);
@@ -1966,6 +2128,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * Highlights an app
      */
     private void makeAppHot(View app) {
+        Toast.makeText(this, "app should be made hot", Toast.LENGTH_SHORT).show();
         if (app == null) {
             return;
         }
@@ -2011,6 +2174,7 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
         View v = view.getChildAt(index).findViewById(R.id.app_icon);
         Rect r = new Rect();
         v.getGlobalVisibleRect(r);
+        Log.i(TAG, "checkIfFolderInterest: " + r);
         float vx = r.left + (r.right - r.left) / 2;
         float vy = r.top + (r.bottom - r.top) / 2;
         Log.i(TAG, "cx: " + x + " cy: " + y + " vx: " + vx + " vy: " + vy);
@@ -2034,9 +2198,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
      * Identifies the app that surrounds a given point
      */
     private int getIndex(ViewGroup page, float x, float y) {
-        Log.d(TAG,
-                "getIndex() called with: page = [" + page + "], x = [" + x + "], y = [" + y + "]");
-
         float minDistance = Float.MAX_VALUE;
         int index = INVALID;
 
@@ -2049,8 +2210,6 @@ public class LauncherActivity extends AppCompatActivity implements LauncherContr
                     (int) (y - mDeviceProfile.iconSizePx / 2),
                     (int) (x + mDeviceProfile.iconSizePx / 2),
                     (int) (y + mDeviceProfile.iconSizePx / 2));
-
-            Log.i(TAG, "both rect: "+r+" "+r2);
             if (Rect.intersects(r, r2)) {
                 float vx = r.left + (r.right - r.left) / 2;
                 float vy = r.top + (r.bottom - r.top) / 2;
