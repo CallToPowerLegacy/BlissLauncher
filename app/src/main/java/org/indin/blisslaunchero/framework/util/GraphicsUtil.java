@@ -14,20 +14,24 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.model.AppItem;
 import org.indin.blisslaunchero.features.launcher.LauncherActivity;
+import org.indin.blisslaunchero.framework.DeviceProfile;
 
 public class GraphicsUtil {
 
     private static final String TAG = "BLISS_GRAPHICS";
+    private final DeviceProfile deviceProfile;
     private Context mContext;
     private String mPackageName;
     private int appIconWidth;
 
     public GraphicsUtil(Context context) {
         this.mContext = context;
-        this.appIconWidth = LauncherActivity.getLauncher(mContext).getDeviceProfile().iconSizePx;
+        this.deviceProfile = BlissLauncher.getApplication(context).getDeviceProfile();
+        this.appIconWidth = deviceProfile.iconSizePx;
     }
 
     /**
@@ -144,13 +148,12 @@ public class GraphicsUtil {
 
         bitmapDrawable.setAntiAlias(true);
         Bitmap bitmap = bitmapDrawable.getBitmap();
-        Log.i(TAG, "addBackground: "+bitmap.getWidth()+"*"+bitmap.getHeight());
         return addBackground(bitmap, isFolder);
     }
 
     public BitmapDrawable convertToRoundedCorner(Context context, Bitmap src) {
         return new BitmapDrawable(context.getResources(),
-                BitmapUtils.getCroppedBitmap(src, LauncherActivity.getLauncher(mContext).getDeviceProfile().path));
+                BitmapUtils.getCroppedBitmap(src, deviceProfile.path));
     }
 
 }

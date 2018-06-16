@@ -40,7 +40,8 @@ public class LauncherPresenter extends MvpPresenter<LauncherContract.View> imple
     public void loadApps(Context context) {
 
         checkViewAttached();
-        mCompositeDisposable.add(loadAppsAndIconCache(context).subscribeOn(Schedulers.io())
+        mCompositeDisposable.add(loadAppsAndIconCache(context)
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new DisposableObserver<AllAppsList>() {
                     @Override
@@ -62,8 +63,8 @@ public class LauncherPresenter extends MvpPresenter<LauncherContract.View> imple
     }
 
     private Observable<AllAppsList> loadAppsAndIconCache(Context context) {
-        IconPackUtil.cacheIconsFromIconPack(context);
+        //IconPackUtil.cacheIconsFromIconPack(context);
         return Observable.defer(
-                () -> Observable.just(AppUtil.loadAllApps(context)));
+                () -> Observable.just(AppUtil.loadAll(context)));
     }
 }

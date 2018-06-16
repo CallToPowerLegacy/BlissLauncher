@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 
+import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 
 public class LauncherViewPager extends ViewPager {
@@ -18,7 +19,7 @@ public class LauncherViewPager extends ViewPager {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        DeviceProfile deviceProfile = LauncherActivity.getLauncher(mContext).getDeviceProfile();
+        DeviceProfile deviceProfile = BlissLauncher.getApplication(mContext).getDeviceProfile();
         setMeasuredDimension(deviceProfile.getAvailableWidthPx(), deviceProfile.getWorkspaceHeight());
     }
 }

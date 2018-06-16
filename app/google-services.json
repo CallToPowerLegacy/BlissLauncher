@@ -1,0 +1,73 @@
+{
+  "project_info": {
+    "project_number": "903301719758",
+    "firebase_url": "https://eelolauncher.firebaseio.com",
+    "project_id": "eelolauncher",
+    "storage_bucket": "eelolauncher.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:903301719758:android:1d89030e089238a3",
+        "android_client_info": {
+          "package_name": "org.indin.blisslauncher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "903301719758-vb8sg3itdiqm1fa3i8sddri6etfdq2a3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLCMo_KXWlxuQeSgVdcwsO3bvh_0xzOqc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:903301719758:android:ed9433ab5b053eb0",
+        "android_client_info": {
+          "package_name": "org.indin.blisslauncher.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "903301719758-vb8sg3itdiqm1fa3i8sddri6etfdq2a3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLCMo_KXWlxuQeSgVdcwsO3bvh_0xzOqc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

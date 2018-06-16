@@ -33,11 +33,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:animateLayoutChanges="false"
         android:background="@color/dockColor"
         android:columnCount="@integer/col_count"
-        android:paddingLeft="@dimen/app_grid_padding"
-        android:paddingRight="@dimen/app_grid_padding"
         android:rowCount="1"/>
 
     <RelativeLayout

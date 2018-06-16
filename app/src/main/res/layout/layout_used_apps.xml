@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginTop="8dp">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_suggestion"
+        android:background="@drawable/item_widget_top_round_corner"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:textColor="#88FFFFFF"/>
+    <GridLayout
+        android:id="@+id/suggestedAppGrid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/item_widget_bottom_round_corner"
+        android:columnCount="@integer/col_count"
+        android:rowCount="1" />
+</LinearLayout>

@@ -1,35 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    >
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:orientation="horizontal"
-        android:background="@drawable/search_widget"
-        android:gravity="center_vertical"
+        android:orientation="vertical"
         android:padding="8dp">
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_search_black_24dp"
-            android:tint="#888888"
-            android:layout_marginLeft="5dp"/>
-        <org.indin.blisslaunchero.framework.customviews.BlissInput
+
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/search"
-            android:id="@+id/search_input"
-            android:layout_marginLeft="16dp"
-            android:background="@null"
-            android:inputType="text"
-            android:maxLines="1"
-            android:imeOptions="actionSearch"
-            />
+            android:background="@drawable/search_widget"
+            android:paddingBottom="8dp"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
+            android:paddingTop="8dp">
+
+            <org.indin.blisslaunchero.framework.customviews.BlissInput
+                android:id="@+id/search_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="8dp"
+                android:background="@android:color/transparent"
+                android:layout_centerVertical="true"
+                android:drawableStart="@drawable/ic_search_white_24dp"
+                android:hint="@string/search"
+                android:layout_toLeftOf="@+id/clearSuggestionImageView"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1" />
+
+            <ImageView
+                android:id="@+id/clearSuggestionImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_cancel_white_24dp" />
+        </RelativeLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/suggestionRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"/>
+
+        <include layout="@layout/layout_used_apps"
+            android:id="@+id/used_apps_layout"/>
+        <include layout="@layout/layout_weather_info"
+        android:id="@+id/weather_info_layout"/>
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

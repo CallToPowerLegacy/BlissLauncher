@@ -30,9 +30,6 @@ public class DotRenderer {
     }
 
     public void drawDot(Canvas canvas, Rect iconBounds) {
-        Log.d(TAG, "drawDot() called with: canvas = [" + canvas + "], iconBounds = [" + iconBounds
-                + "]");
-
         Bitmap myBitmap = BitmapFactory.decodeResource(
                 mContext.getResources(),
                 R.drawable.notification_icon_72);

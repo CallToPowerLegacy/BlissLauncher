@@ -21,6 +21,7 @@ import android.view.ViewParent;
 import android.widget.Scroller;
 
 import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.LauncherActivity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -423,7 +424,7 @@ public class HorizontalPager extends ViewGroup {
         snapToPage(whichPage);
     }
 
-    public void snapToPage(int whichPage) {
+    public void snapToPage(int whichPage, int duration) {
         enableChildrenCache();
 
         boolean changingPages = whichPage != currentPage;
@@ -438,8 +439,12 @@ public class HorizontalPager extends ViewGroup {
         final int newX = getScrollXForPage(whichPage);
         final int delta = newX - getScrollX();
         //mScroller.startScroll(getScrollX(), 0, delta, 0, Math.abs(delta) * 2);
-        mScroller.startScroll(getScrollX(), 0, delta, 0, 400);
+        mScroller.startScroll(getScrollX(), 0, delta, 0, duration);
         invalidate();
+    }
+
+    public void snapToPage(int whichPage) {
+        snapToPage(whichPage, 400);
     }
 
     @Override
@@ -464,10 +469,23 @@ public class HorizontalPager extends ViewGroup {
         }
     }
 
+    public void scrollLeft(int duration) {
+        if (nextPage == INVALID_SCREEN && currentPage > 0 && mScroller.isFinished()) {
+            snapToPage(currentPage - 1, duration);
+        }
+    }
+
     public void scrollRight() {
         if (nextPage == INVALID_SCREEN && currentPage < getChildCount() - 1
                 && mScroller.isFinished()) {
             snapToPage(currentPage + 1);
+        }
+    }
+
+    public void scrollRight(int duration) {
+        if (nextPage == INVALID_SCREEN && currentPage < getChildCount() - 1
+                && mScroller.isFinished()) {
+            snapToPage(currentPage + 1, duration);
         }
     }
 
@@ -533,7 +551,7 @@ public class HorizontalPager extends ViewGroup {
     /**
      * Implement to receive events on scroll position and page snaps.
      */
-    public static interface OnScrollListener {
+    public interface OnScrollListener {
         /**
          * Receives the current scroll X value.  This value will be adjusted to assume the left edge
          * of the first

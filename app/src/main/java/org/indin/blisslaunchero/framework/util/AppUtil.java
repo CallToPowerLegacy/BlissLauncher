@@ -1,24 +1,31 @@
 package org.indin.blisslaunchero.framework.util;
 
 import android.app.ActivityOptions;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.LauncherActivityInfo;
+import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.UserManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.text.SpannableString;
 import android.util.Log;
 
+import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.model.AppItem;
 import org.indin.blisslaunchero.features.launcher.AllAppsList;
 import org.indin.blisslaunchero.framework.AdaptiveIconProvider;
+import org.indin.blisslaunchero.framework.IconsHandler;
 import org.indin.blisslaunchero.framework.Utilities;
 import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
 
@@ -34,164 +41,57 @@ public class AppUtil {
     /**
      * Uses the PackageManager to find all launchable apps.
      */
-    public static List<AppItem> loadLaunchableApps(Context context) {
+    public static AllAppsList loadAll(Context context) {
+
         List<AppItem> launchableApps = new ArrayList<>();
-        PackageManager packageManager = context.getPackageManager();
 
-        List<ApplicationInfo> apps = packageManager.getInstalledApplications(0);
+        UserManager manager = (UserManager) context.getSystemService(Context.USER_SERVICE);
+
+        LauncherApps launcher = (LauncherApps) context.getSystemService(
+                Context.LAUNCHER_APPS_SERVICE);
+
+        IconsHandler iconsHandler = BlissLauncher.getApplication(context).getIconsHandler();
+
         // Handle multi-profile support introduced in Android 5 (#542)
+        for (android.os.UserHandle profile : manager.getUserProfiles()) {
+            UserHandle user = new UserHandle(manager.getSerialNumberForUser(profile), profile);
+            for (LauncherActivityInfo activityInfo : launcher.getActivityList(null, profile)) {
+                ApplicationInfo appInfo = activityInfo.getApplicationInfo();
 
-        for (ApplicationInfo appInfo : apps) {
-            String packageName = appInfo.packageName;
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.setComponent(activityInfo.getComponentName());
+                intent.setFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
-            Intent intent = packageManager.getLaunchIntentForPackage(packageName);
-            if (intent != null) {
-                ActivityInfo activityInfo = intent.resolveActivityInfo(packageManager, 0);
-
-                String componentName = intent.getComponent().toString();
-                Log.i(TAG, "loadLaunchableApps: " + componentName);
-                boolean iconFromIconPack = true;
-                Drawable appIcon = null;
-                boolean isClock = false;
-                boolean isCalendar = false;
-                boolean isAdaptive = false;
-
-                // Load icon from icon pack if present
-                if (IconPackUtil.iconPackPresent) {
-                    isClock = IconPackUtil.isClock(componentName);
-                    isCalendar = IconPackUtil.isCalendar(componentName);
-                    appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
-                }
-                if (appIcon == null) {
-                    isAdaptive = true;
-                    appIcon = new AdaptiveIconProvider().load(context, packageName);
-                    if (appIcon == null) {
-                        Drawable iconDrawable = appInfo.loadIcon(packageManager);
-                        if (Utilities.ATLEAST_OREO
-                                && iconDrawable instanceof AdaptiveIconDrawable) {
-                            appIcon = new AdaptiveIconDrawableCompat(
-                                    ((AdaptiveIconDrawable) iconDrawable).getBackground(),
-                                    ((AdaptiveIconDrawable) iconDrawable).getForeground());
-                        } else {
-                            GraphicsUtil graphicsUtil = new GraphicsUtil(context);
-                            appIcon = graphicsUtil.convertToRoundedCorner(context,
-                                    graphicsUtil.addBackground(iconDrawable, false));
-                        }
-
-                    }
-                }
-
+                Drawable appIcon = iconsHandler.getDrawableIconForPackage(
+                        activityInfo.getComponentName(), user);
+                Log.i(TAG, "loadAll: here");
                 boolean isSystemApp = false;
 
                 if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
                     isSystemApp = true;
                 }
-
-                AppItem launchableApp = new AppItem(activityInfo.loadLabel(packageManager),
-                        packageName,
+                AppItem launchableApp = new AppItem(activityInfo.getLabel().toString(),
+                        appInfo.packageName,
                         appIcon,
                         intent,
-                        componentName,
-                        iconFromIconPack,
+                        activityInfo.getComponentName().toString(),
                         isSystemApp,
-                        isClock,
-                        isCalendar,
-                        isAdaptive);
-                launchableApps.add(launchableApp);
-            }
-        }
-
-
-        Collections.sort(launchableApps, (app1, app2) -> {
-            Collator collator = Collator.getInstance();
-            return collator.compare(app1.getLabel(), app2.getLabel());
-        });
-        Log.i(TAG, "loadLaunchableApps: " + launchableApps.size());
-        return launchableApps;
-    }
-
-
-    public static AllAppsList loadAllApps(Context context) {
-        List<AppItem> launchableApps = new ArrayList<>();
-        PackageManager packageManager = context.getPackageManager();
-
-        List<ApplicationInfo> apps = packageManager.getInstalledApplications(0);
-        // Handle multi-profile support introduced in Android 5 (#542)
-
-        for (ApplicationInfo appInfo : apps) {
-            String packageName = appInfo.packageName;
-
-            Intent intent = packageManager.getLaunchIntentForPackage(packageName);
-            if (intent != null) {
-                ActivityInfo activityInfo = intent.resolveActivityInfo(packageManager, 0);
-
-                String componentName = intent.getComponent().toString();
-                Log.i(TAG, "loadLaunchableApps: " + componentName);
-                boolean iconFromIconPack = true;
-                Drawable appIcon = null;
-                boolean isClock = false;
-                boolean isCalendar = false;
-                boolean isAdaptive = false;
-
-                // Load icon from icon pack if present
-                if (IconPackUtil.iconPackPresent) {
-                    isClock = IconPackUtil.isClock(componentName);
-                    isCalendar = IconPackUtil.isCalendar(componentName);
-                    appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
-                }
-                if (appIcon == null) {
-                    isAdaptive = true;
-                    appIcon = new AdaptiveIconProvider().load(context, packageName);
-                    if (appIcon == null) {
-                        Log.i(TAG, "appIconNull:  "+packageName);
-                        Drawable iconDrawable = appInfo.loadIcon(packageManager);
-                        /*GraphicsUtil graphicsUtil = new GraphicsUtil(context);
-                        appIcon = graphicsUtil.convertToRoundedCorner(context,
-                                graphicsUtil.addBackground(iconDrawable, false));*/
-                        if (Utilities.ATLEAST_OREO
-                                && iconDrawable instanceof AdaptiveIconDrawable) {
-                            appIcon = new AdaptiveIconDrawableCompat(
-                                    ((AdaptiveIconDrawable) iconDrawable).getBackground(),
-                                    ((AdaptiveIconDrawable) iconDrawable).getForeground());
-                        } else {
-                            GraphicsUtil graphicsUtil = new GraphicsUtil(context);
-                            appIcon = graphicsUtil.convertToRoundedCorner(context,
-                                    graphicsUtil.addBackground(iconDrawable, false));
-                        }
-
-                    }
-                }
-
-                boolean isSystemApp = false;
-
-                if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
-                    isSystemApp = true;
-                }
-
-                AppItem launchableApp = new AppItem(activityInfo.loadLabel(packageManager),
-                        packageName,
-                        appIcon,
-                        intent,
-                        componentName,
-                        iconFromIconPack,
-                        isSystemApp,
-                        isClock,
-                        isCalendar,
-                        isAdaptive);
+                        iconsHandler.isClock(activityInfo.getComponentName().toString()),
+                        iconsHandler.isCalendar(activityInfo.getComponentName().toString()));
                 launchableApps.add(launchableApp);
             }
         }
 
         Collections.sort(launchableApps, (app1, app2) -> {
             Collator collator = Collator.getInstance();
-            return collator.compare(app1.getLabel(), app2.getLabel());
+            return collator.compare(app1.getLabel().toString(), app2.getLabel().toString());
         });
-        Log.i(TAG, "loadLaunchableApps: " + launchableApps.size());
-        AllAppsList allAppsList;
+
         List<AppItem> pinnedApps = getPinnedApps(context, launchableApps);
         launchableApps.removeAll(pinnedApps);
-        allAppsList = new AllAppsList(launchableApps, pinnedApps);
-        return allAppsList;
+        return new AllAppsList(launchableApps, pinnedApps);
     }
 
     /**
@@ -239,60 +139,41 @@ public class AppUtil {
     public static AppItem createAppItem(Context context, String packageName) {
         try {
             PackageManager packageManager = context.getPackageManager();
-
             ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
 
             if (intent != null) {
-                String componentName = intent.getComponent().toString();
+                ResolveInfo resolveInfo = packageManager.resolveActivity(intent, 0);
+                if (resolveInfo != null) {
+                    ComponentName componentName = intent.getComponent();
 
-                boolean iconFromIconPack = true;
-                Drawable appIcon = null;
-                boolean isClock = false;
-                boolean isCalendar = false;
-                boolean isAdaptive = false;
-                // Load icon from icon pack if present
-                if (IconPackUtil.iconPackPresent) {
-                    isClock = IconPackUtil.isClock(componentName);
-                    isCalendar = IconPackUtil.isCalendar(componentName);
-                    appIcon = IconPackUtil.getIconFromIconPack(context, componentName);
-                }
-                if (appIcon == null) {
-                    isAdaptive = true;
-                    appIcon = new AdaptiveIconProvider().load(context, packageName);
-                    if (appIcon == null) {
-                        Drawable iconDrawable = appInfo.loadIcon(packageManager);
-                        /*GraphicsUtil graphicsUtil = new GraphicsUtil(context);
-                        appIcon = graphicsUtil.convertToRoundedCorner(context,
-                                graphicsUtil.addBackground(iconDrawable, false));*/
-                        if (Utilities.ATLEAST_OREO
-                                && iconDrawable instanceof AdaptiveIconDrawable) {
-                            appIcon = new AdaptiveIconDrawableCompat(
-                                    ((AdaptiveIconDrawable) iconDrawable).getBackground(),
-                                    ((AdaptiveIconDrawable) iconDrawable).getForeground());
-                        } else {
-                            GraphicsUtil graphicsUtil = new GraphicsUtil(context);
-                            appIcon = graphicsUtil.convertToRoundedCorner(context,
-                                    graphicsUtil.addBackground(iconDrawable, false));
-                        }
+                    ActivityInfo activityInfo = resolveInfo.activityInfo;
+                    IconsHandler iconsHandler = BlissLauncher.getApplication(
+                            context).getIconsHandler();
+                    Drawable appIcon = iconsHandler.getDrawableIconForPackage(componentName,
+                            new UserHandle());
+                    boolean isSystemApp = false;
+
+                    if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                        isSystemApp = true;
                     }
+                    AppItem launchableApp = new AppItem(
+                            activityInfo.loadLabel(packageManager).toString(),
+                            appInfo.packageName,
+                            appIcon,
+                            intent,
+                            componentName.toString(),
+                            isSystemApp,
+                            iconsHandler.isClock(componentName.toString()),
+                            iconsHandler.isCalendar(componentName.toString()));
+                    return launchableApp;
                 }
-
-                return new AppItem(appInfo.loadLabel(packageManager),
-                        packageName,
-                        appIcon,
-                        intent,
-                        componentName,
-                        iconFromIconPack,
-                        (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0,
-                        isClock,
-                        isCalendar,
-                        isAdaptive);
-            } else {
-                return null;
             }
+
         } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
             return null;
         }
+        return null;
     }
 }
