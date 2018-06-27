@@ -25,7 +25,7 @@ import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 
 public class DeviceStatusService extends Service {
 

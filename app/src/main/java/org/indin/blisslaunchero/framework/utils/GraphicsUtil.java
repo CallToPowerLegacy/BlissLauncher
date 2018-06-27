@@ -1,24 +1,20 @@
-package org.indin.blisslaunchero.framework.util;
+package org.indin.blisslaunchero.framework.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.model.AppItem;
-import org.indin.blisslaunchero.features.launcher.LauncherActivity;
 import org.indin.blisslaunchero.framework.DeviceProfile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class GraphicsUtil {
 
@@ -107,7 +103,7 @@ public class GraphicsUtil {
 
     public Bitmap addBackground(Bitmap bitmap, boolean isFolder) {
 
-        if (!ImageUtils.hasTransparency(bitmap)) {
+        if (!hasTransparency(bitmap)) {
             bitmap = Bitmap.createScaledBitmap(bitmap, appIconWidth,
                     (appIconWidth * bitmap.getHeight() / bitmap.getWidth()),
                     true);
@@ -126,7 +122,7 @@ public class GraphicsUtil {
                 .Config.ARGB_8888);
         Canvas canvas = new Canvas(mergedBitmap);
         canvas.drawColor(isFolder ? Color.WHITE
-                : ImageUtils.getDominantColor(bitmap));
+                : getDominantColor(bitmap));
 
         Paint paint = new Paint(
                 Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
@@ -154,6 +150,67 @@ public class GraphicsUtil {
     public BitmapDrawable convertToRoundedCorner(Context context, Bitmap src) {
         return new BitmapDrawable(context.getResources(),
                 BitmapUtils.getCroppedBitmap(src, deviceProfile.path));
+    }
+
+    public boolean hasTransparency(Bitmap bitmap) {
+        for (int y = 0; y < bitmap.getWidth(); y++) {
+            for (int x = 0; x < bitmap.getHeight(); x++) {
+                if (Color.alpha(bitmap.getPixel(x, y)) < 255) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Finds the color with the most occurrences inside of a bitmap.
+     *
+     * @param drawable to get the dominant color of
+     * @return the dominant color
+     */
+    public int getDominantColor(Drawable drawable){
+        return getDominantColor(((BitmapDrawable)drawable).getBitmap());
+    }
+
+    /**
+     * Finds the color with the most occurrences inside of a bitmap.
+     *
+     * @param bitmap the bitmap to get the dominant color of
+     * @return the dominant color
+     */
+    public int getDominantColor(Bitmap bitmap) {
+        Map<Integer, Integer> colors = new HashMap<>();
+
+        int count = 0;
+
+        for (int x = 0; x < bitmap.getWidth(); x++) {
+            for (int y = 0; y < bitmap.getHeight(); y++) {
+                if (Color.alpha(bitmap.getPixel(x, y)) == 255) {
+                    int color = bitmap.getPixel(x, y);
+                    colors.put(color, (colors.containsKey(color) ? colors.get(color) : 0) + 1);
+                } else if ((Color.alpha(bitmap.getPixel(x, y)) < 0xF9)) {
+                    count++;
+                }
+            }
+        }
+
+        int color = Color.TRANSPARENT;
+        int occurrences = 0;
+        if (colors.keySet().size() > 1) {
+            for (Integer key : colors.keySet()) {
+                if (colors.get(key) > occurrences) {
+                    occurrences = colors.get(key);
+                    color = key;
+                }
+            }
+
+            return color;
+        } else {
+            return Color.WHITE;
+        }
     }
 
 }

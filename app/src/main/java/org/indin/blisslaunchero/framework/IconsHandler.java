@@ -17,8 +17,8 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
-import org.indin.blisslaunchero.framework.util.GraphicsUtil;
-import org.indin.blisslaunchero.framework.util.UserHandle;
+import org.indin.blisslaunchero.framework.utils.GraphicsUtil;
+import org.indin.blisslaunchero.framework.utils.UserHandle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

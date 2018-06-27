@@ -1,9 +1,8 @@
-package org.indin.blisslaunchero.framework.util;
+package org.indin.blisslaunchero.framework.utils;
 
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.os.Build;
 import android.util.DisplayMetrics;
 
 import org.indin.blisslaunchero.framework.Utilities;

@@ -44,9 +44,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.PackageManagerUtils;
+import org.indin.blisslaunchero.framework.utils.PackageManagerUtils;
 import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 
 import java.util.Date;
 

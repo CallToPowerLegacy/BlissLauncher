@@ -4,8 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import org.indin.blisslaunchero.framework.mvp.MvpPresenter;
-import org.indin.blisslaunchero.framework.util.AppUtil;
-import org.indin.blisslaunchero.framework.util.IconPackUtil;
+import org.indin.blisslaunchero.framework.utils.AppUtils;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -65,6 +64,6 @@ public class LauncherPresenter extends MvpPresenter<LauncherContract.View> imple
     private Observable<AllAppsList> loadAppsAndIconCache(Context context) {
         //IconPackUtil.cacheIconsFromIconPack(context);
         return Observable.defer(
-                () -> Observable.just(AppUtil.loadAll(context)));
+                () -> Observable.just(AppUtils.loadAll(context)));
     }
 }

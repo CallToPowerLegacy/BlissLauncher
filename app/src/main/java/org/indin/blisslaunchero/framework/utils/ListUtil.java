@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.framework.util;
+package org.indin.blisslaunchero.framework.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

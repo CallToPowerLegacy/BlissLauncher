@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.framework.util;
+package org.indin.blisslaunchero.framework.utils;
 
 import android.app.ActivityOptions;
 import android.content.ComponentName;
@@ -10,33 +10,28 @@ import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.UserManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.text.SpannableString;
 import android.util.Log;
 
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.data.model.AppItem;
 import org.indin.blisslaunchero.features.launcher.AllAppsList;
-import org.indin.blisslaunchero.framework.AdaptiveIconProvider;
 import org.indin.blisslaunchero.framework.IconsHandler;
-import org.indin.blisslaunchero.framework.Utilities;
-import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
 
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class AppUtil {
+public class AppUtils {
 
-    private static final String TAG = "AppUtil";
+    private static final String TAG = "AppUtils";
 
     /**
      * Uses the PackageManager to find all launchable apps.

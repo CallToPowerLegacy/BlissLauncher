@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.framework.util;
+package org.indin.blisslaunchero.framework.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

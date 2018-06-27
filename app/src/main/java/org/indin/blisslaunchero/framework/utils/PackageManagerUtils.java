@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.framework;
+package org.indin.blisslaunchero.framework.utils;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
