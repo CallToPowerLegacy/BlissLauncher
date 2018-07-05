@@ -33,4 +33,5 @@ public class Constants {
 
     public static final String USER_CREATION_TIME_KEY = "user_creation_time_";
 
+    public static final String LOAD_OVER = "org.indin.blisslaunchero.LOAD_OVER";
 }

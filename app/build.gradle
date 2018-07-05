@@ -4,7 +4,7 @@ apply plugin: 'io.fabric'
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "org.indin.blisslauncher"
+        applicationId "org.indin.blisslaunchero"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -52,8 +52,10 @@ dependencies {
 
     implementation 'org.cyanogenmod:platform.sdk:6.0'
 
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.2'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.3'
     implementation 'com.google.firebase:firebase-core:15.0.2'
+
+    implementation 'org.greenrobot:eventbus:3.1.1'
 
     // Support Libs
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibraryVersion}"
@@ -112,8 +114,10 @@ dependencies {
     androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
 }
 
-apply plugin: 'com.google.gms.google-services'
+
 repositories {
     mavenCentral()
 }
 apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'com.google.gms.google-services'

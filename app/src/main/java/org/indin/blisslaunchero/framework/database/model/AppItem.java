@@ -1,51 +1,29 @@
-package org.indin.blisslaunchero.data.model;
+package org.indin.blisslaunchero.framework.database.model;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Index;
-import android.arch.persistence.room.PrimaryKey;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
-@Entity(tableName = "apps", indices = {@Index(value = "package_name", unique = true)})
 public class AppItem {
 
-    @PrimaryKey
-    private int uid;
-
-    @ColumnInfo(name = "label")
     private String mLabel;
 
-    @ColumnInfo(name = "package_name")
     private String mPackageName;
-
-    @ColumnInfo(name = "icon")
-    private byte[] mIconArray;
 
     private Drawable mIcon;
 
-    @ColumnInfo(name = "intent_string")
-    private String mIntentString;
-
     private Intent mIntent;
 
-    @ColumnInfo(name = "component_name")
     private String mComponentName;
 
-    @ColumnInfo(name = "is_system_app")
     private boolean mIsSystemApp;
 
-    @ColumnInfo(name = "is_clock_app")
     private boolean mIsClock;
 
-    @ColumnInfo(name = "is_calendar_app")
     private boolean mIsCalendar;
 
-    @ColumnInfo(name = "is_pinned_app")
     private boolean isPinnedApp;
 
     // Folder specific
@@ -100,10 +78,6 @@ public class AppItem {
         return mIsCalendar;
     }
 
-    public void setSystemApp(boolean isSystemApp) {
-        this.mIsSystemApp = isSystemApp;
-    }
-
     public void setIcon(Drawable icon) {
         this.mIcon = icon;
     }
@@ -118,10 +92,6 @@ public class AppItem {
 
     public String getComponentName() {
         return mComponentName;
-    }
-
-    public void setComponentName(String componentName) {
-        this.mComponentName = componentName;
     }
 
     public boolean isFolder() {
@@ -164,5 +134,13 @@ public class AppItem {
         if(obj instanceof AppItem){
             return ((AppItem)obj).mPackageName.equals(this.mPackageName);
         }else return false;
+    }
+
+    public boolean isPinnedApp() {
+        return isPinnedApp;
+    }
+
+    public void setPinnedApp(boolean pinnedApp) {
+        isPinnedApp = pinnedApp;
     }
 }

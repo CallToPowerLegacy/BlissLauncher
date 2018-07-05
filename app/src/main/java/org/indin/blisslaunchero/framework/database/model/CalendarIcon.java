@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.data.model;
+package org.indin.blisslaunchero.framework.database.model;
 
 import android.widget.TextView;
 

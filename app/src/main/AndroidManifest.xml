@@ -66,11 +66,9 @@
         <service android:name=".features.weather.WeatherUpdateService"/>
         <service android:name=".features.weather.DeviceStatusService"/>
         <service android:name=".features.weather.WeatherSourceListenerService"/>
-        <service
-            android:name=".features.launcher.AppProvider"
-            android:enabled="false"
-            android:exported="false">
-        </service>
+        <service android:name=".features.launcher.AppProvider"/>
+
+        <receiver android:name=".framework.broadcast.PackageAddedRemovedHandler"/>
     </application>
 
 </manifest>

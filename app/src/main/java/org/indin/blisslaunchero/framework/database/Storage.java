@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.data.db;
+package org.indin.blisslaunchero.framework.database;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,7 +7,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
 
-import org.indin.blisslaunchero.data.model.AppItem;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,16 +68,16 @@ public class Storage {
             AppItem appItem = (AppItem) tags.get(2);
             JSONObject appData = new JSONObject();
             appData.put("index", j);
-            appData.put("componentName", appItem.getComponentName());
+            appData.put("packageName", appItem.getPackageName());
             appData.put("isFolder", appItem.isFolder());
             if(appItem.isFolder()) {
                 appData.put("folderID", appItem.getFolderID());
                 appData.put("folderName", appItem.getLabel());
-                JSONArray subAppComponentNames = new JSONArray();
+                JSONArray subAppPackageNames = new JSONArray();
                 for(int k=0;k<appItem.getSubApps().size();k++) {
-                    subAppComponentNames.put(appItem.getSubApps().get(k).getComponentName());
+                    subAppPackageNames.put(appItem.getSubApps().get(k).getPackageName());
                 }
-                appData.put("subApps", subAppComponentNames);
+                appData.put("subApps", subAppPackageNames);
             }
             apps.put(appData);
         }

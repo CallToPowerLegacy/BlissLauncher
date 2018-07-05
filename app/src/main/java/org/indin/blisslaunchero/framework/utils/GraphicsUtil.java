@@ -10,7 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.data.model.AppItem;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 
 import java.util.HashMap;

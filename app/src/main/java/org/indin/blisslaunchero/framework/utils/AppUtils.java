@@ -20,7 +20,7 @@ import android.util.Log;
 
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.data.model.AppItem;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.indin.blisslaunchero.features.launcher.AllAppsList;
 import org.indin.blisslaunchero.framework.IconsHandler;
 
@@ -36,7 +36,7 @@ public class AppUtils {
     /**
      * Uses the PackageManager to find all launchable apps.
      */
-    public static AllAppsList loadAll(Context context) {
+    public static List<AppItem> loadAll(Context context) {
 
         List<AppItem> launchableApps = new ArrayList<>();
 
@@ -84,15 +84,6 @@ public class AppUtils {
             return collator.compare(app1.getLabel().toString(), app2.getLabel().toString());
         });
 
-        List<AppItem> pinnedApps = getPinnedApps(context, launchableApps);
-        launchableApps.removeAll(pinnedApps);
-        return new AllAppsList(launchableApps, pinnedApps);
-    }
-
-    /**
-     * Currently picks four apps for the dock (Phone, SMS, Browser, Camera)
-     */
-    public static List<AppItem> getPinnedApps(Context context, List<AppItem> launchableApps) {
         PackageManager pm = context.getPackageManager();
         Intent[] intents = {
                 new Intent(Intent.ACTION_DIAL),
@@ -100,18 +91,16 @@ public class AppUtils {
                 new Intent(Intent.ACTION_VIEW, Uri.parse("http:")),
                 new Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         };
-
-        List<AppItem> pinnedApps = new ArrayList<>();
         for (Intent intent : intents) {
             String packageName = getPackageNameForIntent(intent, pm);
             for (AppItem app : launchableApps) {
                 if (app.getPackageName().equals(packageName)) {
-                    pinnedApps.add(app);
+                    app.setPinnedApp(true);
                     break;
                 }
             }
         }
-        return pinnedApps;
+        return launchableApps;
     }
 
     @Nullable
