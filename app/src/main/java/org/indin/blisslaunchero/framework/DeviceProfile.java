@@ -14,14 +14,13 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
-import org.indin.blisslaunchero.framework.util.AdaptiveIconUtils;
+import org.indin.blisslaunchero.framework.utils.AdaptiveIconUtils;
 import org.indin.blisslaunchero.framework.customviews.PathParser;
 
 import java.util.ArrayList;
 
 public class DeviceProfile {
 
-    private static final float TALL_DEVICE_ASPECT_RATIO_THRESHOLD = 2.0f;
     private static final int TYPE_WORKSPACE = 0;
     private static final int TYPE_FOLDER = 1;
     private static final int TYPE_HOTSEAT = 2;

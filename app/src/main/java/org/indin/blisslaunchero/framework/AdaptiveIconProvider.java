@@ -10,7 +10,7 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 
 import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
-import org.indin.blisslaunchero.framework.util.ResourceUtils;
+import org.indin.blisslaunchero.framework.utils.ResourceUtils;
 import org.xmlpull.v1.XmlPullParser;
 
 /**

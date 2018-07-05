@@ -27,7 +27,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
-import org.indin.blisslaunchero.framework.util.AdaptiveIconUtils;
+import org.indin.blisslaunchero.framework.utils.AdaptiveIconUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 

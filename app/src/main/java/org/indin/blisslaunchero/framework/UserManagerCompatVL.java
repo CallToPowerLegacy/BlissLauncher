@@ -7,15 +7,15 @@ import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.ArrayMap;
 
-import org.indin.blisslaunchero.framework.util.LauncherConstants;
-import org.indin.blisslaunchero.framework.util.LongArrayMap;
+import org.indin.blisslaunchero.framework.utils.Constants;
+import org.indin.blisslaunchero.framework.utils.LauncherConstants;
+import org.indin.blisslaunchero.framework.utils.LongArrayMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class UserManagerCompatVL extends UserManagerCompat {
-    private static final String USER_CREATION_TIME_KEY = "user_creation_time_";
 
     protected final UserManager mUserManager;
     private final PackageManager mPm;
@@ -106,10 +106,10 @@ public class UserManagerCompatVL extends UserManagerCompat {
 
     @Override
     public long getUserCreationTime(UserHandle user) {
-        SharedPreferences prefs = mContext.getSharedPreferences(LauncherConstants.MANAGED_USER_PREFERENCES_KEY, Context.MODE_PRIVATE);
-        String key = USER_CREATION_TIME_KEY + getSerialNumberForUser(user);
+        SharedPreferences prefs = Preferences.getPrefs(mContext);
+        String key = Constants.USER_CREATION_TIME_KEY + getSerialNumberForUser(user);
         if (!prefs.contains(key)) {
-            prefs.edit().putLong(key, System.currentTimeMillis()).apply();
+           Preferences.setUserCreationTime(mContext, key);
         }
         return prefs.getLong(key, 0);
     }

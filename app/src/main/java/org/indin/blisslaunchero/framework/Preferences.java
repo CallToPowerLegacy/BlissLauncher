@@ -1,11 +1,12 @@
 package org.indin.blisslaunchero.framework;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 
 import org.indin.blisslaunchero.features.weather.WeatherUtils;
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +20,9 @@ import cyanogenmod.weather.WeatherLocation;
 
 public class Preferences {
 
+    /**
+     * Weather related keys and constants.
+     */
     private static final String WEATHER_LOCATION_CITY_ID = "city_id";
     private static final String WEATHER_LOCATION_CITY_NAME = "city_name";
     private static final String WEATHER_LOCATION_STATE = "state";
@@ -42,6 +46,17 @@ public class Preferences {
     private static final String DAY_FORECAST_CONDITION_CODE = "condition_code";
     private static final String DAY_FORECAST_LOW = "low";
     private static final String DAY_FORECAST_HIGH = "high";
+
+    /**
+     * User Preference related keys and constants.
+     */
+    public static final String MANAGED_USER_PREFERENCES_KEY = "org.indin.blisslaunchero.prefs";
+
+    /**
+     * Launcher related keys and constants.
+     */
+    public static final String LAYOUT_PRESENT = "layout_present";
+    public static final String FIRST_TIME = "org.indin.blisslaunchero.FIRST_TIME";
 
     private Preferences() {
     }
@@ -99,7 +114,8 @@ public class Preferences {
         getPrefs(context).edit().putString(Constants.WEATHER_CUSTOM_LOCATION_CITY, city).apply();
     }
 
-    public static boolean setCustomWeatherLocation(Context context, WeatherLocation weatherLocation) {
+    public static boolean setCustomWeatherLocation(Context context,
+            WeatherLocation weatherLocation) {
         if (weatherLocation == null) {
             getPrefs(context).edit()
                     .remove(Constants.WEATHER_CUSTOM_LOCATION).apply();
@@ -315,11 +331,29 @@ public class Preferences {
         return getPrefs(context).getString(Constants.WEATHER_SOURCE, null);
     }
 
+    public static void setUserCreationTime(Context context, String key) {
+        getPrefs(context).edit().putLong(key, System.currentTimeMillis()).apply();
+    }
+
+    public static boolean getLayoutPresent(Context context) {
+        return getPrefs(context).getBoolean(LAYOUT_PRESENT, false);
+    }
+
+    public static void setLayoutPresent(Context context) {
+        getPrefs(context).edit().putBoolean(LAYOUT_PRESENT, true).apply();
+    }
+
+    public static boolean isFirstTime(Context context){
+        return getPrefs(context).getBoolean(FIRST_TIME, true);
+    }
+
+    public static void setFirstTimeDone(Context context){
+        getPrefs(context).edit().putBoolean(FIRST_TIME, false).apply();
+    }
+
     public static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE);
     }
-
-
 
 
 }

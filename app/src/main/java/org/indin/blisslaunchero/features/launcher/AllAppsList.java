@@ -1,8 +1,7 @@
 package org.indin.blisslaunchero.features.launcher;
 
-import org.indin.blisslaunchero.data.model.AppItem;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AllAppsList {

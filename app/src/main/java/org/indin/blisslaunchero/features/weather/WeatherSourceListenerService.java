@@ -7,7 +7,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 
 import cyanogenmod.weather.CMWeatherManager;
 
@@ -40,15 +40,15 @@ public class WeatherSourceListenerService extends Service
     @Override
     public void onCreate() {
         mContext = getApplicationContext();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
         final CMWeatherManager weatherManager
                 = CMWeatherManager.getInstance(mContext);
         weatherManager.registerWeatherServiceProviderChangeListener(this);
         mRegistered = true;
         if (D) Log.d(TAG, "Listener registered");
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
     }
 

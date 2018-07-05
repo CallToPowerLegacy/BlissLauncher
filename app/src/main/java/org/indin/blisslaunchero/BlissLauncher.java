@@ -1,13 +1,20 @@
 package org.indin.blisslaunchero;
 
 import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.util.Log;
 
+import org.indin.blisslaunchero.features.launcher.AppProvider;
+import org.indin.blisslaunchero.features.weather.DeviceStatusService;
+import org.indin.blisslaunchero.features.weather.WeatherSourceListenerService;
 import org.indin.blisslaunchero.features.weather.WeatherUpdateService;
+import org.indin.blisslaunchero.features.weather.WeatherUtils;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 import org.indin.blisslaunchero.framework.IconsHandler;
-import org.indin.blisslaunchero.framework.Preferences;
 
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
@@ -15,6 +22,9 @@ public class BlissLauncher extends Application {
     private IconsHandler iconsPackHandler;
     private DeviceProfile deviceProfile;
 
+    private AppProvider mAppProvider;
+
+    private static final String TAG = "BlissLauncher";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -24,10 +34,12 @@ public class BlissLauncher extends Application {
                 .setFontAttrId(R.attr.fontPath)
                 .build());
 
-
-        Intent intent = new Intent(this, WeatherUpdateService.class);
-        intent.setAction(WeatherUpdateService.ACTION_FORCE_UPDATE);
-        startService(intent);
+        if (WeatherUtils.isWeatherServiceAvailable(this)) {
+            Log.i(TAG, "onCreate: weather avail ");
+            startService(new Intent(this, WeatherSourceListenerService.class));
+            startService(new Intent(this, DeviceStatusService.class));
+            WeatherUpdateService.scheduleNextUpdate(this, true);
+        }
 
     }
 
@@ -48,6 +60,26 @@ public class BlissLauncher extends Application {
         }
 
         return iconsPackHandler;
+    }
+
+    public void resetIconsHandler(){
+        iconsPackHandler = new IconsHandler(this);
+    }
+
+    public void initAppProvider(){
+        connectAppProvider();
+    }
+
+    private void connectAppProvider() {
+        Intent intent = new Intent(this, AppProvider.class);
+        startService(intent);
+    }
+
+    public AppProvider getAppProvider(){
+        if(mAppProvider == null){
+            connectAppProvider();
+        }
+        return mAppProvider;
     }
 
 }

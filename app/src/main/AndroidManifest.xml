@@ -37,6 +37,7 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
                 <category android:name="android.intent.category.HOME"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -51,18 +52,23 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".features.weather.WeatherPreferences"
-                  android:theme="@style/AppTheme">
+        <activity
+            android:name=".features.weather.WeatherPreferences"
+            android:theme="@style/AppTheme">
         </activity>
-
-        <activity android:name=".features.weather.PermissionRequestActivity"
-                  android:theme="@android:style/Theme.Translucent.NoTitleBar"
-                  android:excludeFromRecents="true"
-                  android:noHistory="true"
-                  android:exported="true"/>
+        <activity
+            android:name=".features.weather.PermissionRequestActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
 
         <service android:name=".features.weather.WeatherUpdateService"/>
         <service android:name=".features.weather.DeviceStatusService"/>
         <service android:name=".features.weather.WeatherSourceListenerService"/>
+        <service android:name=".features.launcher.AppProvider"/>
+
+        <receiver android:name=".framework.broadcast.PackageAddedRemovedHandler"/>
     </application>
+
 </manifest>
