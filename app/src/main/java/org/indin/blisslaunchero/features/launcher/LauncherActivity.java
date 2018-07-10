@@ -58,7 +58,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -126,6 +125,12 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener {
 
+    public static final int REORDER_TIMEOUT = 350;
+    private final static int INVALID = -999;
+    private static final String TAG = "DesktopActivity";
+    public static boolean longPressed;
+    private final Alarm mReorderAlarm = new Alarm();
+    private final Alarm mDockReorderAlarm = new Alarm();
     private HorizontalPager mHorizontalPager;
     private DockGridLayout mDock;
     private PageIndicatorLinearLayout mIndicator;
@@ -134,50 +139,28 @@ public class LauncherActivity extends AppCompatActivity implements
     private BlissInput mBlissInput;
     private BlissInput mSearchInput;
     private View mProgressBar;
-
     private BroadcastReceiver installReceiver;
     private BroadcastReceiver uninstallReceiver;
-
     private List<AppItem> launchableApps = new ArrayList<>();
     private List<AppItem> pinnedApps = new ArrayList<>();
-
     private LinkedHashMap<String, AppItem> allLoadedApps;
-
     private int currentPageNumber = 0;
-
     private float maxDistanceForFolderCreation;
-
-    private final static int INVALID = -999;
-
     private List<GridLayout> pages;
-
     private boolean dragDropEnabled = true;
-    public static final int REORDER_TIMEOUT = 350;
-    private final Alarm mReorderAlarm = new Alarm();
-    private final Alarm mDockReorderAlarm = new Alarm();
-
     private BlissFrameLayout movingApp;
     private BlissFrameLayout collidingApp;
     private boolean folderInterest;
-
     private Animation wobbleAnimation;
     private Animation wobbleReverseAnimation;
-
     private int scrollCorner;
-
     private Storage storage;
     private int parentPage = -99;
-
     private boolean folderFromDock;
     private boolean isWobbling = false;
-    public static boolean longPressed;
-
     private CompositeDisposable mCompositeDisposable;
-
     private CountDownTimer mWobblingCountDownTimer;
-
     private List<CalendarIcon> mCalendarIcons = new ArrayList<>();
-    private static final String TAG = "DesktopActivity";
     private Intent notificationServiceIntent;
     private BroadcastReceiver timeChangedReceiver;
     private boolean isUiDone = false;
@@ -195,12 +178,30 @@ public class LauncherActivity extends AppCompatActivity implements
     private View mWeatherSetupTextView;
     private boolean layoutInflationCompleted;
     private boolean allAppsDisplayed;
+    private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive() called with: context = [" + context + "], intent = [" + intent
+                    + "]");
+            if (!intent.getBooleanExtra(WeatherUpdateService.EXTRA_UPDATE_CANCELLED, false)) {
+                WeatherInfo w = Preferences.getCachedWeatherInfo(LauncherActivity.this);
+                if (w == null) {
+                    Toast.makeText(LauncherActivity.this, "Weather info can not be fetched",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                new Handler(Looper.getMainLooper()).post(() -> updateWeatherPanel(w));
+            }
+        }
+    };
+    private AppItem activeFolder;
+    private BlissFrameLayout activeFolderView;
+    private int activeDot;
+    private int statusBarHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Crashlytics.getInstance().crash();
 
         BlissLauncher.getApplication(this).initAppProvider();
 
@@ -253,6 +254,12 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void setupViews() {
         mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
+        statusBarHeight = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+        }
+
         mDock = mLauncherView.findViewById(R.id.dock);
         mIndicator = mLauncherView.findViewById(R.id.page_indicator);
         mFolderWindowContainer = mLauncherView.findViewById(
@@ -511,7 +518,8 @@ public class LauncherActivity extends AppCompatActivity implements
                             existingAppItem.getSubApps().set(k,
                                     AppUtils.createAppItem(this, packageName));
                             existingAppItem.setIcon(
-                                    new GraphicsUtil(this).generateFolderIcon(this, existingAppItem));
+                                    new GraphicsUtil(this).generateFolderIcon(this,
+                                            existingAppItem));
                             BlissFrameLayout blissFrameLayout = prepareApp(existingAppItem, true);
                             gridLayout.removeViewAt(j);
                             addAppToGrid(gridLayout, blissFrameLayout, j);
@@ -926,7 +934,8 @@ public class LauncherActivity extends AppCompatActivity implements
         GridLayout grid = (GridLayout) getLayoutInflater().inflate(R.layout.apps_page, null);
         grid.setRowCount(mDeviceProfile.numRows);
         grid.setLayoutTransition(getDefaultLayoutTransition());
-        grid.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2, 0,
+        grid.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2,
+                (int) (statusBarHeight+Utilities.pxFromDp(8, this)),
                 mDeviceProfile.iconDrawablePaddingPx / 2, 0);
         return grid;
     }
@@ -934,6 +943,9 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createWidgetsPage() {
         ScrollView layout = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
+        layout.setPadding(0,
+                (int) (statusBarHeight+Utilities.pxFromDp(8, this)),
+                0,0);
         mHorizontalPager.addView(layout, 0);
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
@@ -1079,23 +1091,6 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
-    private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "onReceive() called with: context = [" + context + "], intent = [" + intent
-                    + "]");
-            if (!intent.getBooleanExtra(WeatherUpdateService.EXTRA_UPDATE_CANCELLED, false)) {
-                WeatherInfo w = Preferences.getCachedWeatherInfo(LauncherActivity.this);
-                if (w == null) {
-                    Toast.makeText(LauncherActivity.this, "Weather info can not be fetched",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                new Handler(Looper.getMainLooper()).post(() -> updateWeatherPanel(w));
-            }
-        }
-    };
-
     private void updateWeatherPanel(WeatherInfo w) {
         if (mWeatherSetupTextView.getVisibility() == VISIBLE) {
             mWeatherSetupTextView.setVisibility(GONE);
@@ -1177,7 +1172,6 @@ public class LauncherActivity extends AppCompatActivity implements
 
         ForecastBuilder.buildSmallPanel(this, forecastView, w);
     }
-
 
     private ObservableSource<AutoCompleteServiceResult> searchForQuery(
             CharSequence charSequence) {
@@ -1447,9 +1441,6 @@ public class LauncherActivity extends AppCompatActivity implements
         return v;
     }
 
-    private AppItem activeFolder;
-    private BlissFrameLayout activeFolderView;
-
     private void displayFolder(AppItem app, BlissFrameLayout v) {
 
         activeFolder = app;
@@ -1471,64 +1462,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 mFolderAppsViewPager);
         Log.d(TAG, "displayFolder() called with: app = [" + app + "], v = [" + v + "]");
 
-    }
-
-    /**
-     * Adapter for folder apps.
-     */
-    public class FolderAppsPagerAdapter extends PagerAdapter {
-
-        private Context mContext;
-        private List<AppItem> mFolderAppItems;
-
-        public FolderAppsPagerAdapter(Context context) {
-            this.mContext = context;
-            this.mFolderAppItems = activeFolder.getSubApps();
-        }
-
-        @NonNull
-        @Override
-        public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            GridLayout viewGroup = (GridLayout) LayoutInflater.from(mContext).inflate(
-                    R.layout.apps_page, container, false);
-            viewGroup.setRowCount(3);
-            viewGroup.setColumnCount(3);
-            viewGroup.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2,
-                    mDeviceProfile.iconDrawablePaddingPx / 2,
-                    mDeviceProfile.iconDrawablePaddingPx / 2,
-                    mDeviceProfile.iconDrawablePaddingPx / 2);
-            int i = 0;
-            while (9 * position + i < mFolderAppItems.size() && i < 9) {
-                AppItem appItem = mFolderAppItems.get(9 * position + i);
-                BlissFrameLayout appView = prepareApp(appItem, true);
-                GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
-                iconLayoutParams.height = mDeviceProfile.cellHeightPx;
-                iconLayoutParams.width = mDeviceProfile.cellWidthPx;
-                appView.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
-                appView.setLayoutParams(iconLayoutParams);
-                viewGroup.addView(appView);
-                i++;
-            }
-            container.addView(viewGroup);
-            return viewGroup;
-        }
-
-        @Override
-        public int getCount() {
-            Log.d(TAG, "getCount() called " + Math.ceil((float) mFolderAppItems.size() / 9));
-            return (int) Math.ceil((float) mFolderAppItems.size() / 9);
-        }
-
-        @Override
-        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
-            return view == object;
-        }
-
-        @Override
-        public void destroyItem(@NonNull ViewGroup container, int position,
-                @NonNull Object object) {
-            container.removeView((View) object);
-        }
     }
 
     /**
@@ -2342,8 +2275,6 @@ public class LauncherActivity extends AppCompatActivity implements
         updateIndicator();
     }
 
-    private int activeDot;
-
     private void updateIndicator() {
         if (mIndicator.getChildAt(activeDot) != null) {
             ((ImageView) mIndicator.getChildAt(activeDot)).setImageResource(R.drawable.dot_off);
@@ -2401,11 +2332,69 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * Adapter for folder apps.
+     */
+    public class FolderAppsPagerAdapter extends PagerAdapter {
+
+        private Context mContext;
+        private List<AppItem> mFolderAppItems;
+
+        public FolderAppsPagerAdapter(Context context) {
+            this.mContext = context;
+            this.mFolderAppItems = activeFolder.getSubApps();
+        }
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            GridLayout viewGroup = (GridLayout) LayoutInflater.from(mContext).inflate(
+                    R.layout.apps_page, container, false);
+            viewGroup.setRowCount(3);
+            viewGroup.setColumnCount(3);
+            viewGroup.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2,
+                    mDeviceProfile.iconDrawablePaddingPx / 2,
+                    mDeviceProfile.iconDrawablePaddingPx / 2,
+                    mDeviceProfile.iconDrawablePaddingPx / 2);
+            int i = 0;
+            while (9 * position + i < mFolderAppItems.size() && i < 9) {
+                AppItem appItem = mFolderAppItems.get(9 * position + i);
+                BlissFrameLayout appView = prepareApp(appItem, true);
+                GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
+                iconLayoutParams.height = mDeviceProfile.cellHeightPx;
+                iconLayoutParams.width = mDeviceProfile.cellWidthPx;
+                appView.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
+                appView.setLayoutParams(iconLayoutParams);
+                viewGroup.addView(appView);
+                i++;
+            }
+            container.addView(viewGroup);
+            return viewGroup;
+        }
+
+        @Override
+        public int getCount() {
+            Log.d(TAG, "getCount() called " + Math.ceil((float) mFolderAppItems.size() / 9));
+            return (int) Math.ceil((float) mFolderAppItems.size() / 9);
+        }
+
+        @Override
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
+            return view == object;
+        }
+
+        @Override
+        public void destroyItem(@NonNull ViewGroup container, int position,
+                @NonNull Object object) {
+            container.removeView((View) object);
+        }
+    }
+
     class ReorderAlarmListener implements Alarm.OnAlarmListener {
 
-        private GridLayout mPage;
         private final ViewGroup mParent;
         private final int mIndex;
+        private GridLayout mPage;
 
         public ReorderAlarmListener(GridLayout page, ViewGroup parent, int index) {
             mPage = page;
