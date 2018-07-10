@@ -2,7 +2,7 @@ package org.indin.blisslaunchero.features.launcher;
 
 import android.content.Context;
 
-import org.indin.blisslaunchero.data.model.AppItem;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.indin.blisslaunchero.framework.mvp.MvpContract;
 
 import java.util.List;
@@ -17,5 +17,7 @@ public interface LauncherContract {
     interface Presenter extends MvpContract.Presenter<View> {
 
         void loadApps(Context context);
+
+        void getApps(Context context);
     }
 }

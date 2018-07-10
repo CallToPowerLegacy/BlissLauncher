@@ -1,5 +1,6 @@
 package org.indin.blisslaunchero.framework;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.os.Build;
@@ -11,6 +12,7 @@ import org.indin.blisslaunchero.BuildConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Calendar;
 
 public class Utilities {
 
@@ -64,6 +66,11 @@ public class Utilities {
                 size, metrics));
     }
 
+    public static float pxFromDp(int dp, Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return dp * (metrics.densityDpi / 160f);
+    }
+
     public static int pxFromSp(float size, DisplayMetrics metrics) {
         return (int) Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
                 size, metrics));
@@ -79,4 +86,34 @@ public class Utilities {
         return (int) Math.ceil(fm.bottom - fm.top);
     }
 
+    public static String convertMonthToString(int month) {
+        switch (month) {
+            case Calendar.JANUARY:
+                return "JAN";
+            case Calendar.FEBRUARY:
+                return "FEB";
+            case Calendar.MARCH:
+                return "MAR";
+            case Calendar.APRIL:
+                return "APR";
+            case Calendar.MAY:
+                return "MAY";
+            case Calendar.JUNE:
+                return "JUN";
+            case Calendar.JULY:
+                return "JUL";
+            case Calendar.AUGUST:
+                return "AUG";
+            case Calendar.SEPTEMBER:
+                return "SEP";
+            case Calendar.OCTOBER:
+                return "OCT";
+            case Calendar.NOVEMBER:
+                return "NOV";
+            case Calendar.DECEMBER:
+                return "DEC";
+            default:
+                return "";
+        }
+    }
 }

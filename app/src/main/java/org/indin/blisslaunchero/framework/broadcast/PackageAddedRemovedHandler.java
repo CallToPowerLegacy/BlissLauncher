@@ -3,55 +3,64 @@ package org.indin.blisslaunchero.framework.broadcast;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.preference.PreferenceManager;
+import android.util.Log;
 
-import org.indin.blisslaunchero.framework.util.UserHandle;
+import org.greenrobot.eventbus.EventBus;
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.features.launcher.AppProvider;
+import org.indin.blisslaunchero.framework.events.AppAddEvent;
+import org.indin.blisslaunchero.framework.events.AppChangeEvent;
+import org.indin.blisslaunchero.framework.events.AppRemoveEvent;
+import org.indin.blisslaunchero.framework.utils.UserHandle;
 
-
-/**
- * This class gets called when an application is created or removed on the
- * system
- * <p/>
- * We then recreate our data set.
- *
- * @author dorvaryn
- */
 public class PackageAddedRemovedHandler extends BroadcastReceiver {
 
+    private static final String TAG = "PackageAddedRemovedHand";
+
     public static void handleEvent(Context ctx, String action, String packageName, UserHandle user, boolean replacing) {
-        if (PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean("enable-app-history", true)) {
-            // Insert into history new packages (not updated ones)
-            if ("android.intent.action.PACKAGE_ADDED".equals(action) && !replacing) {
-               /* // Add new package to history
-                Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
-                if (launchIntent == null) {//for some plugin app
-                    return;
-                }
+        Log.d(TAG, "handleEvent() called with: ctx = [" + ctx + "], action = [" + action
+                + "], packageName = [" + packageName + "], user = [" + user + "], replacing = ["
+                + replacing + "]");
+        // Insert into history new packages (not updated ones)
+        if ("android.intent.action.PACKAGE_ADDED".equals(action) && !replacing) {
+            Log.i(TAG, "handleEvent: added "+packageName);
 
-                String className = launchIntent.getComponent().getClassName();
-                String pojoID = user.addUserSuffixToString("app://" + packageName + "/" + className, '/');
-                KissApplication.getApplication(ctx).getDataHandler().addToHistory(pojoID);*/
-
-               //TODO: add new app to database
+            Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
+            if (launchIntent == null) {//for some plugin app
+                return;
             }
+            AppAddEvent appAddEvent = new AppAddEvent();
+            appAddEvent.packageName = packageName;
+            EventBus.getDefault().post(appAddEvent);
         }
 
+        if("android.intent.action.PACKAGE_CHANGED".equalsIgnoreCase(action)){
+            Log.i(TAG, "handleEvent: changed "+packageName);
+            Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
+            BlissLauncher.getApplication(ctx).getIconsHandler().resetIconDrawableForPackage(launchIntent.getComponent(), user);
+            AppChangeEvent appChangeEvent = new AppChangeEvent();
+            appChangeEvent.packageName = packageName;
+            EventBus.getDefault().post(appChangeEvent);
+        }
         if ("android.intent.action.PACKAGE_REMOVED".equals(action) && !replacing) {
-            //TODO: remove app from database
+            Log.i(TAG, "handleEvent: removed "+packageName);
+
+            AppRemoveEvent appRemoveEvent = new AppRemoveEvent();
+            appRemoveEvent.packageName = packageName;
+            EventBus.getDefault().post(appRemoveEvent);
         }
 
-        /*KissApplication.getApplication(ctx).resetIconsHandler();
+        BlissLauncher.getApplication(ctx).resetIconsHandler();
 
         // Reload application list
-        final AppProvider provider = KissApplication.getApplication(ctx).getDataHandler().getAppProvider();
+        final AppProvider provider = BlissLauncher.getApplication(ctx).getAppProvider();
         if (provider != null) {
             provider.reload();
-        }*/
+        }
     }
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
-
         String packageName = intent.getData().getSchemeSpecificPart();
 
         if (packageName.equalsIgnoreCase(ctx.getPackageName())) {
@@ -60,7 +69,6 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
             // Discarding it makes startup time much faster locally as apps don't have to be loaded twice.
             return;
         }
-
         handleEvent(ctx,
                 intent.getAction(),
                 packageName, new UserHandle(),
@@ -68,5 +76,4 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
         );
 
     }
-
 }

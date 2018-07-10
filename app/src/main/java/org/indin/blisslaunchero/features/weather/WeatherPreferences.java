@@ -30,7 +30,6 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.provider.Settings;
@@ -39,7 +38,7 @@ import android.util.Log;
 
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 
 import cyanogenmod.weather.CMWeatherManager;
 

@@ -15,7 +15,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 
 public class WeatherIconUtils {
     private static final String TAG = "WeatherIconUtils";

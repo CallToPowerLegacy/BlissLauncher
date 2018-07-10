@@ -44,9 +44,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.PackageManagerUtils;
+import org.indin.blisslaunchero.framework.utils.PackageManagerUtils;
 import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.util.Constants;
+import org.indin.blisslaunchero.framework.utils.Constants;
 
 import java.util.Date;
 
@@ -65,7 +65,7 @@ public class WeatherUpdateService extends Service {
 
     private static final String ACTION_CANCEL_UPDATE_WEATHER_REQUEST =
             "org.indin.blisslauncher.action.CANCEL_UPDATE_WEATHER_REQUEST";
-    private static final long WEATHER_UPDATE_REQUEST_TIMEOUT_MS = 45L * 1000L;
+    private static final long WEATHER_UPDATE_REQUEST_TIMEOUT_MS = 300L * 1000L;
 
     // Broadcast action for end of update
     public static final String ACTION_UPDATE_FINISHED =

@@ -17,8 +17,8 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
-import org.indin.blisslaunchero.framework.util.GraphicsUtil;
-import org.indin.blisslaunchero.framework.util.UserHandle;
+import org.indin.blisslaunchero.framework.utils.GraphicsUtil;
+import org.indin.blisslaunchero.framework.utils.UserHandle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -165,7 +165,6 @@ public class IconsHandler {
         if (iconsPackPackageName.equalsIgnoreCase("default")) {
             return this.getDefaultAppDrawable(componentName, userHandle);
         }*/
-
         String drawable = packagesDrawables.get(componentName.toString());
         if (drawable != null) { //there is a custom icon
             int id = iconPackres.getIdentifier(drawable, "drawable", iconsPackPackageName);
@@ -183,13 +182,11 @@ public class IconsHandler {
         // Search first in cache
         Drawable systemIcon = cacheGetDrawable(componentName.toString());
         if (systemIcon != null) {
-            Log.i(TAG, "find in cache: "+componentName);
             return systemIcon;
         }
 
         systemIcon = new AdaptiveIconProvider().load(ctx, componentName.getPackageName());
         if(systemIcon != null){
-            Log.i(TAG, "getDrawableIconForPackage: "+componentName);
             cacheStoreDrawable(componentName.toString(), systemIcon);
             return systemIcon;
         }
@@ -288,4 +285,25 @@ public class IconsHandler {
         }
     }
 
+    public void resetIconDrawableForPackage(ComponentName componentName, UserHandle user) {
+        if(!packagesDrawables.containsKey(componentName.toString())){
+            Drawable icon = new AdaptiveIconProvider().load(ctx, componentName.getPackageName());
+            if(icon != null){
+                cacheStoreDrawable(componentName.toString(), icon);
+                return;
+            }
+
+            icon = this.getDefaultAppDrawable(componentName, user);
+            if (Utilities.ATLEAST_OREO
+                    && icon instanceof AdaptiveIconDrawable) {
+                icon = new AdaptiveIconDrawableCompat(
+                        ((AdaptiveIconDrawable) icon).getBackground(),
+                        ((AdaptiveIconDrawable) icon).getForeground());
+            } else {
+                icon = graphicsUtil.convertToRoundedCorner(ctx,
+                        graphicsUtil.addBackground(icon, false));
+            }
+            cacheStoreDrawable(componentName.toString(), icon);
+        }
+    }
 }
