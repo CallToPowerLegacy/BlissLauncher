@@ -17,13 +17,14 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
 
     private static final String TAG = "PackageAddedRemovedHand";
 
-    public static void handleEvent(Context ctx, String action, String packageName, UserHandle user, boolean replacing) {
+    public static void handleEvent(Context ctx, String action, String packageName, UserHandle user,
+            boolean replacing) {
         Log.d(TAG, "handleEvent() called with: ctx = [" + ctx + "], action = [" + action
                 + "], packageName = [" + packageName + "], user = [" + user + "], replacing = ["
                 + replacing + "]");
         // Insert into history new packages (not updated ones)
         if ("android.intent.action.PACKAGE_ADDED".equals(action) && !replacing) {
-            Log.i(TAG, "handleEvent: added "+packageName);
+            Log.i(TAG, "handleEvent: added " + packageName);
 
             Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
             if (launchIntent == null) {//for some plugin app
@@ -34,16 +35,20 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
             EventBus.getDefault().post(appAddEvent);
         }
 
-        if("android.intent.action.PACKAGE_CHANGED".equalsIgnoreCase(action)){
-            Log.i(TAG, "handleEvent: changed "+packageName);
+        if ("android.intent.action.PACKAGE_CHANGED".equalsIgnoreCase(action)) {
+            Log.i(TAG, "handleEvent: changed " + packageName);
             Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
-            BlissLauncher.getApplication(ctx).getIconsHandler().resetIconDrawableForPackage(launchIntent.getComponent(), user);
+            if (launchIntent == null) {
+                return;
+            }
+            BlissLauncher.getApplication(ctx).getIconsHandler().resetIconDrawableForPackage(
+                    launchIntent.getComponent(), user);
             AppChangeEvent appChangeEvent = new AppChangeEvent();
             appChangeEvent.packageName = packageName;
             EventBus.getDefault().post(appChangeEvent);
         }
         if ("android.intent.action.PACKAGE_REMOVED".equals(action) && !replacing) {
-            Log.i(TAG, "handleEvent: removed "+packageName);
+            Log.i(TAG, "handleEvent: removed " + packageName);
 
             AppRemoveEvent appRemoveEvent = new AppRemoveEvent();
             appRemoveEvent.packageName = packageName;
@@ -64,9 +69,11 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
         String packageName = intent.getData().getSchemeSpecificPart();
 
         if (packageName.equalsIgnoreCase(ctx.getPackageName())) {
-            // When running KISS locally, sending a new version of the APK immediately triggers a "package removed" for fr.neamar.kiss,
+            // When running KISS locally, sending a new version of the APK immediately triggers a
+            // "package removed" for fr.neamar.kiss,
             // There is no need to handle this event.
-            // Discarding it makes startup time much faster locally as apps don't have to be loaded twice.
+            // Discarding it makes startup time much faster locally as apps don't have to be
+            // loaded twice.
             return;
         }
         handleEvent(ctx,

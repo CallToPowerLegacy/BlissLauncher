@@ -63,17 +63,6 @@ dependencies {
     implementation "com.android.support:support-v4:${rootProject.ext.supportLibraryVersion}"
     implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportLibraryVersion}"
 
-    // Room DB
-    implementation "android.arch.persistence.room:runtime:${rootProject.ext.archVersion}"
-    annotationProcessor "android.arch.persistence.room:compiler:${rootProject.ext.archVersion}"
-    implementation "android.arch.persistence.room:rxjava2:${rootProject.ext.archVersion}"
-
-    // Dagger
-    implementation "com.google.dagger:dagger:${rootProject.ext.daggerVersion}"
-    implementation "com.google.dagger:dagger-android:${rootProject.ext.daggerVersion}"
-    annotationProcessor "com.google.dagger:dagger-compiler:${rootProject.ext.daggerVersion}"
-    annotationProcessor "com.google.dagger:dagger-android-processor:${rootProject.ext.daggerVersion}"
-
     // Rx Java and Android
     implementation "io.reactivex.rxjava2:rxandroid:${rootProject.ext.rxAndroidVersion}"
     implementation "io.reactivex.rxjava2:rxjava:${rootProject.ext.rxJavaVersion}"
