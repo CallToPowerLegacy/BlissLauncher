@@ -58,6 +58,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -785,7 +787,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 suggestedAppsGridLayout.removeAllViews();
             }
             int i = 0;
-            while (suggestedAppsGridLayout.getChildCount() < 4) {
+            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size() ) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
                     BlissFrameLayout view = prepareApp(appItem, true);
@@ -995,7 +997,8 @@ public class LauncherActivity extends AppCompatActivity implements
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
             int i = 0;
-            while (suggestedAppsGridLayout.getChildCount() < 4) {
+            Crashlytics.log("Size of usage stats: "+usageStats.size());
+            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
                     BlissFrameLayout view = prepareApp(appItem, true);
