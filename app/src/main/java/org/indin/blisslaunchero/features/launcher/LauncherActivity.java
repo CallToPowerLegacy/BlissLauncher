@@ -787,7 +787,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 suggestedAppsGridLayout.removeAllViews();
             }
             int i = 0;
-            while (suggestedAppsGridLayout.getChildCount() < 4) {
+            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size() ) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
                     BlissFrameLayout view = prepareApp(appItem, true);
