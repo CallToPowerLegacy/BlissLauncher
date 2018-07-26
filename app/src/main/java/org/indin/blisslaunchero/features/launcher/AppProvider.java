@@ -6,25 +6,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.IBinder;
-import android.os.Process;
 import android.os.UserManager;
 import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
 import org.indin.blisslaunchero.framework.broadcast.PackageAddedRemovedHandler;
 import org.indin.blisslaunchero.framework.database.model.AppItem;
-import org.indin.blisslaunchero.framework.utils.Constants;
 import org.indin.blisslaunchero.framework.utils.UserHandle;
 
 import java.util.LinkedHashMap;
 
 public class AppProvider extends Service implements Provider {
 
-    private LinkedHashMap<String, AppItem> mAppItemArrayMap;
+    private AllAppsList mAllAppsList;
 
     private boolean appsLoaded = false;
 
@@ -135,10 +131,10 @@ public class AppProvider extends Service implements Provider {
         loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    public void loadAppsOver(LinkedHashMap<String, AppItem> appItemArrayMap) {
+    public void loadAppsOver(AllAppsList allAppsList) {
         long time = System.currentTimeMillis() - appLoadingStart;
         Log.i(TAG, "Time to load " + this.getClass().getSimpleName() + ": " + time + "ms");
-        this.mAppItemArrayMap = appItemArrayMap;
+        this.mAllAppsList = allAppsList;
         appsLoaded = true;
         handleAllProviderLoaded();
 
@@ -146,7 +142,7 @@ public class AppProvider extends Service implements Provider {
 
     private synchronized void handleAllProviderLoaded() {
         if(appsLoaded) {
-           mAppsRepository.updateAppsRelay(mAppItemArrayMap);
+           mAppsRepository.updateAppsRelay(mAllAppsList);
         }
     }
 
@@ -169,9 +165,8 @@ public class AppProvider extends Service implements Provider {
         return null;
     }
 
-    public void updateAppsOver(LinkedHashMap<String, AppItem> appItemArrayMap) {
-        this.mAppItemArrayMap = appItemArrayMap;
+    /*public void updateAppsOver(LinkedHashMap<String, AppItem> appItemArrayMap) {
+        this.mAllAppsList = appItemArrayMap;
         appsLoaded = true;
-
-    }
+    }*/
 }

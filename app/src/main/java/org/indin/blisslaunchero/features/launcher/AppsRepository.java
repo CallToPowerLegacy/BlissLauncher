@@ -7,7 +7,7 @@ import org.indin.blisslaunchero.framework.database.model.AppItem;
 import java.util.LinkedHashMap;
 
 public class AppsRepository {
-    private BehaviorRelay<LinkedHashMap<String, AppItem>> appsRelay;
+    private BehaviorRelay<AllAppsList> appsRelay;
 
     private static AppsRepository sAppsRepository;
 
@@ -22,11 +22,11 @@ public class AppsRepository {
         return sAppsRepository;
     }
 
-    public void updateAppsRelay(LinkedHashMap<String, AppItem> appItemLinkedHashMap){
-        this.appsRelay.accept(appItemLinkedHashMap);
+    public void updateAppsRelay(AllAppsList allAppsList){
+        this.appsRelay.accept(allAppsList);
     }
 
-    public BehaviorRelay<LinkedHashMap<String, AppItem>> getAppsRelay() {
+    public BehaviorRelay<AllAppsList> getAppsRelay() {
         return appsRelay;
     }
 }

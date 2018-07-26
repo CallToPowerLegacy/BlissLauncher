@@ -145,7 +145,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private BroadcastReceiver uninstallReceiver;
     private List<AppItem> launchableApps = new ArrayList<>();
     private List<AppItem> pinnedApps = new ArrayList<>();
-    private LinkedHashMap<String, AppItem> allLoadedApps;
+    private AllAppsList allLoadedApps;
     private int currentPageNumber = 0;
     private float maxDistanceForFolderCreation;
     private List<GridLayout> pages;
@@ -231,10 +231,10 @@ public class LauncherActivity extends AppCompatActivity implements
         getCompositeDisposable().add(
                 AppsRepository.getAppsRepository().getAppsRelay().subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeWith(new DisposableObserver<LinkedHashMap<String, AppItem>>() {
+                        .subscribeWith(new DisposableObserver<AllAppsList>() {
                             @Override
                             public void onNext(
-                                    LinkedHashMap<String, AppItem> appItemLinkedHashMap) {
+                                    AllAppsList appItemLinkedHashMap) {
                                 if (!allAppsDisplayed) {
                                     allLoadedApps = appItemLinkedHashMap;
                                     showApps();
@@ -807,13 +807,17 @@ public class LauncherActivity extends AppCompatActivity implements
         if (storage.isLayoutPresent()) {
             createUIFromStorage();
         } else {
-            for (Map.Entry<String, AppItem> stringAppItemEntry : allLoadedApps.entrySet()) {
-                if (stringAppItemEntry.getValue().isPinnedApp()) {
-                    pinnedApps.add(stringAppItemEntry.getValue());
-                } else {
-                    launchableApps.add(stringAppItemEntry.getValue());
-                }
+
+            for (String defaultPinnedAppsPackage : allLoadedApps.defaultPinnedAppsPackages) {
+                pinnedApps.add(allLoadedApps.launchableApps.get(defaultPinnedAppsPackage));
             }
+
+            for (Map.Entry<String, AppItem> stringAppItemEntry : allLoadedApps.launchableApps.entrySet()) {
+                launchableApps.add(stringAppItemEntry.getValue());
+            }
+
+            launchableApps.removeAll(pinnedApps);
+
             int nPages = (int) Math.ceil(
                     (float) launchableApps.size() / mDeviceProfile.maxAppsPerPage);
             pages = new ArrayList<>();
@@ -909,7 +913,7 @@ public class LauncherActivity extends AppCompatActivity implements
             }
         }
 
-        LinkedHashMap<String, AppItem> map = allLoadedApps;
+        LinkedHashMap<String, AppItem> map = allLoadedApps.launchableApps;
         map.keySet().removeAll(keySet);
         for (Map.Entry<String, AppItem> stringAppItemEntry : map.entrySet()) {
             if (pages.get(pages.size() - 1).getChildCount() < mDeviceProfile.maxAppsPerPage) {
@@ -1302,8 +1306,8 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private AppItem prepareAppItemFromPackage(String packageName) {
-        if (allLoadedApps.containsKey(packageName)) {
-            AppItem appItem = allLoadedApps.get(packageName);
+        if (allLoadedApps.launchableApps.containsKey(packageName)) {
+            AppItem appItem = allLoadedApps.launchableApps.get(packageName);
             return appItem;
         } else {
             return null;

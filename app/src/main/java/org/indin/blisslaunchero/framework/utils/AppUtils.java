@@ -20,13 +20,14 @@ import android.util.Log;
 
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.indin.blisslaunchero.features.launcher.AllAppsList;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.indin.blisslaunchero.framework.IconsHandler;
 
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class AppUtils {
@@ -36,9 +37,10 @@ public class AppUtils {
     /**
      * Uses the PackageManager to find all launchable apps.
      */
-    public static List<AppItem> loadAll(Context context) {
+    public static AllAppsList loadAll(Context context) {
 
         List<AppItem> launchableApps = new ArrayList<>();
+        List<String> defaultPinnedAppsPackages = new ArrayList<>();
 
         UserManager manager = (UserManager) context.getSystemService(Context.USER_SERVICE);
 
@@ -84,6 +86,11 @@ public class AppUtils {
             return collator.compare(app1.getLabel().toString(), app2.getLabel().toString());
         });
 
+        LinkedHashMap<String, AppItem> appArrayMap = new LinkedHashMap<>();
+        for (AppItem appItem : launchableApps) {
+            appArrayMap.put(appItem.getPackageName(), appItem);
+        }
+
         PackageManager pm = context.getPackageManager();
         Intent[] intents = {
                 new Intent(Intent.ACTION_DIAL),
@@ -96,11 +103,13 @@ public class AppUtils {
             for (AppItem app : launchableApps) {
                 if (app.getPackageName().equals(packageName)) {
                     app.setPinnedApp(true);
+                    defaultPinnedAppsPackages.add(packageName);
                     break;
                 }
             }
         }
-        return launchableApps;
+        AllAppsList allAppsList = new AllAppsList(appArrayMap, defaultPinnedAppsPackages);
+        return allAppsList;
     }
 
     @Nullable
