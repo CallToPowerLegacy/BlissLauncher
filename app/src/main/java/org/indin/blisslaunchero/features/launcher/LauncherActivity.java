@@ -1,25 +1,14 @@
 package org.indin.blisslaunchero.features.launcher;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
 import android.app.Activity;
-import android.app.WallpaperManager;
 import android.app.usage.UsageStats;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -37,7 +26,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.DragEvent;
@@ -59,7 +47,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -123,6 +110,13 @@ import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
 
 public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener {
@@ -572,7 +566,6 @@ public class LauncherActivity extends AppCompatActivity implements
 
     public void showApps() {
         allAppsDisplayed = true;
-        showIconPackWallpaperFirstTime();
         mProgressBar.setVisibility(GONE);
         createUI();
         isUiDone = true;
@@ -658,29 +651,6 @@ public class LauncherActivity extends AppCompatActivity implements
             }
         }
         return false;
-    }
-
-    private void showIconPackWallpaperFirstTime() {
-        if (Preferences.isFirstTime(this)) {
-            Bitmap bmap2 = BitmapFactory.decodeStream(
-                    getResources().openRawResource(+R.drawable.graphics_1));
-
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            int height = metrics.heightPixels;
-            int width = metrics.widthPixels;
-            Bitmap bitmap = Bitmap.createScaledBitmap(bmap2, width, height, true);
-
-            WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
-            try {
-                wallpaperManager.setResource(+R.drawable.graphics_1);
-                wallpaperManager.setBitmap(bitmap);
-                Preferences.setFirstTimeDone(this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     /**
