@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 
 import io.fabric.sdk.android.services.concurrency.AsyncTask;
 
-public class LoadAppsTask extends AsyncTask<Void, Void, LinkedHashMap<String, AppItem>> {
+public class LoadAppsTask extends AsyncTask<Void, Void, AllAppsList> {
 
     final WeakReference<Context> mContext;
     private WeakReference<AppProvider> mAppProvider;
@@ -28,20 +28,12 @@ public class LoadAppsTask extends AsyncTask<Void, Void, LinkedHashMap<String, Ap
     }
 
     @Override
-    protected LinkedHashMap<String, AppItem> doInBackground(Void... voids) {
-        long start = System.nanoTime();
-
-        LinkedHashMap<String, AppItem> appArrayMap = new LinkedHashMap<>();
-        for (AppItem appItem : AppUtils.loadAll(mContext.get())) {
-            appArrayMap.put(appItem.getPackageName(), appItem);
-        }
-        long end = System.nanoTime();
-        Log.i("time", Long.toString((end - start) / 1000000) + " milliseconds to list apps");
-        return appArrayMap;
+    protected AllAppsList doInBackground(Void... voids) {
+        return AppUtils.loadAll(mContext.get());
     }
 
     @Override
-    protected void onPostExecute(LinkedHashMap<String, AppItem> appItemArrayMap) {
+    protected void onPostExecute(AllAppsList appItemArrayMap) {
         super.onPostExecute(appItemArrayMap);
         if(mAppProvider!=null){
             mAppProvider.get().loadAppsOver(appItemArrayMap);
