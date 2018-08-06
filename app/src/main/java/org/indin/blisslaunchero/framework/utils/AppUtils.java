@@ -21,8 +21,9 @@ import android.util.Log;
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.features.launcher.AllAppsList;
-import org.indin.blisslaunchero.framework.database.model.AppItem;
+import org.indin.blisslaunchero.features.launcher.AppProvider;
 import org.indin.blisslaunchero.framework.IconsHandler;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -54,6 +55,11 @@ public class AppUtils {
             UserHandle user = new UserHandle(manager.getSerialNumberForUser(profile), profile);
             for (LauncherActivityInfo activityInfo : launcher.getActivityList(null, profile)) {
                 ApplicationInfo appInfo = activityInfo.getApplicationInfo();
+
+                if (appInfo.packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)
+                        || appInfo.packageName.equalsIgnoreCase(AppProvider.MUPDF_PACKAGE)) {
+                    continue;
+                }
 
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -134,6 +140,11 @@ public class AppUtils {
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
+
+            if (appInfo.packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)
+                    || appInfo.packageName.equalsIgnoreCase(AppProvider.MUPDF_PACKAGE)) {
+                return null;
+            }
 
             if (intent != null) {
                 ResolveInfo resolveInfo = packageManager.resolveActivity(intent, 0);

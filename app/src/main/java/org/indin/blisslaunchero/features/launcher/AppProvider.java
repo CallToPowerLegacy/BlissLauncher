@@ -28,6 +28,8 @@ public class AppProvider extends Service implements Provider {
 
     private AppsRepository mAppsRepository;
 
+    public static final String MICROG_PACKAGE = "com.google.android.gms";
+    public static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
 
     private static final String TAG = "AppProvider";
 
@@ -49,6 +51,11 @@ public class AppProvider extends Service implements Provider {
             public void onPackageRemoved(String packageName, android.os.UserHandle user) {
                 Log.d(TAG, "onPackageRemoved() called with: packageName = [" + packageName
                         + "], user = [" + user + "]");
+
+                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                    return;
+                }
+
                 PackageAddedRemovedHandler.handleEvent(AppProvider.this,
                         "android.intent.action.PACKAGE_REMOVED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
@@ -60,6 +67,11 @@ public class AppProvider extends Service implements Provider {
             public void onPackageAdded(String packageName, android.os.UserHandle user) {
                 Log.d(TAG, "onPackageAdded() called with: packageName = [" + packageName
                         + "], user = [" + user + "]");
+
+                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                    return;
+                }
+
                 PackageAddedRemovedHandler.handleEvent(AppProvider.this,
                         "android.intent.action.PACKAGE_ADDED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
@@ -71,6 +83,11 @@ public class AppProvider extends Service implements Provider {
             public void onPackageChanged(String packageName, android.os.UserHandle user) {
                 Log.d(TAG, "onPackageChanged() called with: packageName = [" + packageName
                         + "], user = [" + user + "]");
+
+                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                    return;
+                }
+
                 PackageAddedRemovedHandler.handleEvent(AppProvider.this,
                         "android.intent.action.PACKAGE_CHANGED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
