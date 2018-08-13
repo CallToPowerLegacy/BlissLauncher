@@ -1,5 +1,13 @@
 package org.indin.blisslaunchero.features.launcher;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
+import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
@@ -111,13 +119,6 @@ import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
-
 public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener {
 
@@ -228,9 +229,12 @@ public class LauncherActivity extends AppCompatActivity implements
                         .subscribeWith(new DisposableObserver<AllAppsList>() {
                             @Override
                             public void onNext(
-                                    AllAppsList appItemLinkedHashMap) {
-                                if (!allAppsDisplayed) {
-                                    allLoadedApps = appItemLinkedHashMap;
+                                    AllAppsList allAppsList) {
+                                if (allAppsList.launchableApps.size() <= 0) {
+                                    BlissLauncher.getApplication(
+                                            LauncherActivity.this).getAppProvider().reload();
+                                } else {
+                                    allLoadedApps = allAppsList;
                                     showApps();
                                 }
                             }
@@ -316,11 +320,13 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+        Log.d(TAG, "onStart() called");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume() called");
         overridePendingTransition(R.anim.reenter, R.anim.releave);
         if (mWeatherPanel != null && mWeatherSetupTextView != null) {
             createOrUpdateWeatherPanel();
@@ -330,11 +336,13 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d(TAG, "onStop() called");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy() called");
         EventBus.getDefault().unregister(this);
         unregisterReceiver(timeChangedReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
@@ -757,7 +765,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 suggestedAppsGridLayout.removeAllViews();
             }
             int i = 0;
-            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size() ) {
+            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
                     BlissFrameLayout view = prepareApp(appItem, true);
@@ -774,15 +782,16 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createUI() {
         mHorizontalPager.setUiCreated(false);
         mDock.setEnabled(false);
+        launchableApps.clear();
+        pinnedApps.clear();
         if (storage.isLayoutPresent()) {
             createUIFromStorage();
         } else {
-
             for (String defaultPinnedAppsPackage : allLoadedApps.defaultPinnedAppsPackages) {
                 pinnedApps.add(allLoadedApps.launchableApps.get(defaultPinnedAppsPackage));
             }
-
-            for (Map.Entry<String, AppItem> stringAppItemEntry : allLoadedApps.launchableApps.entrySet()) {
+            for (Map.Entry<String, AppItem> stringAppItemEntry : allLoadedApps.launchableApps
+                    .entrySet()) {
                 launchableApps.add(stringAppItemEntry.getValue());
             }
 
@@ -911,7 +920,7 @@ public class LauncherActivity extends AppCompatActivity implements
         grid.setRowCount(mDeviceProfile.numRows);
         grid.setLayoutTransition(getDefaultLayoutTransition());
         grid.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2,
-                (int) (statusBarHeight+Utilities.pxFromDp(8, this)),
+                (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
                 mDeviceProfile.iconDrawablePaddingPx / 2, 0);
         return grid;
     }
@@ -920,8 +929,8 @@ public class LauncherActivity extends AppCompatActivity implements
         ScrollView layout = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
         layout.setPadding(0,
-                (int) (statusBarHeight+Utilities.pxFromDp(8, this)),
-                0,0);
+                (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
+                0, 0);
         mHorizontalPager.addView(layout, 0);
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
@@ -971,7 +980,7 @@ public class LauncherActivity extends AppCompatActivity implements
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
             int i = 0;
-            Crashlytics.log("Size of usage stats: "+usageStats.size());
+            Crashlytics.log("Size of usage stats: " + usageStats.size());
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
