@@ -1,12 +1,12 @@
 package org.indin.blisslaunchero.features.launcher;
 
+import android.util.Log;
+
 import com.jakewharton.rxrelay2.BehaviorRelay;
 
-import org.indin.blisslaunchero.framework.database.model.AppItem;
-
-import java.util.LinkedHashMap;
-
 public class AppsRepository {
+
+    private static final String TAG = "AppsRepository";
     private BehaviorRelay<AllAppsList> appsRelay;
 
     private static AppsRepository sAppsRepository;
@@ -17,6 +17,7 @@ public class AppsRepository {
 
     public static AppsRepository getAppsRepository(){
         if(sAppsRepository == null){
+            Log.d(TAG, "getAppsRepository() called");
             sAppsRepository = new AppsRepository();
         }
         return sAppsRepository;

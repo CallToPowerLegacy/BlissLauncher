@@ -12,14 +12,11 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
 import android.app.Activity;
-import android.app.WallpaperManager;
 import android.app.usage.UsageStats;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -37,7 +34,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.DragEvent;
@@ -59,7 +55,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -234,9 +229,12 @@ public class LauncherActivity extends AppCompatActivity implements
                         .subscribeWith(new DisposableObserver<AllAppsList>() {
                             @Override
                             public void onNext(
-                                    AllAppsList appItemLinkedHashMap) {
-                                if (!allAppsDisplayed) {
-                                    allLoadedApps = appItemLinkedHashMap;
+                                    AllAppsList allAppsList) {
+                                if (allAppsList.launchableApps.size() <= 0) {
+                                    BlissLauncher.getApplication(
+                                            LauncherActivity.this).getAppProvider().reload();
+                                } else {
+                                    allLoadedApps = allAppsList;
                                     showApps();
                                 }
                             }
@@ -322,11 +320,13 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+        Log.d(TAG, "onStart() called");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume() called");
         overridePendingTransition(R.anim.reenter, R.anim.releave);
         if (mWeatherPanel != null && mWeatherSetupTextView != null) {
             createOrUpdateWeatherPanel();
@@ -336,11 +336,13 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d(TAG, "onStop() called");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy() called");
         EventBus.getDefault().unregister(this);
         unregisterReceiver(timeChangedReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
@@ -572,7 +574,6 @@ public class LauncherActivity extends AppCompatActivity implements
 
     public void showApps() {
         allAppsDisplayed = true;
-        showIconPackWallpaperFirstTime();
         mProgressBar.setVisibility(GONE);
         createUI();
         isUiDone = true;
@@ -658,29 +659,6 @@ public class LauncherActivity extends AppCompatActivity implements
             }
         }
         return false;
-    }
-
-    private void showIconPackWallpaperFirstTime() {
-        if (Preferences.isFirstTime(this)) {
-            Bitmap bmap2 = BitmapFactory.decodeStream(
-                    getResources().openRawResource(+R.drawable.graphics_1));
-
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            int height = metrics.heightPixels;
-            int width = metrics.widthPixels;
-            Bitmap bitmap = Bitmap.createScaledBitmap(bmap2, width, height, true);
-
-            WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
-            try {
-                wallpaperManager.setResource(+R.drawable.graphics_1);
-                wallpaperManager.setBitmap(bitmap);
-                Preferences.setFirstTimeDone(this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     /**
@@ -787,7 +765,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 suggestedAppsGridLayout.removeAllViews();
             }
             int i = 0;
-            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size() ) {
+            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
                     BlissFrameLayout view = prepareApp(appItem, true);
@@ -804,15 +782,16 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createUI() {
         mHorizontalPager.setUiCreated(false);
         mDock.setEnabled(false);
+        launchableApps.clear();
+        pinnedApps.clear();
         if (storage.isLayoutPresent()) {
             createUIFromStorage();
         } else {
-
             for (String defaultPinnedAppsPackage : allLoadedApps.defaultPinnedAppsPackages) {
                 pinnedApps.add(allLoadedApps.launchableApps.get(defaultPinnedAppsPackage));
             }
-
-            for (Map.Entry<String, AppItem> stringAppItemEntry : allLoadedApps.launchableApps.entrySet()) {
+            for (Map.Entry<String, AppItem> stringAppItemEntry : allLoadedApps.launchableApps
+                    .entrySet()) {
                 launchableApps.add(stringAppItemEntry.getValue());
             }
 
@@ -941,7 +920,7 @@ public class LauncherActivity extends AppCompatActivity implements
         grid.setRowCount(mDeviceProfile.numRows);
         grid.setLayoutTransition(getDefaultLayoutTransition());
         grid.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2,
-                (int) (statusBarHeight+Utilities.pxFromDp(8, this)),
+                (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
                 mDeviceProfile.iconDrawablePaddingPx / 2, 0);
         return grid;
     }
@@ -950,8 +929,8 @@ public class LauncherActivity extends AppCompatActivity implements
         ScrollView layout = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
         layout.setPadding(0,
-                (int) (statusBarHeight+Utilities.pxFromDp(8, this)),
-                0,0);
+                (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
+                0, 0);
         mHorizontalPager.addView(layout, 0);
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
@@ -1001,7 +980,7 @@ public class LauncherActivity extends AppCompatActivity implements
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
             int i = 0;
-            Crashlytics.log("Size of usage stats: "+usageStats.size());
+            Crashlytics.log("Size of usage stats: " + usageStats.size());
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {

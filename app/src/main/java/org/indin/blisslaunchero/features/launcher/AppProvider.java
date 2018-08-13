@@ -6,17 +6,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.os.AsyncTask;
+import android.os.Binder;
 import android.os.IBinder;
 import android.os.UserManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import org.greenrobot.eventbus.EventBus;
 import org.indin.blisslaunchero.framework.broadcast.PackageAddedRemovedHandler;
-import org.indin.blisslaunchero.framework.database.model.AppItem;
 import org.indin.blisslaunchero.framework.utils.UserHandle;
-
-import java.util.LinkedHashMap;
 
 public class AppProvider extends Service implements Provider {
 
@@ -28,6 +25,10 @@ public class AppProvider extends Service implements Provider {
 
     private AppsRepository mAppsRepository;
 
+    public static final String MICROG_PACKAGE = "com.google.android.gms";
+    public static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
+
+    private IBinder mBinder = new LocalBinder();
 
     private static final String TAG = "AppProvider";
 
@@ -49,6 +50,11 @@ public class AppProvider extends Service implements Provider {
             public void onPackageRemoved(String packageName, android.os.UserHandle user) {
                 Log.d(TAG, "onPackageRemoved() called with: packageName = [" + packageName
                         + "], user = [" + user + "]");
+
+                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                    return;
+                }
+
                 PackageAddedRemovedHandler.handleEvent(AppProvider.this,
                         "android.intent.action.PACKAGE_REMOVED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
@@ -60,6 +66,11 @@ public class AppProvider extends Service implements Provider {
             public void onPackageAdded(String packageName, android.os.UserHandle user) {
                 Log.d(TAG, "onPackageAdded() called with: packageName = [" + packageName
                         + "], user = [" + user + "]");
+
+                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                    return;
+                }
+
                 PackageAddedRemovedHandler.handleEvent(AppProvider.this,
                         "android.intent.action.PACKAGE_ADDED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
@@ -71,6 +82,11 @@ public class AppProvider extends Service implements Provider {
             public void onPackageChanged(String packageName, android.os.UserHandle user) {
                 Log.d(TAG, "onPackageChanged() called with: packageName = [" + packageName
                         + "], user = [" + user + "]");
+
+                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                    return;
+                }
+
                 PackageAddedRemovedHandler.handleEvent(AppProvider.this,
                         "android.intent.action.PACKAGE_CHANGED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
@@ -156,17 +172,17 @@ public class AppProvider extends Service implements Provider {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
     }
 
-    /*public void updateAppsOver(LinkedHashMap<String, AppItem> appItemArrayMap) {
-        this.mAllAppsList = appItemArrayMap;
-        appsLoaded = true;
-    }*/
+    public class LocalBinder extends Binder {
+        public AppProvider getService(){
+            return AppProvider.this;
+        }
+    }
 }

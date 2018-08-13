@@ -73,6 +73,18 @@ public class BlissLauncher extends Application {
     private void connectAppProvider() {
         Intent intent = new Intent(this, AppProvider.class);
         startService(intent);
+
+        bindService(intent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                AppProvider.LocalBinder localBinder = (AppProvider.LocalBinder) service;
+                mAppProvider = localBinder.getService();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+            }
+        }, Context.BIND_AUTO_CREATE);
     }
 
     public AppProvider getAppProvider(){
