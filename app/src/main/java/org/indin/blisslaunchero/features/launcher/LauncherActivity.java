@@ -248,7 +248,9 @@ public class LauncherActivity extends AppCompatActivity implements
                                             LauncherActivity.this).getAppProvider().reload();
                                 } else {
                                     allLoadedApps = allAppsList;
-                                    showApps();
+                                    if(!allAppsDisplayed){
+                                        showApps();
+                                    }
                                 }
                             }
 
@@ -586,7 +588,6 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     public void showApps() {
-        allAppsDisplayed = true;
         mProgressBar.setVisibility(GONE);
         createUI();
         isUiDone = true;
@@ -596,6 +597,7 @@ public class LauncherActivity extends AppCompatActivity implements
         createWidgetsPage();
         createIndicator();
         createOrUpdateBadgeCount();
+        allAppsDisplayed = true;
     }
 
     private void createOrUpdateBadgeCount() {
