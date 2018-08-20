@@ -1,4 +1,32 @@
+/*
+ * Copyright 2018 /e/.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.indin.blisslaunchero.framework.utils;
+
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.AllAppsList;
+import org.indin.blisslaunchero.features.launcher.AppProvider;
+import org.indin.blisslaunchero.framework.IconsHandler;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
 
 import android.app.ActivityOptions;
 import android.content.ComponentName;
@@ -17,19 +45,6 @@ import android.os.UserManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.util.Log;
-
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.features.launcher.AllAppsList;
-import org.indin.blisslaunchero.features.launcher.AppProvider;
-import org.indin.blisslaunchero.framework.IconsHandler;
-import org.indin.blisslaunchero.framework.database.model.AppItem;
-
-import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 public class AppUtils {
 
@@ -75,7 +90,13 @@ public class AppUtils {
                 if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
                     isSystemApp = true;
                 }
-                AppItem launchableApp = new AppItem(activityInfo.getLabel().toString(),
+
+                String labelName = activityInfo.getLabel().toString();
+
+                if (appInfo.packageName.equalsIgnoreCase("com.generalmagic.magicearth")) {
+                    labelName = "Maps";
+                }
+                AppItem launchableApp = new AppItem(labelName,
                         appInfo.packageName,
                         appIcon,
                         intent,

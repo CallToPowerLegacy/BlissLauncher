@@ -1,8 +1,29 @@
+/*
+ * Copyright 2018 /e/.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.indin.blisslaunchero.framework.customviews;
 
 /**
  * Created by falcon on 11/2/18.
  */
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.indin.blisslaunchero.R;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -19,13 +40,6 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.Scroller;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.features.launcher.LauncherActivity;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 public class HorizontalPager extends ViewGroup {
     private static final String TAG = "HorizontalPager";

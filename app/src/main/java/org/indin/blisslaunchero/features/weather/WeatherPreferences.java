@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2012 The CyanogenMod Project (DvTonder)
+ * Copyright 2018 /e/.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.indin.blisslaunchero.features.weather;
 
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -35,6 +33,7 @@ import android.preference.SwitchPreference;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.framework.Preferences;
@@ -44,17 +43,16 @@ import cyanogenmod.weather.CMWeatherManager;
 
 
 public class WeatherPreferences extends PreferenceActivity implements
-        SharedPreferences.OnSharedPreferenceChangeListener, Preference.OnPreferenceChangeListener,
+        SharedPreferences.OnSharedPreferenceChangeListener,
         CMWeatherManager.WeatherServiceProviderChangeListener {
     private static final String TAG = "WeatherPreferences";
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    public static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
     private SwitchPreference mUseCustomLoc;
     private EditTextPreference mCustomWeatherLoc;
     private SwitchPreference mUseMetric;
     private IconSelectionPreference mIconSet;
     private SwitchPreference mUseCustomlocation;
-    private SwitchPreference mShowWeather;
     private Context mContext;
     private Runnable mPostResumeRunnable;
     private PreferenceScreen mWeatherSource;
@@ -68,25 +66,21 @@ public class WeatherPreferences extends PreferenceActivity implements
 
         // Load items that need custom summaries etc.
         mUseCustomLoc = (SwitchPreference) findPreference(Constants.WEATHER_USE_CUSTOM_LOCATION);
-        mCustomWeatherLoc = (EditTextPreference) findPreference(Constants.WEATHER_CUSTOM_LOCATION_CITY);
+        mCustomWeatherLoc = (EditTextPreference) findPreference(
+                Constants.WEATHER_CUSTOM_LOCATION_CITY);
         mIconSet = (IconSelectionPreference) findPreference(Constants.WEATHER_ICONS);
         mUseMetric = (SwitchPreference) findPreference(Constants.WEATHER_USE_METRIC);
-        mUseCustomlocation = (SwitchPreference) findPreference(Constants.WEATHER_USE_CUSTOM_LOCATION);
+        mUseCustomlocation = (SwitchPreference) findPreference(
+                Constants.WEATHER_USE_CUSTOM_LOCATION);
         mWeatherSource = (PreferenceScreen) findPreference(Constants.WEATHER_SOURCE);
-        mWeatherSource.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                if (Preferences.getWeatherSource(mContext) != null && mShowWeather.isChecked()) {
-                    mWeatherSource.notifyDependencyChange(false);
-                } else {
-                    mWeatherSource.notifyDependencyChange(true);
-                }
-                return false;
+        mWeatherSource.setOnPreferenceChangeListener((preference, o) -> {
+            if (Preferences.getWeatherSource(mContext) != null) {
+                mWeatherSource.notifyDependencyChange(false);
+            } else {
+                mWeatherSource.notifyDependencyChange(true);
             }
+            return false;
         });
-
-        mShowWeather = (SwitchPreference) findPreference(Constants.SHOW_WEATHER);
-        mShowWeather.setOnPreferenceChangeListener(this);
 
         // At first placement/start default the use of Metric units based on locale
         // If we had a previously set value already, this will just reset the same value
@@ -94,10 +88,16 @@ public class WeatherPreferences extends PreferenceActivity implements
         Preferences.setUseMetricUnits(mContext, defValue);
         mUseMetric.setChecked(defValue);
 
-        // Show a warning if location manager is disabled and there is no custom location set
-        LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && !mUseCustomLoc.isChecked()) {
-            showDialog();
+        if(!mUseCustomLoc.isChecked()){
+            if (!hasLocationPermission(this)) {
+                String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
+                requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE);
+            }else{
+                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    showDialog();
+                }
+            }
         }
     }
 
@@ -105,11 +105,8 @@ public class WeatherPreferences extends PreferenceActivity implements
     public void onResume() {
         super.onResume();
 
-        getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-
-        if (!hasLocationPermission(mContext)) {
-            mShowWeather.setChecked(false);
-        }
+        getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(
+                this);
 
         if (mPostResumeRunnable != null) {
             mPostResumeRunnable.run();
@@ -119,7 +116,7 @@ public class WeatherPreferences extends PreferenceActivity implements
         final CMWeatherManager weatherManager = CMWeatherManager.getInstance(mContext);
         weatherManager.registerWeatherServiceProviderChangeListener(this);
 
-        mWeatherSource.setEnabled(mShowWeather.isChecked());
+        mWeatherSource.setEnabled(true);
 
         updateLocationSummary();
         updateIconSetSummary();
@@ -129,7 +126,8 @@ public class WeatherPreferences extends PreferenceActivity implements
     @Override
     public void onPause() {
         super.onPause();
-        getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+        getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(
+                this);
         final CMWeatherManager weatherManager = CMWeatherManager.getInstance(mContext);
         weatherManager.unregisterWeatherServiceProviderChangeListener(this);
     }
@@ -191,25 +189,23 @@ public class WeatherPreferences extends PreferenceActivity implements
             forceWeatherUpdate = true;
         }
 
-        if (key.equals(Constants.SHOW_WEATHER) || key.equals(Constants.WEATHER_REFRESH_INTERVAL)) {
+        if (key.equals(Constants.WEATHER_REFRESH_INTERVAL)) {
             needWeatherUpdate = true;
         }
 
-        if (key.equals(Constants.SHOW_WEATHER)) {
-            mWeatherSource.setEnabled(mShowWeather.isChecked());
-            if (Preferences.getWeatherSource(mContext) != null && mShowWeather.isChecked()) {
-                mWeatherSource.notifyDependencyChange(false);
-            } else {
-                mWeatherSource.notifyDependencyChange(true);
-            }
+        mWeatherSource.setEnabled(true);
+        if (Preferences.getWeatherSource(mContext) != null) {
+            mWeatherSource.notifyDependencyChange(false);
+        } else {
+            mWeatherSource.notifyDependencyChange(true);
         }
 
         if (Constants.DEBUG) {
             Log.v(TAG, "Preference " + key + " changed, need update " +
-                    needWeatherUpdate + " force update "  + forceWeatherUpdate);
+                    needWeatherUpdate + " force update " + forceWeatherUpdate);
         }
 
-        if (Preferences.showWeather(mContext) && (needWeatherUpdate || forceWeatherUpdate)) {
+        if ((needWeatherUpdate || forceWeatherUpdate)) {
             Intent updateIntent = new Intent(mContext, WeatherUpdateService.class);
             if (forceWeatherUpdate) {
                 updateIntent.setAction(WeatherUpdateService.ACTION_FORCE_UPDATE);
@@ -238,6 +234,10 @@ public class WeatherPreferences extends PreferenceActivity implements
             }
             mCustomWeatherLoc.setSummary(location);
         } else {
+            if (!hasLocationPermission(mContext)) {
+                String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
+                requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE);
+            }
             mCustomWeatherLoc.setSummary(R.string.weather_geolocated);
         }
     }
@@ -251,16 +251,33 @@ public class WeatherPreferences extends PreferenceActivity implements
         builder.setMessage(R.string.weather_retrieve_location_dialog_message);
         builder.setCancelable(false);
         builder.setPositiveButton(R.string.weather_retrieve_location_dialog_enable_button,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        mContext.startActivity(intent);
-                    }
+                (dialog1, whichButton) -> {
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    intent.setFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivityForResult(intent, 203);
                 });
         builder.setNegativeButton(R.string.cancel, null);
         dialog = builder.create();
         dialog.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult() called with: requestCode = [" + requestCode
+                + "], resultCode = [" + resultCode + "], data = [" + data + "]");
+        if (requestCode == 203) {
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                Toast.makeText(this, "Set custom location in weather wettings.",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                startService(new Intent(this, WeatherUpdateService.class)
+                        .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void updateIconSetSummary() {
@@ -271,32 +288,21 @@ public class WeatherPreferences extends PreferenceActivity implements
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
+            int[] grantResults) {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // We only get here if user tried to enable the preference,
                 // hence safe to turn it on after permission is granted
-                mPostResumeRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        mShowWeather.setChecked(true);
-                    }
-                };
+                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    showDialog();
+                } else {
+                    startService(new Intent(this, WeatherUpdateService.class)
+                            .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                }
             }
         }
-    }
-
-    @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (preference == mShowWeather) {
-            if (!hasLocationPermission(mContext)) {
-                String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
-                requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE);
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
@@ -313,7 +319,7 @@ public class WeatherPreferences extends PreferenceActivity implements
             Preferences.setWeatherSource(mContext, null);
         }
 
-        if (providerName != null && mShowWeather.isChecked()) {
+        if (providerName != null) {
             mWeatherSource.notifyDependencyChange(false);
         } else {
             mWeatherSource.notifyDependencyChange(true);
