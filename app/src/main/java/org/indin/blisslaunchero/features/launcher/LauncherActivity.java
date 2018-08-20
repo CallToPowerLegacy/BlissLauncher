@@ -17,22 +17,66 @@ package org.indin.blisslaunchero.features.launcher;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.LayoutTransition;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.usage.UsageStats;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.util.TypedValue;
+import android.view.DragEvent;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.crashlytics.android.Crashlytics;
+import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -72,54 +116,18 @@ import org.indin.blisslaunchero.framework.utils.GraphicsUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.crashlytics.android.Crashlytics;
-import com.jakewharton.rxbinding2.widget.RxTextView;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.LayoutTransition;
-import android.app.Activity;
-import android.app.usage.UsageStats;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.util.TypedValue;
-import android.view.DragEvent;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.FrameLayout;
-import android.widget.GridLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.Toast;
 import cyanogenmod.weather.WeatherInfo;
 import cyanogenmod.weather.util.WeatherUtils;
 import io.reactivex.Observable;
@@ -138,6 +146,7 @@ public class LauncherActivity extends AppCompatActivity implements
     public static final int REORDER_TIMEOUT = 350;
     private final static int INVALID = -999;
     private static final String TAG = "DesktopActivity";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     public static boolean longPressed;
     private final Alarm mReorderAlarm = new Alarm();
     private final Alarm mDockReorderAlarm = new Alarm();
@@ -188,6 +197,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private View mWeatherSetupTextView;
     private boolean layoutInflationCompleted;
     private boolean allAppsDisplayed;
+
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -248,7 +258,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                             LauncherActivity.this).getAppProvider().reload();
                                 } else {
                                     allLoadedApps = allAppsList;
-                                    if(!allAppsDisplayed){
+                                    if (!allAppsDisplayed) {
                                         showApps();
                                     }
                                 }
@@ -343,9 +353,6 @@ public class LauncherActivity extends AppCompatActivity implements
         super.onResume();
         Log.d(TAG, "onResume() called");
         overridePendingTransition(R.anim.reenter, R.anim.releave);
-        if (mWeatherPanel != null && mWeatherSetupTextView != null) {
-            createOrUpdateWeatherPanel();
-        }
     }
 
     @Override
@@ -366,19 +373,16 @@ public class LauncherActivity extends AppCompatActivity implements
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAppAddEvent(AppAddEvent appAddEvent) {
-        Log.d(TAG, "onAppAddEvent() called with: appAddEvent = [" + appAddEvent + "]");
         addNewApp(appAddEvent.packageName);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAppRemoveEvent(AppRemoveEvent appRemoveEvent) {
-        Log.d(TAG, "onAppRemoveEvent() called with: appRemoveEvent = [" + appRemoveEvent + "]");
         removePackageFromLauncher(appRemoveEvent.packageName);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAppChangeEvent(AppChangeEvent appChangeEvent) {
-        Log.d(TAG, "onAppChangeEvent() called with: appChangeEvent = [" + appChangeEvent + "]");
         updateApp(appChangeEvent.packageName);
     }
 
@@ -1071,15 +1075,52 @@ public class LauncherActivity extends AppCompatActivity implements
         mWeatherSetupTextView = findViewById(R.id.weather_setup_textview);
         mWeatherPanel = findViewById(R.id.weather_panel);
 
+        createOrUpdateWeatherPanel();
+
         LocalBroadcastManager.getInstance(this).registerReceiver(mWeatherReceiver, new IntentFilter(
                 WeatherUpdateService.ACTION_UPDATE_FINISHED));
-        startService(new Intent(this, WeatherUpdateService.class)
-                .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
-        createOrUpdateWeatherPanel();
+
+        if (!Preferences.useCustomWeatherLocation(this)) {
+            if (!WeatherPreferences.hasLocationPermission(this)) {
+                String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
+                requestPermissions(permissions,
+                        WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE);
+            } else {
+                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    showLocationEnableDialog();
+                } else {
+                    startService(new Intent(this, WeatherUpdateService.class)
+                            .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                }
+            }
+        } else {
+            startService(new Intent(this, WeatherUpdateService.class)
+                    .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            int[] grantResults) {
+        if (requestCode == WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // We only get here if user tried to enable the preference,
+                // hence safe to turn it on after permission is granted
+                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    showLocationEnableDialog();
+                } else {
+                    startService(new Intent(this, WeatherUpdateService.class)
+                            .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                }
+            }
+        }
     }
 
     private void createOrUpdateWeatherPanel() {
-        if (!Preferences.showWeather(this) || Preferences.getCachedWeatherInfo(this) == null) {
+        if (Preferences.getCachedWeatherInfo(this) == null) {
             mWeatherSetupTextView.setVisibility(VISIBLE);
             mWeatherPanel.setVisibility(GONE);
             mWeatherSetupTextView.setOnClickListener(
@@ -1093,6 +1134,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void updateWeatherPanel(WeatherInfo w) {
+
         if (mWeatherSetupTextView.getVisibility() == VISIBLE) {
             mWeatherSetupTextView.setVisibility(GONE);
         }
@@ -1172,6 +1214,43 @@ public class LauncherActivity extends AppCompatActivity implements
         LinearLayout forecastView = (LinearLayout) mWeatherPanel.findViewById(R.id.forecast_view);
 
         ForecastBuilder.buildSmallPanel(this, forecastView, w);
+    }
+
+    private void showLocationEnableDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final Dialog dialog;
+
+        // Build and show the dialog
+        builder.setTitle(R.string.weather_retrieve_location_dialog_title);
+        builder.setMessage(R.string.weather_retrieve_location_dialog_message);
+        builder.setCancelable(false);
+        builder.setPositiveButton(R.string.weather_retrieve_location_dialog_enable_button,
+                (dialog1, whichButton) -> {
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    intent.setFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivityForResult(intent, 203);
+                });
+        builder.setNegativeButton(R.string.cancel, null);
+        dialog = builder.create();
+        dialog.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult() called with: requestCode = [" + requestCode
+                + "], resultCode = [" + resultCode + "], data = [" + data + "]");
+        if(requestCode == 203){
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                Toast.makeText(this, "Set custom location in weather wettings.", Toast.LENGTH_SHORT).show();
+            } else {
+                startService(new Intent(this, WeatherUpdateService.class)
+                        .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+            }
+        }else{
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private ObservableSource<AutoCompleteServiceResult> searchForQuery(
@@ -1881,7 +1960,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         if (!bounds.contains((int) cX, (int) cY)) {
                             removeAppFromFolder();
                         } else {
-                            Log.i(TAG, "here comes  ");
+                            Log.i(TAG, "here comes ");
                             movingApp.setVisibility(View.VISIBLE);
                             int currentItem = mFolderAppsViewPager.getCurrentItem();
                             makeAppWobble(movingApp, true,
@@ -1890,10 +1969,14 @@ public class LauncherActivity extends AppCompatActivity implements
                         }
                     }
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                    Log.i(TAG, "onDrag: here it is");
                     if (isDragging) {
                         isDragging = false;
+                        Log.i(TAG, "onDrag: here it is2");
+
                     }
                     if (!dragEvent.getResult()) {
+                        Log.i(TAG, "onDrag: here it is3");
                         movingApp.setVisibility(View.VISIBLE);
                         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
                             int currentItem = mFolderAppsViewPager.getCurrentItem();
@@ -1908,6 +1991,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             makeAppWobble(movingApp, true, mDock.indexOfChild(movingApp));
                         }
                     }
+                    Log.i(TAG, "onDrag: here it is3");
 
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();

@@ -21,11 +21,6 @@
 
     <PreferenceCategory android:title="@string/general_category">
 
-        <SwitchPreference
-            android:key="show_weather"
-            android:title="@string/location_enable"
-            android:defaultValue="true" />
-
         <PreferenceScreen
             android:key="weather_source"
             android:defaultValue=""

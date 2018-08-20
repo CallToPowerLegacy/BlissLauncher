@@ -23,7 +23,6 @@ public class Constants {
     public static final boolean DEBUG = true;
     public static final String PREF_NAME = "BLISS_LAUNCHER";
 
-    public static final String SHOW_WEATHER = "show_weather";
     public static final String WEATHER_SOURCE = "weather_source";
     public static final String WEATHER_USE_CUSTOM_LOCATION = "weather_use_custom_location";
     public static final String WEATHER_CUSTOM_LOCATION_CITY = "weather_custom_location_city";

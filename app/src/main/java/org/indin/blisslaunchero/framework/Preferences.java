@@ -15,18 +15,18 @@
  */
 package org.indin.blisslaunchero.framework;
 
-import java.util.ArrayList;
-import java.util.Locale;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 
-import org.indin.blisslaunchero.features.weather.WeatherUtils;
 import org.indin.blisslaunchero.framework.utils.Constants;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
+import java.util.ArrayList;
+import java.util.Locale;
+
 import cyanogenmod.weather.WeatherInfo;
 import cyanogenmod.weather.WeatherLocation;
 
@@ -76,11 +76,6 @@ public class Preferences {
 
     public static boolean isFirstWeatherUpdate(Context context) {
         return getPrefs(context).getBoolean(Constants.WEATHER_FIRST_UPDATE, true);
-    }
-
-    public static boolean showWeather(Context context) {
-        return getPrefs(context).getBoolean(Constants.SHOW_WEATHER, true)
-                && WeatherUtils.isWeatherServiceAvailable(context);
     }
 
     public static int weatherFontColor(Context context) {
