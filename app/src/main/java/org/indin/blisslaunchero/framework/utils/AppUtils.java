@@ -182,8 +182,14 @@ public class AppUtils {
                     if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
                         isSystemApp = true;
                     }
+
+                    String labelName = activityInfo.loadLabel(packageManager).toString();
+
+                    if (appInfo.packageName.equalsIgnoreCase("com.generalmagic.magicearth")) {
+                        labelName = "Maps";
+                    }
                     AppItem launchableApp = new AppItem(
-                            activityInfo.loadLabel(packageManager).toString(),
+                            labelName,
                             appInfo.packageName,
                             appIcon,
                             intent,
