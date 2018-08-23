@@ -32,6 +32,10 @@ android {
 
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
     // Always show the result of every unit test, even if it passes.
     testOptions.unitTests.all {
         testLogging {
