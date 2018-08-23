@@ -15,6 +15,10 @@
  */
 package org.indin.blisslaunchero.features.weather;
 
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.framework.Preferences;
+import org.indin.blisslaunchero.framework.utils.Constants;
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -34,11 +38,6 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
-
 import cyanogenmod.weather.CMWeatherManager;
 
 

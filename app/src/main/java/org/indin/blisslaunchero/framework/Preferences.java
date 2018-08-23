@@ -15,18 +15,17 @@
  */
 package org.indin.blisslaunchero.framework;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
+import java.util.ArrayList;
+import java.util.Locale;
 
 import org.indin.blisslaunchero.framework.utils.Constants;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Locale;
-
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import cyanogenmod.weather.WeatherInfo;
 import cyanogenmod.weather.WeatherLocation;
 
