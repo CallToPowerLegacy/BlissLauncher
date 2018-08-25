@@ -38,6 +38,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.BuildConfig;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.features.notification.NotificationRepository;
 import org.indin.blisslaunchero.features.notification.NotificationService;
@@ -84,6 +85,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.usage.UsageStats;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -144,7 +147,6 @@ public class LauncherActivity extends AppCompatActivity implements
     public static final int REORDER_TIMEOUT = 350;
     private final static int INVALID = -999;
     private static final String TAG = "DesktopActivity";
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     public static boolean longPressed;
     private final Alarm mReorderAlarm = new Alarm();
     private final Alarm mDockReorderAlarm = new Alarm();
@@ -156,8 +158,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private BlissInput mBlissInput;
     private BlissInput mSearchInput;
     private View mProgressBar;
-    private BroadcastReceiver installReceiver;
-    private BroadcastReceiver uninstallReceiver;
     private List<AppItem> launchableApps = new ArrayList<>();
     private List<AppItem> pinnedApps = new ArrayList<>();
     private AllAppsList allLoadedApps;
@@ -178,7 +178,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private CompositeDisposable mCompositeDisposable;
     private CountDownTimer mWobblingCountDownTimer;
     private List<CalendarIcon> mCalendarIcons = new ArrayList<>();
-    private Intent notificationServiceIntent;
     private BroadcastReceiver timeChangedReceiver;
     private boolean isUiDone = false;
     private Set<String> mAppsWithNotifications = new HashSet<>();
@@ -187,13 +186,11 @@ public class LauncherActivity extends AppCompatActivity implements
     private DeviceProfile mDeviceProfile;
     private boolean mLongClickStartsDrag = true;
     private boolean isDragging;
-    private RecyclerView mSuggestionRecyclerView;
     private AutoCompleteAdapter mSuggestionAdapter;
     private GridLayout suggestedAppsGridLayout;
     private BlissDragShadowBuilder dragShadowBuilder;
     private View mWeatherPanel;
     private View mWeatherSetupTextView;
-    private boolean layoutInflationCompleted;
     private boolean allAppsDisplayed;
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
@@ -232,13 +229,35 @@ public class LauncherActivity extends AppCompatActivity implements
         mLauncherView = LayoutInflater.from(this).inflate(R.layout.activity_main, null);
         setupViews();
         setContentView(mLauncherView);
-        layoutInflationCompleted = true;
-
         createOrUpdateIconGrid();
 
         // Start NotificationService to add count badge to Icons
-        notificationServiceIntent = new Intent(this, NotificationService.class);
+        Intent notificationServiceIntent = new Intent(this, NotificationService.class);
         startService(notificationServiceIntent);
+
+        ContentResolver cr = getContentResolver();
+        String setting = "enabled_notification_listeners";
+        String permissionString = Settings.Secure.getString(cr, setting);
+        Log.i(TAG, "package name:" + getPackageName());
+        if (permissionString == null || !permissionString.contains(getPackageName())) {
+            if (BuildConfig.DEBUG) {
+                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+            } else if (!Preferences.getNotificationAccess(this)) {
+                ComponentName cn = new ComponentName(this, NotificationService.class);
+                Log.i(TAG, "cn: " + cn);
+                if (permissionString == null) {
+                    permissionString = "";
+                } else {
+                    permissionString += ":";
+                }
+                permissionString += cn.flattenToString();
+                boolean success = Settings.Secure.putString(cr, setting, permissionString);
+                Log.i(TAG, "onCreate: " + success);
+                if (success) {
+                    Preferences.setNotificationAccess(this);
+                }
+            }
+        }
 
         mProgressBar.setVisibility(View.VISIBLE);
     }
@@ -979,15 +998,15 @@ public class LauncherActivity extends AppCompatActivity implements
 
             }
         });
-        mSuggestionRecyclerView = layout.findViewById(R.id.suggestionRecyclerView);
+        RecyclerView suggestionRecyclerView = layout.findViewById(R.id.suggestionRecyclerView);
         mSuggestionAdapter = new AutoCompleteAdapter(this);
-        mSuggestionRecyclerView.setHasFixedSize(true);
-        mSuggestionRecyclerView.setLayoutManager(
+        suggestionRecyclerView.setHasFixedSize(true);
+        suggestionRecyclerView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        mSuggestionRecyclerView.setAdapter(mSuggestionAdapter);
+        suggestionRecyclerView.setAdapter(mSuggestionAdapter);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL);
-        mSuggestionRecyclerView.addItemDecoration(dividerItemDecoration);
+        suggestionRecyclerView.addItemDecoration(dividerItemDecoration);
         layout.setOnDragListener(null);
 
         layout.findViewById(R.id.used_apps_layout).setClipToOutline(true);
@@ -1238,15 +1257,16 @@ public class LauncherActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResult() called with: requestCode = [" + requestCode
                 + "], resultCode = [" + resultCode + "], data = [" + data + "]");
-        if(requestCode == 203){
+        if (requestCode == 203) {
             LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                Toast.makeText(this, "Set custom location in weather wettings.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Set custom location in weather wettings.",
+                        Toast.LENGTH_SHORT).show();
             } else {
                 startService(new Intent(this, WeatherUpdateService.class)
                         .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
             }
-        }else{
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
