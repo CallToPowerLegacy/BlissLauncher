@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.indin.blisslaunchero.framework.Utilities;
 
+import android.annotation.SuppressLint;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -37,7 +38,9 @@ public class ResourceUtils {
      * @throws IllegalAccessException    if something is very wrong
      * @throws InvocationTargetException if something is really very extremely wrong
      */
-    public static void setFakeConfig(Resources resources, int sdk) throws NoSuchMethodException, IllegalAccessException,
+    @SuppressLint("PrivateApi")
+    public static void setFakeConfig(Resources resources, int sdk)
+            throws NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
         int width, height;
         DisplayMetrics metrics = resources.getDisplayMetrics();
@@ -52,26 +55,36 @@ public class ResourceUtils {
         Configuration configuration = resources.getConfiguration();
 
         if (Utilities.ATLEAST_OREO) {
-            AssetManager.class.getDeclaredMethod("setConfiguration", int.class, int.class, String.class, int.class, int.class,
-                    int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class,
+            AssetManager.class.getDeclaredMethod("setConfiguration", int.class, int.class,
+                    String.class, int.class, int.class,
+                    int.class, int.class, int.class, int.class, int.class, int.class, int.class,
+                    int.class, int.class,
                     int.class, int.class, int.class, int.class)
                     .invoke(resources.getAssets(), configuration.mcc, configuration.mnc,
-                            Utilities.ATLEAST_LOLLIPOP_MR1 ? configuration.locale.toLanguageTag() : null,
-                            configuration.orientation, configuration.touchscreen, configuration.densityDpi,
-                            configuration.keyboard, configuration.keyboardHidden, configuration.navigation,
+                            configuration.locale.toLanguageTag(),
+                            configuration.orientation, configuration.touchscreen,
+                            configuration.densityDpi,
+                            configuration.keyboard, configuration.keyboardHidden,
+                            configuration.navigation,
                             width, height, configuration.smallestScreenWidthDp,
-                            configuration.screenWidthDp, configuration.screenHeightDp, configuration.screenLayout,
+                            configuration.screenWidthDp, configuration.screenHeightDp,
+                            configuration.screenLayout,
                             configuration.uiMode, configuration.colorMode, sdk);
         } else {
-            AssetManager.class.getDeclaredMethod("setConfiguration", int.class, int.class, String.class, int.class, int.class,
-                    int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class,
+            AssetManager.class.getDeclaredMethod("setConfiguration", int.class, int.class,
+                    String.class, int.class, int.class,
+                    int.class, int.class, int.class, int.class, int.class, int.class, int.class,
+                    int.class, int.class,
                     int.class, int.class, int.class)
                     .invoke(resources.getAssets(), configuration.mcc, configuration.mnc,
-                            Utilities.ATLEAST_LOLLIPOP_MR1 ? configuration.locale.toLanguageTag() : null,
-                            configuration.orientation, configuration.touchscreen, configuration.densityDpi,
-                            configuration.keyboard, configuration.keyboardHidden, configuration.navigation,
+                            configuration.locale.toLanguageTag(),
+                            configuration.orientation, configuration.touchscreen,
+                            configuration.densityDpi,
+                            configuration.keyboard, configuration.keyboardHidden,
+                            configuration.navigation,
                             width, height, configuration.smallestScreenWidthDp,
-                            configuration.screenWidthDp, configuration.screenHeightDp, configuration.screenLayout,
+                            configuration.screenWidthDp, configuration.screenHeightDp,
+                            configuration.screenLayout,
                             configuration.uiMode, sdk);
         }
     }

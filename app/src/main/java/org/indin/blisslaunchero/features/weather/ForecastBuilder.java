@@ -27,6 +27,7 @@ import java.util.TimeZone;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.framework.Preferences;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,16 +41,18 @@ import cyanogenmod.weather.util.WeatherUtils;
 public class ForecastBuilder {
 
     private static final String TAG = "ForecastBuilder";
+
     /**
      * This method is used to build the small, horizontal forecasts panel
-     * @param context
-     * @param smallPanel = a horizontal linearlayout that will contain the forecasts
-     * @param w = the Weather info object that contains the forecast data
+     * @param context Context to be used
+     * @param smallPanel a horizontal linearlayout that will contain the forecasts
+     * @param w the Weather info object that contains the forecast data
      */
-    public static boolean buildSmallPanel(Context context, LinearLayout smallPanel, WeatherInfo w) {
+    @SuppressLint("InflateParams")
+    public static void buildSmallPanel(Context context, LinearLayout smallPanel, WeatherInfo w) {
         if (smallPanel == null) {
             Log.d(TAG, "Invalid view passed");
-            return false;
+            return;
         }
 
         // Get things ready
@@ -60,9 +63,9 @@ public class ForecastBuilder {
 
         smallPanel.removeAllViews();
         List<WeatherInfo.DayForecast> forecasts = w.getForecasts();
-        if (forecasts == null || forecasts.size() <= 1) {
+        if (forecasts.size() <= 1) {
             smallPanel.setVisibility(View.GONE);
-            return false;
+            return;
         }
 
         TimeZone MyTimezone = TimeZone.getDefault();
@@ -77,16 +80,17 @@ public class ForecastBuilder {
             WeatherInfo.DayForecast d = forecasts.get(count);
 
             // Load the views
+            assert inflater != null;
             View forecastItem = inflater.inflate(R.layout.item_weather_forecast, null);
 
             // The day of the week
-            TextView day = (TextView) forecastItem.findViewById(R.id.forecast_day);
+            TextView day = forecastItem.findViewById(R.id.forecast_day);
             day.setText(calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT,
                     Locale.getDefault()));
             calendar.roll(Calendar.DAY_OF_WEEK, true);
 
             // Weather Image
-            ImageView image = (ImageView) forecastItem.findViewById(R.id.weather_image);
+            ImageView image = forecastItem.findViewById(R.id.weather_image);
             String iconsSet = Preferences.getWeatherIconSet(context);
             final int resId = WeatherIconUtils.getWeatherIconResource(context, iconsSet,
                     d.getConditionCode());
@@ -112,8 +116,8 @@ public class ForecastBuilder {
             }
             String dayLow = cyanogenmod.weather.util.WeatherUtils.formatTemperature(lowTemp, tempUnit);
             String dayHigh = WeatherUtils.formatTemperature(highTemp, tempUnit);
-            TextView temps = (TextView) forecastItem.findViewById(R.id.weather_temps);
-            temps.setText(dayLow + "\n" + dayHigh);
+            TextView temps = forecastItem.findViewById(R.id.weather_temps);
+            temps.setText(String.format("%s\n%s", dayLow, dayHigh));
 
             // Add the view
             smallPanel.addView(forecastItem,
@@ -126,6 +130,5 @@ public class ForecastBuilder {
                         itemSidePadding, LinearLayout.LayoutParams.MATCH_PARENT));
             }
         }
-        return true;
     }
 }

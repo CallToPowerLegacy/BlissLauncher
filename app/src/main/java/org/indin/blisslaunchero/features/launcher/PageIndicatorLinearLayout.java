@@ -15,13 +15,13 @@
  */
 package org.indin.blisslaunchero.features.launcher;
 
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.framework.DeviceProfile;
-
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
+
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.framework.DeviceProfile;
 
 public class PageIndicatorLinearLayout extends LinearLayout {
     private Context mContext;
@@ -45,6 +45,7 @@ public class PageIndicatorLinearLayout extends LinearLayout {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         DeviceProfile deviceProfile = BlissLauncher.getApplication(mContext).getDeviceProfile();
-        setMeasuredDimension(deviceProfile.getAvailableWidthPx(), deviceProfile.getPageIndicatorHeight());
+        setMeasuredDimension(deviceProfile.getAvailableWidthPx(),
+                deviceProfile.getPageIndicatorHeight());
     }
 }

@@ -15,16 +15,13 @@
  */
 package org.indin.blisslaunchero.framework.customviews;
 
-/**
- * Created by falcon on 11/2/18.
- */
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.indin.blisslaunchero.R;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -197,10 +194,7 @@ public class HorizontalPager extends ViewGroup {
     @Override
     public boolean requestChildRectangleOnScreen(View child, Rect rectangle, boolean immediate) {
         int screen = indexOfChild(child);
-        if (screen != currentPage || !mScroller.isFinished()) {
-            return true;
-        }
-        return false;
+        return screen != currentPage || !mScroller.isFinished();
     }
 
     @Override
@@ -351,6 +345,7 @@ public class HorizontalPager extends ViewGroup {
         mIsUiCreated = isUiCreated;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (mVelocityTracker == null) {

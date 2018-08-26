@@ -63,10 +63,10 @@ public class BlissDragShadowBuilder extends View.DragShadowBuilder {
         int height;
 
         // Sets the width of the shadow to half the width of the original View
-        width = (int) (getView().getWidth() * 1);
+        width = getView().getWidth();
 
         // Sets the height of the shadow to half the height of the original View
-        height = (int) (getView().getHeight() * 1);
+        height = getView().getHeight();
 
         // Sets the size parameter's width and height values. These get back to the system
         // through the size parameter.

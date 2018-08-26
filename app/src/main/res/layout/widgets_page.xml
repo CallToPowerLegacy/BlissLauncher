@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:orientation="vertical"
-android:background="@color/dark_grey_44">
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:background="@color/dark_grey_44"
+            android:orientation="vertical"
+            tools:ignore="ContentDescription">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,15 +27,15 @@ android:background="@color/dark_grey_44">
                 android:id="@+id/search_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawablePadding="8dp"
-                android:background="@android:color/transparent"
                 android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/clearSuggestionImageView"
+                android:background="@android:color/transparent"
+                android:drawablePadding="8dp"
                 android:drawableStart="@drawable/ic_search_white_24dp"
                 android:hint="@string/search"
-                android:layout_toLeftOf="@+id/clearSuggestionImageView"
                 android:imeOptions="actionSearch"
                 android:inputType="text"
-                android:maxLines="1" />
+                android:maxLines="1"/>
 
             <ImageView
                 android:id="@+id/clearSuggestionImageView"
@@ -41,7 +43,7 @@ android:background="@color/dark_grey_44">
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:src="@drawable/ic_cancel_white_24dp" />
+                android:src="@drawable/ic_cancel_white_24dp"/>
         </RelativeLayout>
 
         <android.support.v7.widget.RecyclerView
@@ -49,13 +51,13 @@ android:background="@color/dark_grey_44">
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"/>
+            android:paddingEnd="4dp"
+            android:paddingStart="4dp"/>
 
-        <include layout="@layout/layout_used_apps"
-            android:id="@+id/used_apps_layout"/>
-        <include layout="@layout/layout_weather_info"
-        android:id="@+id/weather_info_layout"/>
+        <include android:id="@+id/used_apps_layout"
+                 layout="@layout/layout_used_apps"/>
+        <include android:id="@+id/weather_info_layout"
+                 layout="@layout/layout_weather_info"/>
     </LinearLayout>
 
 </ScrollView>

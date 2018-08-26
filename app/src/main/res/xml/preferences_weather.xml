@@ -23,7 +23,6 @@
 
         <PreferenceScreen
             android:key="weather_source"
-            android:defaultValue=""
             android:summary="@string/weather_source_not_selected"
             android:title="@string/weather_source_title">
             <intent android:action="cyanogenmod.intent.action.MANAGE_WEATHER_PROVIDER_SERVICES" />

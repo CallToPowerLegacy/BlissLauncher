@@ -17,6 +17,7 @@ package org.indin.blisslaunchero.framework.utils;
 
 import java.util.Iterator;
 
+import android.support.annotation.NonNull;
 import android.util.LongSparseArray;
 
 /**
@@ -37,6 +38,7 @@ public class LongArrayMap<E> extends LongSparseArray<E> implements Iterable<E> {
         return (LongArrayMap<E>) super.clone();
     }
 
+    @NonNull
     @Override
     public Iterator<E> iterator() {
         return new ValueIterator();

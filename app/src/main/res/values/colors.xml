@@ -8,15 +8,11 @@
     <color name="dockColor">#4D000000</color>
     <color name="dot_off_color">#88FFFFFF</color>
     <color name="dot_on_color">#FFFFFF</color>
-    <color name="widgetsPageColor">#88000000</color>
 
-
-    <color name="transparent_black">#7000</color>
     <color name="transparent_white">#afff</color>
 
     <color name="text_shadow_opaque">#3f000000</color>
 
-    <color name="light_blue">#774888ef</color>
     <color name="dark_grey">#66000000</color>
     <color name="dark_grey_44">#44000000</color>
 

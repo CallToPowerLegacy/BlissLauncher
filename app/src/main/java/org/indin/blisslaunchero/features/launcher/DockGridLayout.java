@@ -15,12 +15,12 @@
  */
 package org.indin.blisslaunchero.features.launcher;
 
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.framework.DeviceProfile;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.GridLayout;
+
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.framework.DeviceProfile;
 
 public class DockGridLayout extends GridLayout {
 

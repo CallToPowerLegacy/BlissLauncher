@@ -19,8 +19,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
 
-import org.indin.blisslaunchero.BuildConfig;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
@@ -32,8 +30,6 @@ import android.util.TypedValue;
 public class Utilities {
 
     private static final String TAG = "Utilities";
-
-    public static final String AUTHORITY = (BuildConfig.APPLICATION_ID + ".settings").intern();
 
     /**
      * Use hard coded values to compile with android source.
@@ -49,9 +45,6 @@ public class Utilities {
 
     public static final boolean ATLEAST_MARSHMALLOW =
             Build.VERSION.SDK_INT >= 23;
-
-    public static final boolean ATLEAST_LOLLIPOP_MR1 =
-            Build.VERSION.SDK_INT >=22;
 
     /**
      * Compresses the bitmap to a byte array for serialization.
@@ -77,7 +70,7 @@ public class Utilities {
         return (size / densityRatio);
     }
     public static int pxFromDp(float size, DisplayMetrics metrics) {
-        return (int) Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 size, metrics));
     }
 
@@ -87,7 +80,7 @@ public class Utilities {
     }
 
     public static int pxFromSp(float size, DisplayMetrics metrics) {
-        return (int) Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
                 size, metrics));
     }
 

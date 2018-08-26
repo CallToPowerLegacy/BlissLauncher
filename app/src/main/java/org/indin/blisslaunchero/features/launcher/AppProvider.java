@@ -15,9 +15,6 @@
  */
 package org.indin.blisslaunchero.features.launcher;
 
-import org.indin.blisslaunchero.framework.broadcast.PackageAddedRemovedHandler;
-import org.indin.blisslaunchero.framework.utils.UserHandle;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -30,13 +27,14 @@ import android.os.UserManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.indin.blisslaunchero.framework.broadcast.PackageAddedRemovedHandler;
+import org.indin.blisslaunchero.framework.utils.UserHandle;
+
 public class AppProvider extends Service implements Provider {
 
     private AllAppsList mAllAppsList;
 
     private boolean appsLoaded = false;
-
-    private long appLoadingStart;
 
     private AppsRepository mAppsRepository;
 
@@ -63,10 +61,8 @@ public class AppProvider extends Service implements Provider {
         launcher.registerCallback(new LauncherApps.Callback() {
             @Override
             public void onPackageRemoved(String packageName, android.os.UserHandle user) {
-                Log.d(TAG, "onPackageRemoved() called with: packageName = [" + packageName
-                        + "], user = [" + user + "]");
-
-                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                if (packageName.equalsIgnoreCase(MICROG_PACKAGE) || packageName.equalsIgnoreCase(
+                        MUPDF_PACKAGE)) {
                     return;
                 }
 
@@ -79,10 +75,8 @@ public class AppProvider extends Service implements Provider {
 
             @Override
             public void onPackageAdded(String packageName, android.os.UserHandle user) {
-                Log.d(TAG, "onPackageAdded() called with: packageName = [" + packageName
-                        + "], user = [" + user + "]");
-
-                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                if (packageName.equalsIgnoreCase(MICROG_PACKAGE) || packageName.equalsIgnoreCase(
+                        MUPDF_PACKAGE)) {
                     return;
                 }
 
@@ -95,10 +89,8 @@ public class AppProvider extends Service implements Provider {
 
             @Override
             public void onPackageChanged(String packageName, android.os.UserHandle user) {
-                Log.d(TAG, "onPackageChanged() called with: packageName = [" + packageName
-                        + "], user = [" + user + "]");
-
-                if(packageName.equalsIgnoreCase(MICROG_PACKAGE)|| packageName.equalsIgnoreCase(MUPDF_PACKAGE)){
+                if (packageName.equalsIgnoreCase(MICROG_PACKAGE) || packageName.equalsIgnoreCase(
+                        MUPDF_PACKAGE)) {
                     return;
                 }
 
@@ -149,22 +141,12 @@ public class AppProvider extends Service implements Provider {
         initializeAppLoading(new LoadAppsTask(this));
     }
 
-    @Override
-    public boolean isAppsLoaded() {
-        return appsLoaded;
-    }
-
     private void initializeAppLoading(LoadAppsTask loader) {
-        appLoadingStart = System.currentTimeMillis();
-
-        Log.i(TAG, "Starting app provider: " + this.getClass().getSimpleName());
         loader.setAppProvider(this);
         loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void loadAppsOver(AllAppsList allAppsList) {
-        long time = System.currentTimeMillis() - appLoadingStart;
-        Log.i(TAG, "Time to load " + this.getClass().getSimpleName() + ": " + time + "ms");
         this.mAllAppsList = allAppsList;
         appsLoaded = true;
         handleAllProviderLoaded();
@@ -172,15 +154,13 @@ public class AppProvider extends Service implements Provider {
     }
 
     private synchronized void handleAllProviderLoaded() {
-        if(appsLoaded) {
-           mAppsRepository.updateAppsRelay(mAllAppsList);
+        if (appsLoaded) {
+            mAppsRepository.updateAppsRelay(mAllAppsList);
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand() called with: intent = [" + intent + "], flags = [" + flags
-                + "], startId = [" + startId + "]");
         return START_STICKY;
     }
 
@@ -196,7 +176,7 @@ public class AppProvider extends Service implements Provider {
     }
 
     public class LocalBinder extends Binder {
-        public AppProvider getService(){
+        public AppProvider getService() {
             return AppProvider.this;
         }
     }

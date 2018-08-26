@@ -15,12 +15,6 @@
  */
 package org.indin.blisslaunchero.features.weather;
 
-import java.util.HashSet;
-import java.util.List;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -33,6 +27,13 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.framework.Preferences;
+
+import java.util.HashSet;
+import java.util.List;
+
 import cyanogenmod.weather.CMWeatherManager;
 import cyanogenmod.weather.WeatherLocation;
 
@@ -41,9 +42,11 @@ public class CustomLocationPreference extends EditTextPreference
     public CustomLocationPreference(Context context) {
         super(context);
     }
+
     public CustomLocationPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
+
     public CustomLocationPreference(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
@@ -51,6 +54,7 @@ public class CustomLocationPreference extends EditTextPreference
     private ProgressDialog mProgressDialog;
     private int mCustomLocationRequestId;
     private Handler mHandler;
+
     @Override
     protected void showDialog(Bundle state) {
         super.showDialog(state);
@@ -58,26 +62,19 @@ public class CustomLocationPreference extends EditTextPreference
 
         final AlertDialog d = (AlertDialog) getDialog();
         final Button okButton = d.getButton(DialogInterface.BUTTON_POSITIVE);
-        okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CustomLocationPreference.this.onClick(d, DialogInterface.BUTTON_POSITIVE);
-                final String customLocationToLookUp = getEditText().getText().toString();
-                if (TextUtils.equals(customLocationToLookUp, "")) return;
-                final CMWeatherManager weatherManager = CMWeatherManager.getInstance(getContext());
-                mProgressDialog = new ProgressDialog(getContext());
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.setMessage(getContext().getString(R.string.weather_progress_title));
-                mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        weatherManager.cancelRequest(mCustomLocationRequestId);
-                    }
-                });
-                mCustomLocationRequestId = weatherManager.lookupCity(customLocationToLookUp,
-                        CustomLocationPreference.this);
-                mProgressDialog.show();
-            }
+        okButton.setOnClickListener(v -> {
+            CustomLocationPreference.this.onClick(d, DialogInterface.BUTTON_POSITIVE);
+            final String customLocationToLookUp = getEditText().getText().toString();
+            if (TextUtils.equals(customLocationToLookUp, "")) return;
+            final CMWeatherManager weatherManager = CMWeatherManager.getInstance(getContext());
+            mProgressDialog = new ProgressDialog(getContext());
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.setMessage(getContext().getString(R.string.weather_progress_title));
+            mProgressDialog.setOnCancelListener(
+                    dialog -> weatherManager.cancelRequest(mCustomLocationRequestId));
+            mCustomLocationRequestId = weatherManager.lookupCity(customLocationToLookUp,
+                    CustomLocationPreference.this);
+            mProgressDialog.show();
         });
     }
 
@@ -103,12 +100,9 @@ public class CustomLocationPreference extends EditTextPreference
     private void handleResultDisambiguation(final List<WeatherLocation> results) {
         CharSequence[] items = buildItemList(results);
         new AlertDialog.Builder(getContext())
-                .setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        applyLocation(results.get(which));
-                        dialog.dismiss();
-                    }
+                .setSingleChoiceItems(items, -1, (dialog, which) -> {
+                    applyLocation(results.get(which));
+                    dialog.dismiss();
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .setTitle(R.string.weather_select_location)
@@ -166,22 +160,19 @@ public class CustomLocationPreference extends EditTextPreference
 
     @Override
     public void onLookupCityRequestCompleted(int status, final List<WeatherLocation> locations) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                final Context context = getContext();
-                if (locations == null || locations.isEmpty()) {
-                    Toast.makeText(context,
-                            context.getString(R.string.weather_retrieve_location_dialog_title),
-                            Toast.LENGTH_SHORT)
-                            .show();
-                } else if (locations.size() > 1) {
-                    handleResultDisambiguation(locations);
-                } else {
-                    applyLocation(locations.get(0));
-                }
-                mProgressDialog.dismiss();
+        mHandler.post(() -> {
+            final Context context = getContext();
+            if (locations == null || locations.isEmpty()) {
+                Toast.makeText(context,
+                        context.getString(R.string.weather_retrieve_location_dialog_title),
+                        Toast.LENGTH_SHORT)
+                        .show();
+            } else if (locations.size() > 1) {
+                handleResultDisambiguation(locations);
+            } else {
+                applyLocation(locations.get(0));
             }
+            mProgressDialog.dismiss();
         });
     }
 }

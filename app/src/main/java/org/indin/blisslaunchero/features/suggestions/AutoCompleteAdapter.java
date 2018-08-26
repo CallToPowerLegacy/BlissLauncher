@@ -15,13 +15,6 @@
  */
 package org.indin.blisslaunchero.features.suggestions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.features.launcher.LauncherActivity;
-
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -36,21 +29,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.LauncherActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class AutoCompleteAdapter extends
         RecyclerView.Adapter<AutoCompleteAdapter.AutoCompleteViewHolder> {
     private List<String> mItems = new ArrayList<>();
-    private final Context mContext;
     private final OnSuggestionClickListener mOnSuggestionClickListener;
     private final LayoutInflater mInflater;
     private String mQueryText;
 
-    private static final String TAG = "AutoCompleteAdapter";
-
     public AutoCompleteAdapter(Context context) {
         super();
-        mContext = context;
-        mOnSuggestionClickListener = (LauncherActivity) mContext;
-        mInflater = LayoutInflater.from(mContext);
+        mOnSuggestionClickListener = (LauncherActivity) context;
+        mInflater = LayoutInflater.from(context);
     }
 
     @NonNull
@@ -100,16 +96,11 @@ public class AutoCompleteAdapter extends
         notifyDataSetChanged();
     }
 
-    public void clearSuggestions() {
-        mItems.clear();
-        notifyDataSetChanged();
-    }
-
     static class AutoCompleteViewHolder extends RecyclerView.ViewHolder {
 
         private TextView mSuggestionTextView;
 
-        public AutoCompleteViewHolder(View itemView) {
+        AutoCompleteViewHolder(View itemView) {
             super(itemView);
             mSuggestionTextView = itemView.findViewById(R.id.suggestionTextView);
         }

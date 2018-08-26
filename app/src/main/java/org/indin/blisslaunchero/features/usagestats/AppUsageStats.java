@@ -17,16 +17,6 @@ package org.indin.blisslaunchero.features.usagestats;
 
 import static android.app.usage.UsageStatsManager.INTERVAL_BEST;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.indin.blisslaunchero.R;
-
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
@@ -34,6 +24,16 @@ import android.content.Intent;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.indin.blisslaunchero.R;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AppUsageStats {
 

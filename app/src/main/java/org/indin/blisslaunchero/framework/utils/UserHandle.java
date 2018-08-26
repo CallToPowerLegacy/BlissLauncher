@@ -32,11 +32,7 @@ public class UserHandle {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public UserHandle(long serial, android.os.UserHandle user) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            // OS does not provide any APIs for multi-user support
-            this.serial = 0;
-            this.handle = null;
-        } else if (user != null && Process.myUserHandle().equals(user)) {
+        if (user != null && Process.myUserHandle().equals(user)) {
             // For easier processing the current user is also stored as `null`, even
             // if there is multi-user support
             this.serial = 0;

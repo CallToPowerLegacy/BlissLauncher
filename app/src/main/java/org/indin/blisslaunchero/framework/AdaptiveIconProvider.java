@@ -56,9 +56,9 @@ public class AdaptiveIconProvider {
 
             AssetManager assetManager = resources.getAssets();
 
-            XmlResourceParser manifestParser = null;
+            XmlResourceParser manifestParser;
             String iconName = null;
-            int iconId = 0;
+            int iconId;
             try {
                 manifestParser = assetManager.openXmlResourceParser("AndroidManifest.xml");
                 int eventType;
