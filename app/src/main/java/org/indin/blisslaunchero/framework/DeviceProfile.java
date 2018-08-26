@@ -144,12 +144,9 @@ public class DeviceProfile {
     // Listeners
     private ArrayList<LauncherLayoutChangeListener> mListeners = new ArrayList<>();
 
-    private Context mContext;
-
     private static final String TAG = "DeviceProfile";
 
     public DeviceProfile(Context context) {
-        mContext = context;
 
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();

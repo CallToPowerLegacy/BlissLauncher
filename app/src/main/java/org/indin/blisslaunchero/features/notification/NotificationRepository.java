@@ -15,15 +15,15 @@
  */
 package org.indin.blisslaunchero.features.notification;
 
+import android.service.notification.StatusBarNotification;
+import android.util.Log;
+
+import com.jakewharton.rxrelay2.BehaviorRelay;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import com.jakewharton.rxrelay2.BehaviorRelay;
-
-import android.service.notification.StatusBarNotification;
-import android.util.Log;
 
 /**
  * Created by Amit Kumar
@@ -56,6 +56,7 @@ public class NotificationRepository {
         }
         this.notificationRelay.accept(notificationSet);
     }
+
     public BehaviorRelay<Set<String>> getNotifications() {
         return this.notificationRelay;
     }

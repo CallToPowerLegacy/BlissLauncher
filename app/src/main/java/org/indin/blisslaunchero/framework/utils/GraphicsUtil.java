@@ -22,6 +22,7 @@ import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.framework.DeviceProfile;
 import org.indin.blisslaunchero.framework.database.model.AppItem;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -34,14 +35,12 @@ import android.util.Log;
 public class GraphicsUtil {
 
     private static final String TAG = "BLISS_GRAPHICS";
-    private final DeviceProfile deviceProfile;
     private Context mContext;
-    private String mPackageName;
     private int appIconWidth;
 
     public GraphicsUtil(Context context) {
         this.mContext = context;
-        this.deviceProfile = BlissLauncher.getApplication(context).getDeviceProfile();
+        DeviceProfile deviceProfile = BlissLauncher.getApplication(context).getDeviceProfile();
         this.appIconWidth = deviceProfile.iconSizePx;
     }
 
@@ -164,7 +163,7 @@ public class GraphicsUtil {
 
     public BitmapDrawable convertToRoundedCorner(Context context, Bitmap src) {
         return new BitmapDrawable(context.getResources(),
-                BitmapUtils.getCroppedBitmap(src, deviceProfile.path));
+                BitmapUtils.getCroppedBitmap(src, DeviceProfile.path));
     }
 
     public boolean hasTransparency(Bitmap bitmap) {
@@ -196,7 +195,8 @@ public class GraphicsUtil {
      * @param bitmap the bitmap to get the dominant color of
      * @return the dominant color
      */
-    public int getDominantColor(Bitmap bitmap) {
+    private int getDominantColor(Bitmap bitmap) {
+        @SuppressLint("UseSparseArrays")
         Map<Integer, Integer> colors = new HashMap<>();
 
         int count = 0;

@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -32,10 +31,6 @@ android {
 
     }
 
-    lintOptions {
-        abortOnError false
-    }
-
     // Always show the result of every unit test, even if it passes.
     testOptions.unitTests.all {
         testLogging {
@@ -49,15 +44,13 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
 
     implementation 'org.cyanogenmod:platform.sdk:6.0'
 
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.3'
-    implementation 'com.google.firebase:firebase-core:15.0.2'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
+    implementation 'com.google.firebase:firebase-core:16.0.3'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
 
@@ -78,7 +71,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
 
     // Okhttp
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.8.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.9.0'
 
     // Rx Relay
     implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
@@ -111,6 +104,4 @@ dependencies {
 repositories {
     mavenCentral()
 }
-apply plugin: 'kotlin-android-extensions'
-
 apply plugin: 'com.google.gms.google-services'

@@ -32,19 +32,15 @@ import android.widget.GridLayout;
 public class Storage {
 
     private final String TAG = "BLISS_STORAGE";
-    private final Context context;
     private final SharedPreferences prefs;
 
     public Storage(Context context) {
-        this.context = context;
         prefs = context.getSharedPreferences("launcher_layout", Context.MODE_PRIVATE);
     }
 
     /**
      * Loop through all the child elements of all the pages, and the dock, to create a JSON
      * document, which is then stored in the shared-preferences.
-     * @param pages
-     * @param dock
      */
     public void save(final List<GridLayout> pages, final GridLayout dock) {
         AsyncTask.execute(() -> {
@@ -63,7 +59,7 @@ public class Storage {
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("LAYOUT", data.toString(4));
                 editor.putBoolean("LAYOUT_PRESENT", true);
-                editor.commit();
+                editor.apply();
             } catch(Exception e) {
                 Log.e(TAG, "Couldn't save layout " + e);
             }
@@ -72,9 +68,9 @@ public class Storage {
 
     /**
      * Reads the tags of the View items of a single page to populate a JSONArray
-     * @param storageArray
-     * @param layout
-     * @throws Exception
+     * @param storageArray array in which data is stored
+     * @param layout Layout which is stored
+     * @throws Exception if any json i/o exception
      */
     private void stuffData(JSONArray storageArray, ViewGroup layout) throws Exception {
         JSONArray apps = new JSONArray();
@@ -101,7 +97,7 @@ public class Storage {
 
     /**
      * Converts the JSON data stored as a string back into valid JSON objects
-     * @return
+     * @return stored data of launcher
      */
     public StorageData load() {
         StorageData storageData = new StorageData();
@@ -117,8 +113,7 @@ public class Storage {
     }
 
     /**
-     * Returns true if the shared preferences contains a previously stored layout
-     * @return
+     * @return true if the shared preferences contains a previously stored layout
      */
     public boolean isLayoutPresent() {
         return prefs.getBoolean("LAYOUT_PRESENT", false);

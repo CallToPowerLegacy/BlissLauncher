@@ -59,6 +59,8 @@ public class Preferences {
     private static final String DAY_FORECAST_LOW = "low";
     private static final String DAY_FORECAST_HIGH = "high";
 
+    private static final String NOTIFICATION_ACCESS = "notification_access";
+
     /**
      * User Preference related keys and constants.
      */
@@ -358,9 +360,15 @@ public class Preferences {
         getPrefs(context).edit().putBoolean(FIRST_TIME, false).apply();
     }
 
+    public static boolean getNotificationAccess(Context context){
+        return getPrefs(context).getBoolean(NOTIFICATION_ACCESS, false);
+    }
+
+    public static void setNotificationAccess(Context context){
+        getPrefs(context).edit().putBoolean(NOTIFICATION_ACCESS, true).apply();
+    }
+
     public static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE);
     }
-
-
 }

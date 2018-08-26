@@ -15,6 +15,7 @@
  */
 package org.indin.blisslaunchero.features.weather;
 
+import java.lang.ref.WeakReference;
 import java.util.Date;
 
 import org.indin.blisslaunchero.R;
@@ -269,6 +270,7 @@ public class WeatherUpdateService extends Service {
             return mHandler;
         }
 
+        @SuppressLint("WakelockTimeout")
         private void onNewWeatherRequest() {
             if (mIsProcessingWeatherUpdate) {
                 Log.d(TAG, "Already processing weather update, discarding request...");
@@ -278,7 +280,7 @@ public class WeatherUpdateService extends Service {
             mIsProcessingWeatherUpdate = true;
             final PowerManager pm
                     = (PowerManager) mContext.getSystemService(POWER_SERVICE);
-            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "blisslauncher:WeatherUpdateService");
             mWakeLock.setReferenceCounted(false);
             if (D) Log.v(TAG, "ACQUIRING WAKELOCK");
             mWakeLock.acquire();
@@ -440,7 +442,7 @@ public class WeatherUpdateService extends Service {
     }
 
     private static class WeatherLocationListener implements LocationListener {
-        private Context mContext;
+        private WeakReference<Context> mContext;
         private PendingIntent mTimeoutIntent;
         private static WeatherLocationListener sInstance = null;
 
@@ -487,17 +489,17 @@ public class WeatherUpdateService extends Service {
 
         private WeatherLocationListener(Context context) {
             super();
-            mContext = context;
+            mContext = new WeakReference<>(context);
         }
 
         private void setTimeoutAlarm() {
-            Intent intent = new Intent(mContext, WeatherUpdateService.class);
+            Intent intent = new Intent(mContext.get(), WeatherUpdateService.class);
             intent.setAction(ACTION_CANCEL_LOCATION_UPDATE);
 
-            mTimeoutIntent = PendingIntent.getService(mContext, 0, intent,
+            mTimeoutIntent = PendingIntent.getService(mContext.get(), 0, intent,
                     PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_CANCEL_CURRENT);
 
-            AlarmManager am = (AlarmManager) mContext.getSystemService(ALARM_SERVICE);
+            AlarmManager am = (AlarmManager) mContext.get().getSystemService(ALARM_SERVICE);
             long elapseTime = SystemClock.elapsedRealtime() + LOCATION_REQUEST_TIMEOUT;
             am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, elapseTime, mTimeoutIntent);
         }
@@ -505,7 +507,7 @@ public class WeatherUpdateService extends Service {
         private void cancelTimeoutAlarm() {
             Log.d(TAG, "cancelTimeoutAlarm2() called");
             if (mTimeoutIntent != null) {
-                AlarmManager am = (AlarmManager) mContext.getSystemService(ALARM_SERVICE);
+                AlarmManager am = (AlarmManager) mContext.get().getSystemService(ALARM_SERVICE);
                 am.cancel(mTimeoutIntent);
                 mTimeoutIntent = null;
             }
@@ -516,7 +518,7 @@ public class WeatherUpdateService extends Service {
             // Now, we have a location to use. Schedule a weather update right now.
             if (D) Log.d(TAG, "The location has changed, schedule an update ");
             synchronized (WeatherLocationListener.class) {
-                scheduleUpdate(mContext, 0, true);
+                scheduleUpdate(mContext.get(), 0, true);
                 cancelTimeoutAlarm();
                 sInstance = null;
             }
@@ -528,7 +530,7 @@ public class WeatherUpdateService extends Service {
             if (D) Log.d(TAG, "The location service has become available, schedule an update ");
             if (status == LocationProvider.AVAILABLE) {
                 synchronized (WeatherLocationListener.class) {
-                    scheduleUpdate(mContext, 0, true);
+                    scheduleUpdate(mContext.get(), 0, true);
                     cancelTimeoutAlarm();
                     sInstance = null;
                 }

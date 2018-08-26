@@ -38,6 +38,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.BuildConfig;
 import org.indin.blisslaunchero.R;
 import org.indin.blisslaunchero.features.notification.NotificationRepository;
 import org.indin.blisslaunchero.features.notification.NotificationService;
@@ -79,11 +80,14 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.usage.UsageStats;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -144,7 +148,6 @@ public class LauncherActivity extends AppCompatActivity implements
     public static final int REORDER_TIMEOUT = 350;
     private final static int INVALID = -999;
     private static final String TAG = "DesktopActivity";
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     public static boolean longPressed;
     private final Alarm mReorderAlarm = new Alarm();
     private final Alarm mDockReorderAlarm = new Alarm();
@@ -156,8 +159,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private BlissInput mBlissInput;
     private BlissInput mSearchInput;
     private View mProgressBar;
-    private BroadcastReceiver installReceiver;
-    private BroadcastReceiver uninstallReceiver;
     private List<AppItem> launchableApps = new ArrayList<>();
     private List<AppItem> pinnedApps = new ArrayList<>();
     private AllAppsList allLoadedApps;
@@ -178,7 +179,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private CompositeDisposable mCompositeDisposable;
     private CountDownTimer mWobblingCountDownTimer;
     private List<CalendarIcon> mCalendarIcons = new ArrayList<>();
-    private Intent notificationServiceIntent;
     private BroadcastReceiver timeChangedReceiver;
     private boolean isUiDone = false;
     private Set<String> mAppsWithNotifications = new HashSet<>();
@@ -187,13 +187,11 @@ public class LauncherActivity extends AppCompatActivity implements
     private DeviceProfile mDeviceProfile;
     private boolean mLongClickStartsDrag = true;
     private boolean isDragging;
-    private RecyclerView mSuggestionRecyclerView;
     private AutoCompleteAdapter mSuggestionAdapter;
     private GridLayout suggestedAppsGridLayout;
     private BlissDragShadowBuilder dragShadowBuilder;
     private View mWeatherPanel;
     private View mWeatherSetupTextView;
-    private boolean layoutInflationCompleted;
     private boolean allAppsDisplayed;
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
@@ -217,6 +215,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private int activeDot;
     private int statusBarHeight;
 
+    @SuppressLint("InflateParams")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -232,13 +231,35 @@ public class LauncherActivity extends AppCompatActivity implements
         mLauncherView = LayoutInflater.from(this).inflate(R.layout.activity_main, null);
         setupViews();
         setContentView(mLauncherView);
-        layoutInflationCompleted = true;
-
         createOrUpdateIconGrid();
 
         // Start NotificationService to add count badge to Icons
-        notificationServiceIntent = new Intent(this, NotificationService.class);
+        Intent notificationServiceIntent = new Intent(this, NotificationService.class);
         startService(notificationServiceIntent);
+
+        ContentResolver cr = getContentResolver();
+        String setting = "enabled_notification_listeners";
+        String permissionString = Settings.Secure.getString(cr, setting);
+        Log.i(TAG, "package name:" + getPackageName());
+        if (permissionString == null || !permissionString.contains(getPackageName())) {
+            if (BuildConfig.DEBUG) {
+                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+            } else if (!Preferences.getNotificationAccess(this)) {
+                ComponentName cn = new ComponentName(this, NotificationService.class);
+                Log.i(TAG, "cn: " + cn);
+                if (permissionString == null) {
+                    permissionString = "";
+                } else {
+                    permissionString += ":";
+                }
+                permissionString += cn.flattenToString();
+                boolean success = Settings.Secure.putString(cr, setting, permissionString);
+                Log.i(TAG, "onCreate: " + success);
+                if (success) {
+                    Preferences.setNotificationAccess(this);
+                }
+            }
+        }
 
         mProgressBar.setVisibility(View.VISIBLE);
     }
@@ -858,7 +879,6 @@ public class LauncherActivity extends AppCompatActivity implements
         pages = new ArrayList<>();
         Set<String> keySet = new HashSet<>();
         List<AppItem> storedItems = new ArrayList<>();
-        List<AppItem> dockItems = new ArrayList<>();
 
         mDock.setLayoutTransition(getDefaultLayoutTransition());
 
@@ -867,7 +887,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 JSONObject currentDockItemData = storageData.dock.getJSONArray(0).getJSONObject(i);
                 AppItem appItem = prepareAppFromJSON(currentDockItemData);
                 if (appItem != null) {
-                    dockItems.add(appItem);
                     keySet.add(appItem.getPackageName());
                     BlissFrameLayout appView = prepareApp(appItem, false);
                     if (appView != null) {
@@ -932,6 +951,7 @@ public class LauncherActivity extends AppCompatActivity implements
         currentPageNumber = 0;
     }
 
+    @SuppressLint("InflateParams")
     private GridLayout preparePage() {
         GridLayout grid = (GridLayout) getLayoutInflater().inflate(R.layout.apps_page, null);
         grid.setRowCount(mDeviceProfile.numRows);
@@ -958,7 +978,7 @@ public class LauncherActivity extends AppCompatActivity implements
             mSearchInput.clearFocus();
         });
 
-        mSearchInput = (BlissInput) layout.findViewById(R.id.search_input);
+        mSearchInput = layout.findViewById(R.id.search_input);
         mSearchInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -979,15 +999,15 @@ public class LauncherActivity extends AppCompatActivity implements
 
             }
         });
-        mSuggestionRecyclerView = layout.findViewById(R.id.suggestionRecyclerView);
+        RecyclerView suggestionRecyclerView = layout.findViewById(R.id.suggestionRecyclerView);
         mSuggestionAdapter = new AutoCompleteAdapter(this);
-        mSuggestionRecyclerView.setHasFixedSize(true);
-        mSuggestionRecyclerView.setLayoutManager(
+        suggestionRecyclerView.setHasFixedSize(true);
+        suggestionRecyclerView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        mSuggestionRecyclerView.setAdapter(mSuggestionAdapter);
+        suggestionRecyclerView.setAdapter(mSuggestionAdapter);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL);
-        mSuggestionRecyclerView.addItemDecoration(dividerItemDecoration);
+        suggestionRecyclerView.addItemDecoration(dividerItemDecoration);
         layout.setOnDragListener(null);
 
         layout.findViewById(R.id.used_apps_layout).setClipToOutline(true);
@@ -1008,9 +1028,10 @@ public class LauncherActivity extends AppCompatActivity implements
             }
         }
 
-        RxTextView.textChanges(mSearchInput)
+        getCompositeDisposable().add(RxTextView.textChanges(
+                mSearchInput)
                 .debounce(300, TimeUnit.MILLISECONDS)
-                .map(charSequence -> charSequence.toString())
+                .map(CharSequence::toString)
                 .distinctUntilChanged()
                 .switchMap(
                         (Function<CharSequence,
@@ -1048,7 +1069,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     @Override
                     public void onComplete() {
                     }
-                });
+                }));
 
         mSearchInput.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
@@ -1099,8 +1120,8 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         if (requestCode == WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -1141,50 +1162,50 @@ public class LauncherActivity extends AppCompatActivity implements
         int color = Preferences.weatherFontColor(this);
         final boolean useMetric = Preferences.useMetricUnits(this);
         double temp = w.getTemperature();
-        double todaysLow = w.getTodaysLow();
-        double todaysHigh = w.getTodaysHigh();
+        double todayLow = w.getTodaysLow();
+        double todayHigh = w.getTodaysHigh();
 
         int tempUnit = w.getTemperatureUnit();
         if (tempUnit == FAHRENHEIT && useMetric) {
             temp = WeatherUtils.fahrenheitToCelsius(temp);
-            todaysLow = WeatherUtils.fahrenheitToCelsius(todaysLow);
-            todaysHigh = WeatherUtils.fahrenheitToCelsius(todaysHigh);
+            todayLow = WeatherUtils.fahrenheitToCelsius(todayLow);
+            todayHigh = WeatherUtils.fahrenheitToCelsius(todayHigh);
             tempUnit = CELSIUS;
         } else if (tempUnit == CELSIUS && !useMetric) {
             temp = WeatherUtils.celsiusToFahrenheit(temp);
-            todaysLow = WeatherUtils.celsiusToFahrenheit(todaysLow);
-            todaysHigh = WeatherUtils.celsiusToFahrenheit(todaysHigh);
+            todayLow = WeatherUtils.celsiusToFahrenheit(todayLow);
+            todayHigh = WeatherUtils.celsiusToFahrenheit(todayHigh);
             tempUnit = FAHRENHEIT;
         }
 
         // Set the current conditions
         // Weather Image
-        ImageView weatherImage = (ImageView) mWeatherPanel.findViewById(R.id.weather_image);
+        ImageView weatherImage = mWeatherPanel.findViewById(R.id.weather_image);
         String iconsSet = Preferences.getWeatherIconSet(this);
         weatherImage.setImageBitmap(
                 WeatherIconUtils.getWeatherIconBitmap(this, iconsSet, color,
                         w.getConditionCode(), WeatherIconUtils.getNextHigherDensity(this)));
 
         // City
-        TextView city = (TextView) mWeatherPanel.findViewById(R.id.weather_city);
+        TextView city = mWeatherPanel.findViewById(R.id.weather_city);
         city.setText(w.getCity());
 
         // Weather Condition
-        TextView weatherCondition = (TextView) mWeatherPanel.findViewById(R.id.weather_condition);
+        TextView weatherCondition = mWeatherPanel.findViewById(R.id.weather_condition);
         weatherCondition.setText(
                 org.indin.blisslaunchero.features.weather.WeatherUtils.resolveWeatherCondition(this,
                         w.getConditionCode()));
 
         // Weather Temps
-        TextView weatherTemp = (TextView) mWeatherPanel.findViewById(
+        TextView weatherTemp = mWeatherPanel.findViewById(
                 R.id.weather_current_temperature);
         weatherTemp.setText(WeatherUtils.formatTemperature(temp, tempUnit));
 
         // Weather Temps Panel additional items
-        final String low = WeatherUtils.formatTemperature(todaysLow, tempUnit);
-        final String high = WeatherUtils.formatTemperature(todaysHigh, tempUnit);
-        TextView weatherLowHigh = (TextView) mWeatherPanel.findViewById(R.id.weather_low_high);
-        weatherLowHigh.setText(low + " / " + high);
+        final String low = WeatherUtils.formatTemperature(todayLow, tempUnit);
+        final String high = WeatherUtils.formatTemperature(todayHigh, tempUnit);
+        TextView weatherLowHigh = mWeatherPanel.findViewById(R.id.weather_low_high);
+        weatherLowHigh.setText(String.format("%s / %s", low, high));
 
         double windSpeed = w.getWindSpeed();
         int windSpeedUnit = w.getWindSpeedUnit();
@@ -1200,16 +1221,17 @@ public class LauncherActivity extends AppCompatActivity implements
 
 
         // Humidity and Wind
-        TextView weatherHumWind = (TextView) mWeatherPanel.findViewById(R.id.weather_chance_rain);
+        TextView weatherHumWind = mWeatherPanel.findViewById(R.id.weather_chance_rain);
         weatherHumWind.setText(
-                org.indin.blisslaunchero.features.weather.WeatherUtils.formatHumidity(
-                        w.getHumidity()) + ", "
-                        + org.indin.blisslaunchero.features.weather.WeatherUtils.formatWindSpeed(
-                        this, windSpeed, windSpeedUnit) + " "
-                        + org.indin.blisslaunchero.features.weather.WeatherUtils
-                        .resolveWindDirection(
-                                this, w.getWindDirection()));
-        LinearLayout forecastView = (LinearLayout) mWeatherPanel.findViewById(R.id.forecast_view);
+                String.format("%s, %s %s",
+                        org.indin.blisslaunchero.features.weather.WeatherUtils.formatHumidity(
+                                w.getHumidity()),
+                        org.indin.blisslaunchero.features.weather.WeatherUtils.formatWindSpeed(
+                                this, windSpeed, windSpeedUnit),
+                        org.indin.blisslaunchero.features.weather.WeatherUtils
+                                .resolveWindDirection(
+                                        this, w.getWindDirection())));
+        LinearLayout forecastView = mWeatherPanel.findViewById(R.id.forecast_view);
 
         ForecastBuilder.buildSmallPanel(this, forecastView, w);
     }
@@ -1238,15 +1260,16 @@ public class LauncherActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResult() called with: requestCode = [" + requestCode
                 + "], resultCode = [" + resultCode + "], data = [" + data + "]");
-        if(requestCode == 203){
+        if (requestCode == 203) {
             LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                Toast.makeText(this, "Set custom location in weather wettings.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Set custom location in weather settings.",
+                        Toast.LENGTH_SHORT).show();
             } else {
                 startService(new Intent(this, WeatherUpdateService.class)
                         .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
             }
-        }else{
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
@@ -1391,6 +1414,7 @@ public class LauncherActivity extends AppCompatActivity implements
      * <p>
      * The View object also has all the required listeners attached to it.
      */
+    @SuppressLint({"InflateParams", "ClickableViewAccessibility"})
     private BlissFrameLayout prepareApp(final AppItem app, boolean withText) {
         final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(R.layout.app_view,
                 null);
@@ -1464,7 +1488,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
         icon.setOnTouchListener(new View.OnTouchListener() {
 
-            long iconPressedAt = 0l;
+            long iconPressedAt = 0;
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
@@ -1533,9 +1557,9 @@ public class LauncherActivity extends AppCompatActivity implements
 
         mFolderAppsViewPager.setAdapter(new FolderAppsPagerAdapter(this));
         mFolderAppsViewPager.getLayoutParams().width =
-                (int) (mDeviceProfile.cellWidthPx * 3 + mDeviceProfile.iconDrawablePaddingPx);
+                mDeviceProfile.cellWidthPx * 3 + mDeviceProfile.iconDrawablePaddingPx;
         mFolderAppsViewPager.getLayoutParams().height =
-                (int) (mDeviceProfile.cellHeightPx * 3 + mDeviceProfile.iconDrawablePaddingPx);
+                mDeviceProfile.cellHeightPx * 3 + mDeviceProfile.iconDrawablePaddingPx;
         ((CircleIndicator) mLauncherView.findViewById(R.id.indicator)).setViewPager(
                 mFolderAppsViewPager);
         Log.d(TAG, "displayFolder() called with: app = [" + app + "], v = [" + v + "]");
@@ -1585,7 +1609,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
         if (shouldPlayAnimation) {
             if (viewGroup.getAnimation() == null) {
-                ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
+                ImageView imageView = viewGroup.findViewById(R.id.uninstall_app);
                 if (imageView == null) {
                     new Handler(Looper.getMainLooper()).post(() -> {
                         addUninstallIcon(viewGroup);
@@ -1599,7 +1623,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 }
             }
         } else {
-            ImageView imageView = (ImageView) viewGroup.findViewById(R.id.uninstall_app);
+            ImageView imageView = viewGroup.findViewById(R.id.uninstall_app);
             if (imageView != null) {
                 ((ViewGroup) imageView.getParent()).removeView(imageView);
             }
@@ -1614,7 +1638,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private void addUninstallIcon(ViewGroup viewGroup) {
         final AppItem appItem = getAppDetails(viewGroup);
         if (!appItem.isSystemApp() && !appItem.isFolder()) {
-            SquareFrameLayout appIcon = (SquareFrameLayout) viewGroup.findViewById(R.id.app_icon);
+            SquareFrameLayout appIcon = viewGroup.findViewById(R.id.app_icon);
             int size = mDeviceProfile.uninstallIconSizePx;
             int topPadding = (appIcon.getTop() - mDeviceProfile.uninstallIconSizePx / 2
                     + mDeviceProfile.uninstallIconPadding > 0) ?

@@ -15,26 +15,25 @@
  */
 package org.indin.blisslaunchero.features.launcher;
 
-import java.lang.ref.WeakReference;
+import android.content.Context;
 
 import org.indin.blisslaunchero.framework.utils.AppUtils;
 
-import android.content.Context;
+import java.lang.ref.WeakReference;
+
 import io.fabric.sdk.android.services.concurrency.AsyncTask;
 
 public class LoadAppsTask extends AsyncTask<Void, Void, AllAppsList> {
 
-    final WeakReference<Context> mContext;
+    private final WeakReference<Context> mContext;
     private WeakReference<AppProvider> mAppProvider;
 
-    private static final String TAG = "LoadAppsTask";
-
-    public LoadAppsTask(Context context){
+    LoadAppsTask(Context context) {
         super();
         this.mContext = new WeakReference<>(context);
     }
 
-    public void setAppProvider(AppProvider appProvider){
+    public void setAppProvider(AppProvider appProvider) {
         this.mAppProvider = new WeakReference<>(appProvider);
     }
 
@@ -46,7 +45,7 @@ public class LoadAppsTask extends AsyncTask<Void, Void, AllAppsList> {
     @Override
     protected void onPostExecute(AllAppsList appItemArrayMap) {
         super.onPostExecute(appItemArrayMap);
-        if(mAppProvider!=null){
+        if (mAppProvider != null) {
             mAppProvider.get().loadAppsOver(appItemArrayMap);
         }
     }

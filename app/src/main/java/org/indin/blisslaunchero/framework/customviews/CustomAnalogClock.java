@@ -38,12 +38,10 @@ public class CustomAnalogClock extends View {
 
     public static boolean is24;
     public static boolean hourOnTop;
-    private final ArrayList<DialOverlay> mDialOverlay = new ArrayList<DialOverlay>();
     private Calendar mCalendar;
     private Drawable mFace;
     private int mDialWidth;
     private float sizeScale = 1f;
-    private int radius;
     private int mDialHeight;
     private int mBottom;
     private int mTop;
@@ -127,7 +125,6 @@ public class CustomAnalogClock extends View {
         mSizeChanged = true;
         mDialHeight = mFace.getIntrinsicHeight();
         mDialWidth = mFace.getIntrinsicWidth();
-        radius = Math.max(mDialHeight, mDialWidth);
         invalidate();
     }
 
@@ -204,11 +201,6 @@ public class CustomAnalogClock extends View {
         }
 
         mFace.draw(canvas);
-
-        for (final DialOverlay overlay : mDialOverlay) {
-            overlay.onDraw(canvas, cX, cY, w, h, mCalendar, sizeChanged);
-        }
-
         mHandsOverlay.onDraw(canvas, cX, cY, w, h, mCalendar, sizeChanged);
 
         if (scaled) {

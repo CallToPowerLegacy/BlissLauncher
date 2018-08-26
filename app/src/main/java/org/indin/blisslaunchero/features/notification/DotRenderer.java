@@ -15,8 +15,6 @@
  */
 package org.indin.blisslaunchero.features.notification;
 
-import org.indin.blisslaunchero.R;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,13 +22,13 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import org.indin.blisslaunchero.R;
+
 /**
  * Created by falcon on 20/3/18.
  */
-
 public class DotRenderer {
 
-    private static final String TAG = "DotRenderer";
     private static final float SIZE_PERCENTAGE = 0.3375f;
 
     private final Context mContext;
@@ -47,7 +45,7 @@ public class DotRenderer {
         Bitmap myBitmap = BitmapFactory.decodeResource(
                 mContext.getResources(),
                 R.drawable.notification_icon_72);
-        Bitmap scaledBitmap = Bitmap.createScaledBitmap(myBitmap, mSize,mSize, true);
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(myBitmap, mSize, mSize, true);
 
         canvas.drawBitmap(scaledBitmap, iconBounds.left - scaledBitmap.getWidth() / 2,
                 iconBounds.top - scaledBitmap.getHeight() / 2, mPaint);

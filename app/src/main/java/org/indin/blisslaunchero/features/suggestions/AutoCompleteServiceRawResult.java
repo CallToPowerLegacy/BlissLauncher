@@ -23,10 +23,6 @@ public class AutoCompleteServiceRawResult {
         this.phrase = phrase;
     }
 
-    public void setPhrase(String phrase) {
-        phrase = phrase;
-    }
-
     public String getPhrase() {
         return phrase;
     }

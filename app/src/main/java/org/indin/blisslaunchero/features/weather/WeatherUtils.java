@@ -46,7 +46,7 @@ public final class WeatherUtils {
      * Returns a localized string of the wind direction
      * @param context Application context to access resources
      * @param windDirection The wind direction in degrees
-     * @return
+     * @return The wind direction in string format
      */
     public static String resolveWindDirection(Context context, double windDirection) {
         int resId;
@@ -181,7 +181,7 @@ public final class WeatherUtils {
 
     /**
      * Checks if the Lineage Weather service is available in this device
-     * @param context
+     * @param context Context to be used
      * @return true if service is available, false otherwise
      */
     public static boolean isWeatherServiceAvailable(Context context) {

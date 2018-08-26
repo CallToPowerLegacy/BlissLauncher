@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/workspace"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="false"
-    tools:context="org.indin.blisslaunchero.features.launcher.LauncherActivity">
+                xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/workspace"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="false"
+                tools:context="org.indin.blisslaunchero.features.launcher.LauncherActivity">
 
     <org.indin.blisslaunchero.framework.customviews.HorizontalPager
         android:id="@+id/pages_container"
@@ -54,29 +53,29 @@
             android:background="@null"
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions|textCapSentences"
-            android:text="@string/untitled"
-            android:paddingTop="16dp"
             android:paddingBottom="16dp"
+            android:paddingTop="16dp"
+            android:text="@string/untitled"
             android:textAlignment="center"
             android:textColor="@android:color/white"
-            android:textSize="18sp" />
+            android:textSize="18sp"/>
         <LinearLayout
             android:id="@+id/folder_apps_background"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_centerInParent="true"
-            android:background="@drawable/folder_window">
-        <android.support.v4.view.ViewPager
-            android:id="@+id/folder_apps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:background="@drawable/folder_window"
+            android:orientation="vertical">
+            <android.support.v4.view.ViewPager
+                android:id="@+id/folder_apps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
 
-        <me.relex.circleindicator.CircleIndicator
-            android:id="@+id/indicator"
-            android:layout_width="match_parent"
-            android:layout_height="24dp"
-            android:paddingBottom="4dp"/>
+            <me.relex.circleindicator.CircleIndicator
+                android:id="@+id/indicator"
+                android:layout_width="match_parent"
+                android:layout_height="24dp"
+                android:paddingBottom="4dp"/>
         </LinearLayout>
 
     </RelativeLayout>
@@ -86,6 +85,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="gone" />
+        android:visibility="gone"/>
 
 </RelativeLayout>

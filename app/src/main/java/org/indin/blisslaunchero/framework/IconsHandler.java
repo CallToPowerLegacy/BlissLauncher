@@ -65,8 +65,6 @@ public class IconsHandler {
     private Resources iconPackres;
     // package name of the icons pack
     private String iconsPackPackageName;
-    // list of back images available on an icons pack
-    private final List<Bitmap> backImages = new ArrayList<>();
     // bitmap mask of an icons pack
     private Bitmap maskImage = null;
     // front image of an icons pack
@@ -111,7 +109,6 @@ public class IconsHandler {
         }
 
         packagesDrawables.clear();
-        backImages.clear();
         cacheClear();
 
         // system icons, nothing to do

@@ -16,11 +16,13 @@
 package org.indin.blisslaunchero.features.weather;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 
 import org.indin.blisslaunchero.R;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -36,6 +38,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.DialogPreference;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,7 +54,6 @@ public class IconSelectionPreference extends DialogPreference implements
     private static final String INTENT_CATEGORY_ICONPACK = "com.dvtonder.chronus.ICON_PACK";
 
     private static final String SEARCH_URI = "https://market.android.com/search?q=%s&c=apps";
-    private static final String APP_URI = "market://details?id=%s";
 
     private static class IconSetDescriptor {
         String name;
@@ -59,13 +61,13 @@ public class IconSelectionPreference extends DialogPreference implements
         int descriptionResId;
         Drawable previewDrawable;
         int previewResId;
-        public IconSetDescriptor(String name, int descriptionResId,
+        IconSetDescriptor(String name, int descriptionResId,
                 int previewResId) {
             this.name = name;
             this.descriptionResId = descriptionResId;
             this.previewResId = previewResId;
         }
-        public IconSetDescriptor(String packageName, CharSequence description,
+        IconSetDescriptor(String packageName, CharSequence description,
                 Drawable preview) {
             this.name = "ext:" + packageName;
             this.description = description;
@@ -107,7 +109,6 @@ public class IconSelectionPreference extends DialogPreference implements
     private GridView mGrid;
     private String mValue;
     private String mSelectedValue;
-    private String mPreviousSelection;
 
     private BroadcastReceiver mPackageChangeReceiver = new BroadcastReceiver() {
         @Override
@@ -147,13 +148,10 @@ public class IconSelectionPreference extends DialogPreference implements
         super.showDialog(state);
 
         AlertDialog d = (AlertDialog) getDialog();
-        d.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String uri = String.format(Locale.US, SEARCH_URI,
-                        getContext().getString(R.string.icon_set_store_filter));
-                viewUri(getContext(), uri);
-            }
+        d.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener(view -> {
+            String uri = String.format(Locale.US, SEARCH_URI,
+                    getContext().getString(R.string.icon_set_store_filter));
+            viewUri(getContext(), uri);
         });
     }
 
@@ -188,15 +186,15 @@ public class IconSelectionPreference extends DialogPreference implements
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         IconSetDescriptor descriptor = mAdapter.getItem(mGrid.getCheckedItemPosition());
         mSelectedValue = descriptor.name;
-        mPreviousSelection = mSelectedValue;
     }
 
+    @SuppressLint("InflateParams")
     @Override
     protected View onCreateDialogView() {
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View view = inflater.inflate(R.layout.icon_style_selection, null);
 
-        mGrid = (GridView) view.findViewById(R.id.icon_list);
+        mGrid = view.findViewById(R.id.icon_list);
         mGrid.setAdapter(mAdapter);
         mGrid.setOnItemClickListener(this);
 
@@ -212,7 +210,6 @@ public class IconSelectionPreference extends DialogPreference implements
         }
         mGrid.setItemChecked(index, true);
         mSelectedValue = mAdapter.getItem(index).name;
-        mPreviousSelection = mSelectedValue;
     }
 
     private int getValueIndex(String value) {
@@ -264,16 +261,12 @@ public class IconSelectionPreference extends DialogPreference implements
         }
 
         private static ArrayList<IconSetDescriptor> populateIconSets(Context context) {
-            ArrayList<IconSetDescriptor> result = new ArrayList<IconSetDescriptor>();
-            for (IconSetDescriptor desc : ICON_SETS) {
-                result.add(desc);
-            }
+            ArrayList<IconSetDescriptor> result = new ArrayList<>(
+                    Arrays.asList(ICON_SETS));
 
             PackageManager pm = context.getPackageManager();
             Intent i = new Intent(Intent.ACTION_MAIN);
             i.addCategory(INTENT_CATEGORY_ICONPACK);
-
-            HashSet<String> installedIconPacks = new HashSet<String>();
 
             for (ResolveInfo info : pm.queryIntentActivities(i, 0)) {
                 ApplicationInfo appInfo = info.activityInfo.applicationInfo;
@@ -283,7 +276,6 @@ public class IconSelectionPreference extends DialogPreference implements
                     Drawable preview = previewResId != 0 ? res.getDrawable(previewResId) : null;
                     result.add(new IconSetDescriptor(appInfo.packageName,
                             appInfo.loadLabel(pm), preview));
-                    installedIconPacks.add(appInfo.packageName.toLowerCase(Locale.US));
                 } catch (PackageManager.NameNotFoundException e) {
                     // shouldn't happen, ignore package
                 }
@@ -292,14 +284,14 @@ public class IconSelectionPreference extends DialogPreference implements
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.icon_item, parent, false);
             }
 
             IconSetDescriptor descriptor = getItem(position);
-            ImageView preview = (ImageView) convertView.findViewById(R.id.preview);
-            TextView name = (TextView) convertView.findViewById(R.id.name);
+            ImageView preview = convertView.findViewById(R.id.preview);
+            TextView name = convertView.findViewById(R.id.name);
 
             if (descriptor.previewDrawable != null) {
                 preview.setImageDrawable(descriptor.previewDrawable);

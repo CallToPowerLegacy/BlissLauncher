@@ -166,6 +166,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         mTransparentRegion = new Region();
     }
 
+    @SuppressLint("PrivateApi")
     private void initReflections() {
         try {
             Class<?> pathParser = getClass().getClassLoader().loadClass("android.util.PathParser");
@@ -285,9 +286,6 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         return EXTRA_INSET_PERCENTAGE;
     }
 
-    /**
-     * @hide
-     */
     public static float getExtraInsetPercentage() {
         return EXTRA_INSET_PERCENTAGE;
     }
@@ -350,7 +348,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         int cX = bounds.width() / 2;
         int cY = bounds.height() / 2;
 
-        for (int i = 0, count = mLayerState.N_CHILDREN; i < count; i++) {
+        for (int i = 0, count = LayerState.N_CHILDREN; i < count; i++) {
             final ChildDrawable r = mLayerState.mChildren[i];
             if (r == null) {
                 continue;
@@ -394,14 +392,14 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void draw(@NonNull Canvas canvas) {
         if (mLayersBitmap == null) {
             return;
         }
         if (mLayersShader == null) {
             mCanvas.setBitmap(mLayersBitmap);
             mCanvas.drawColor(Color.BLACK);
-            for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+            for (int i = 0; i < LayerState.N_CHILDREN; i++) {
                 if (mLayerState.mChildren[i] == null) {
                     continue;
                 }
@@ -487,7 +485,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         final int innerDepth = parser.getDepth() + 1;
         int type;
         int depth;
-        int childIndex = 0;
+        int childIndex;
         while ((type = parser.next()) != XmlPullParser.END_DOCUMENT
                 && ((depth = parser.getDepth()) >= innerDepth || type != XmlPullParser.END_TAG)) {
             if (type != XmlPullParser.START_TAG) {
@@ -630,7 +628,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void setHotspot(float x, float y) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setHotspot(x, y);
@@ -641,7 +639,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void setHotspotBounds(int left, int top, int right, int bottom) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setHotspotBounds(left, top, right, bottom);
@@ -656,7 +654,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     }
 
     @Override
-    public void getHotspotBounds(Rect outRect) {
+    public void getHotspotBounds(@NonNull Rect outRect) {
         if (mHotspotBounds != null) {
             outRect.set(mHotspotBounds);
         } else {
@@ -669,7 +667,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         final boolean changed = super.setVisible(visible, restart);
         final ChildDrawable[] array = mLayerState.mChildren;
 
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setVisible(visible, restart);
@@ -682,7 +680,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void setDither(boolean dither) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setDither(dither);
@@ -693,7 +691,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void setAlpha(int alpha) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setAlpha(alpha);
@@ -704,7 +702,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void setColorFilter(ColorFilter colorFilter) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setColorFilter(colorFilter);
@@ -715,7 +713,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void setTintList(ColorStateList tint) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        final int N = mLayerState.N_CHILDREN;
+        final int N = LayerState.N_CHILDREN;
         for (int i = 0; i < N; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
@@ -725,9 +723,9 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     }
 
     @Override
-    public void setTintMode(Mode tintMode) {
+    public void setTintMode(@NonNull Mode tintMode) {
         final ChildDrawable[] array = mLayerState.mChildren;
-        final int N = mLayerState.N_CHILDREN;
+        final int N = LayerState.N_CHILDREN;
         for (int i = 0; i < N; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
@@ -753,7 +751,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         mLayerState.mAutoMirrored = mirrored;
 
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.setAutoMirrored(mirrored);
@@ -769,7 +767,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     @Override
     public void jumpToCurrentState() {
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null) {
                 dr.jumpToCurrentState();
@@ -787,7 +785,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         boolean changed = false;
 
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null && dr.isStateful() && dr.setState(state)) {
                 changed = true;
@@ -806,7 +804,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         boolean changed = false;
 
         final ChildDrawable[] array = mLayerState.mChildren;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final Drawable dr = array[i].mDrawable;
             if (dr != null && dr.setLevel(level)) {
                 changed = true;
@@ -827,7 +825,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
 
     private int getMaxIntrinsicWidth() {
         int width = -1;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final ChildDrawable r = mLayerState.mChildren[i];
             if (r.mDrawable == null) {
                 continue;
@@ -847,7 +845,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
 
     private int getMaxIntrinsicHeight() {
         int height = -1;
-        for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+        for (int i = 0; i < LayerState.N_CHILDREN; i++) {
             final ChildDrawable r = mLayerState.mChildren[i];
             if (r.mDrawable == null) {
                 continue;
@@ -869,11 +867,12 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         return null;
     }
 
+    @NonNull
     @Override
     public Drawable mutate() {
         if (!mMutated && super.mutate() == this) {
             mLayerState = createConstantState(mLayerState, null);
-            for (int i = 0; i < mLayerState.N_CHILDREN; i++) {
+            for (int i = 0; i < LayerState.N_CHILDREN; i++) {
                 final Drawable dr = mLayerState.mChildren[i].mDrawable;
                 if (dr != null) {
                     dr.mutate();
@@ -896,7 +895,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
     static class ChildDrawable {
         public Drawable mDrawable;
         public int[] mThemeAttrs;
-        public int mDensity = DisplayMetrics.DENSITY_DEFAULT;
+        public int mDensity;
 
         ChildDrawable(int density) {
             mDensity = density;
@@ -1018,11 +1017,13 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
             return false;
         }
 
+        @NonNull
         @Override
         public Drawable newDrawable() {
             return new AdaptiveIconDrawableCompat(this, null);
         }
 
+        @NonNull
         @Override
         public Drawable newDrawable(@Nullable Resources res) {
             return new AdaptiveIconDrawableCompat(this, null);
