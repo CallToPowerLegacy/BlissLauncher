@@ -15,11 +15,6 @@
  */
 package org.indin.blisslaunchero.framework;
 
-import java.util.ArrayList;
-
-import org.indin.blisslaunchero.framework.customviews.PathParser;
-import org.indin.blisslaunchero.framework.utils.AdaptiveIconUtils;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -33,6 +28,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
+
+import org.indin.blisslaunchero.framework.customviews.PathParser;
+import org.indin.blisslaunchero.framework.utils.AdaptiveIconUtils;
+
+import java.util.ArrayList;
 
 public class DeviceProfile {
 
@@ -220,11 +220,14 @@ public class DeviceProfile {
         // Workspace
         if (availableWidthPx < 640) {
             iconSizePx = 90;
-        }
-        if (availableWidthPx >= 640 && availableWidthPx < 960) {
+        } else if (availableWidthPx < 960) {
             iconSizePx = 120;
-        } else if (availableWidthPx >= 960) {
+        } else if (availableWidthPx < 1100) {
+            iconSizePx = 150;
+        } else if (availableWidthPx < 1200) {
             iconSizePx = 180;
+        } else {
+            iconSizePx = 210;
         }
         iconTextSizePx = (int) (Utilities.pxFromSp(12, dm) * scale);
         iconDrawablePaddingPx = (availableWidthPx - iconSizePx * 4) / 5;
