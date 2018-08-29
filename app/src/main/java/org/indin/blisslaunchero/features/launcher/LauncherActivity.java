@@ -371,7 +371,6 @@ public class LauncherActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume() called");
-        overridePendingTransition(R.anim.reenter, R.anim.releave);
     }
 
     @Override
