@@ -219,15 +219,15 @@ public class DeviceProfile {
     private void updateIconSize(float scale, Resources res, DisplayMetrics dm) {
         // Workspace
         if (availableWidthPx < 640) {
-            iconSizePx = 90;
+            iconSizePx = 95;
         } else if (availableWidthPx < 960) {
-            iconSizePx = 120;
+            iconSizePx = 126;
         } else if (availableWidthPx < 1100) {
-            iconSizePx = 150;
+            iconSizePx = 160;
         } else if (availableWidthPx < 1200) {
-            iconSizePx = 180;
+            iconSizePx = 190;
         } else {
-            iconSizePx = 210;
+            iconSizePx = 230;
         }
         iconTextSizePx = (int) (Utilities.pxFromSp(12, dm) * scale);
         iconDrawablePaddingPx = (availableWidthPx - iconSizePx * 4) / 5;
