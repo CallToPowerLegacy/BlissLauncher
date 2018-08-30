@@ -1,4 +1,4 @@
-image: "registry.gitlab.eelo.io:5000/eelo/docker-android-apps-cicd:latest"
+image: "registry.gitlab.eelo.io:5000/e/apps/docker-android-apps-cicd:latest"
 
 stages:
 - build
@@ -19,4 +19,3 @@ build:
   artifacts:
     paths:
     - app/build/outputs/apk
-
