@@ -118,6 +118,7 @@ public class CustomAnalogClock extends View {
 
         mHandsOverlay = new HandsOverlay(Hhand, Mhand, SHand).withScale(sizeScale);
         mHandsOverlay.setShowSeconds(true);
+        setScale((float) BlissLauncher.getApplication(mContext).getDeviceProfile().iconSizePx / mDialWidth);
     }
 
     public void setFace(Drawable face) {
@@ -199,6 +200,7 @@ public class CustomAnalogClock extends View {
             mFace.setBounds(cX - (w / 2), cY - (h / 2), cX + (w / 2), cY
                     + (h / 2));
         }
+
 
         mFace.draw(canvas);
         mHandsOverlay.onDraw(canvas, cX, cY, w, h, mCalendar, sizeChanged);

@@ -16,12 +16,11 @@
 package org.indin.blisslaunchero.features.launcher;
 
 import android.content.Context;
+import android.os.AsyncTask;
 
 import org.indin.blisslaunchero.framework.utils.AppUtils;
 
 import java.lang.ref.WeakReference;
-
-import io.fabric.sdk.android.services.concurrency.AsyncTask;
 
 public class LoadAppsTask extends AsyncTask<Void, Void, AllAppsList> {
 

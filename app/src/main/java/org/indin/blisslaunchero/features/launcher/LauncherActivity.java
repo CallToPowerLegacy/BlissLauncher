@@ -17,6 +17,7 @@ package org.indin.blisslaunchero.features.launcher;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
 import static cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
@@ -73,7 +74,6 @@ import org.indin.blisslaunchero.framework.utils.GraphicsUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.crashlytics.android.Crashlytics;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import android.Manifest;
@@ -130,6 +130,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import cyanogenmod.weather.WeatherInfo;
 import cyanogenmod.weather.util.WeatherUtils;
 import io.reactivex.Observable;
@@ -1016,7 +1017,6 @@ public class LauncherActivity extends AppCompatActivity implements
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
             int i = 0;
-            Crashlytics.log("Size of usage stats: " + usageStats.size());
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
@@ -2324,8 +2324,8 @@ public class LauncherActivity extends AppCompatActivity implements
                     (int) (x + mDeviceProfile.iconSizePx / 2),
                     (int) (y + mDeviceProfile.iconSizePx / 2));
             if (Rect.intersects(r, r2)) {
-                float vx = r.left + (r.right - r.left) / 2;
-                float vy = r.top + (r.bottom - r.top) / 2;
+                float vx = r.left + (float) (r.right - r.left) / 2;
+                float vy = r.top + (float) (r.bottom - r.top) / 2;
                 float distance = (float) Math.hypot(vx - x, vy - y);
                 if (minDistance > distance) {
                     minDistance = distance;
