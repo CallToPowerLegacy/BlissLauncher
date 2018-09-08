@@ -41,6 +41,7 @@ public class DeviceProfile {
     private static final int TYPE_HOTSEAT = 2;
 
     public static Path path;
+    private final float widthCm;
     public int cellHeightWithoutPaddingPx;
     public int hotseatCellHeightWithoutPaddingPx;
 
@@ -160,10 +161,15 @@ public class DeviceProfile {
         availableWidthPx = smallestSize.x;
         availableHeightPx = largestSize.y;
 
+
         Point realSize = new Point();
         display.getRealSize(realSize);
 
         widthPx = realSize.x;
+        double x = widthPx / dm.xdpi;
+        widthCm = (float) (x * 2.540001f);
+        Log.i(TAG, "DeviceProfile: " + availableWidthPx);
+        Log.i(TAG, "DeviceProfile: " + widthPx);
         heightPx = realSize.y;
 
         context = getContext(context, Configuration.ORIENTATION_PORTRAIT);
@@ -218,7 +224,7 @@ public class DeviceProfile {
 
     private void updateIconSize(float scale, Resources res, DisplayMetrics dm) {
         // Workspace
-        if (availableWidthPx < 640) {
+        /*if (availableWidthPx < 640) {
             iconSizePx = 95;
         } else if (availableWidthPx < 960) {
             iconSizePx = 126;
@@ -227,8 +233,11 @@ public class DeviceProfile {
         } else if (availableWidthPx < 1200) {
             iconSizePx = 190;
         } else {
-            iconSizePx = 230;
-        }
+            iconSizePx = 213;
+        }*/
+
+        iconSizePx = (int) (widthPx/widthCm);
+
         iconTextSizePx = (int) (Utilities.pxFromSp(12, dm) * scale);
         iconDrawablePaddingPx = (availableWidthPx - iconSizePx * 4) / 5;
 
@@ -245,9 +254,9 @@ public class DeviceProfile {
         dateTextSize = iconSizePx * 154 / 192;
 
         dateTextTopPadding = (dateTextviewHeight - (int) (1.14 * Utilities.calculateTextHeight(
-                dateTextSize / 2))) / 2;
+                (float) dateTextSize / 2))) / 2;
         dateTextBottomPadding = (dateTextviewHeight - (int) (0.86 * Utilities.calculateTextHeight(
-                dateTextSize / 2))) / 2;
+                (float) dateTextSize / 2))) / 2;
 
         Log.i(TAG, "datepadding: " + dateTextTopPadding + "*" + dateTextBottomPadding);
 
