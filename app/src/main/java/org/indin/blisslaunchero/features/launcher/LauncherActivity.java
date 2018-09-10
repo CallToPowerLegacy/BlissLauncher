@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 /e/.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.indin.blisslaunchero.features.launcher;
 
 import static android.view.View.GONE;
@@ -73,7 +58,6 @@ import org.indin.blisslaunchero.framework.utils.GraphicsUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.crashlytics.android.Crashlytics;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import android.Manifest;
@@ -1016,7 +1000,6 @@ public class LauncherActivity extends AppCompatActivity implements
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
             int i = 0;
-            Crashlytics.log("Size of usage stats: " + usageStats.size());
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
@@ -2324,8 +2307,8 @@ public class LauncherActivity extends AppCompatActivity implements
                     (int) (x + mDeviceProfile.iconSizePx / 2),
                     (int) (y + mDeviceProfile.iconSizePx / 2));
             if (Rect.intersects(r, r2)) {
-                float vx = r.left + (r.right - r.left) / 2;
-                float vy = r.top + (r.bottom - r.top) / 2;
+                float vx = r.left + (float) (r.right - r.left) / 2;
+                float vy = r.top + (float) (r.bottom - r.top) / 2;
                 float distance = (float) Math.hypot(vx - x, vy - y);
                 if (minDistance > distance) {
                     minDistance = distance;

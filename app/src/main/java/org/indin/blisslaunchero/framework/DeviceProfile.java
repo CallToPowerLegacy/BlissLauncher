@@ -1,19 +1,9 @@
-/*
- * Copyright 2018 /e/.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.indin.blisslaunchero.framework;
+
+import java.util.ArrayList;
+
+import org.indin.blisslaunchero.framework.customviews.PathParser;
+import org.indin.blisslaunchero.framework.utils.AdaptiveIconUtils;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -29,11 +19,6 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
-import org.indin.blisslaunchero.framework.customviews.PathParser;
-import org.indin.blisslaunchero.framework.utils.AdaptiveIconUtils;
-
-import java.util.ArrayList;
-
 public class DeviceProfile {
 
     private static final int TYPE_WORKSPACE = 0;
@@ -41,6 +26,7 @@ public class DeviceProfile {
     private static final int TYPE_HOTSEAT = 2;
 
     public static Path path;
+    private final float widthCm;
     public int cellHeightWithoutPaddingPx;
     public int hotseatCellHeightWithoutPaddingPx;
 
@@ -160,10 +146,15 @@ public class DeviceProfile {
         availableWidthPx = smallestSize.x;
         availableHeightPx = largestSize.y;
 
+
         Point realSize = new Point();
         display.getRealSize(realSize);
 
         widthPx = realSize.x;
+        double x = widthPx / dm.xdpi;
+        widthCm = (float) (x * 2.540001f);
+        Log.i(TAG, "DeviceProfile: " + availableWidthPx);
+        Log.i(TAG, "DeviceProfile: " + widthPx);
         heightPx = realSize.y;
 
         context = getContext(context, Configuration.ORIENTATION_PORTRAIT);
@@ -218,7 +209,7 @@ public class DeviceProfile {
 
     private void updateIconSize(float scale, Resources res, DisplayMetrics dm) {
         // Workspace
-        if (availableWidthPx < 640) {
+        /*if (availableWidthPx < 640) {
             iconSizePx = 95;
         } else if (availableWidthPx < 960) {
             iconSizePx = 126;
@@ -227,8 +218,11 @@ public class DeviceProfile {
         } else if (availableWidthPx < 1200) {
             iconSizePx = 190;
         } else {
-            iconSizePx = 230;
-        }
+            iconSizePx = 213;
+        }*/
+
+        iconSizePx = (int) (widthPx/widthCm);
+
         iconTextSizePx = (int) (Utilities.pxFromSp(12, dm) * scale);
         iconDrawablePaddingPx = (availableWidthPx - iconSizePx * 4) / 5;
 
@@ -245,9 +239,9 @@ public class DeviceProfile {
         dateTextSize = iconSizePx * 154 / 192;
 
         dateTextTopPadding = (dateTextviewHeight - (int) (1.14 * Utilities.calculateTextHeight(
-                dateTextSize / 2))) / 2;
+                (float) dateTextSize / 2))) / 2;
         dateTextBottomPadding = (dateTextviewHeight - (int) (0.86 * Utilities.calculateTextHeight(
-                dateTextSize / 2))) / 2;
+                (float) dateTextSize / 2))) / 2;
 
         Log.i(TAG, "datepadding: " + dateTextTopPadding + "*" + dateTextBottomPadding);
 
