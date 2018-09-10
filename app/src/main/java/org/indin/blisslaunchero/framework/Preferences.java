@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-
 import cyanogenmod.weather.WeatherInfo;
 import cyanogenmod.weather.WeatherLocation;
 
