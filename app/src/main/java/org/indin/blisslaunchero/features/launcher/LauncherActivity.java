@@ -1291,7 +1291,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void runSearch(String query) {
-        Uri uri = Uri.parse("https://spot.eelo.me/?q=" + query);
+        Uri uri = Uri.parse("https://spot.ecloud.global/?q=" + query);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         AppUtils.startActivityWithAnimation(this, intent);
     }
