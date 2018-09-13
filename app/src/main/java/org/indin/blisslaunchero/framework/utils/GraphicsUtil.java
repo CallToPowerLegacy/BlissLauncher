@@ -167,8 +167,8 @@ public class GraphicsUtil {
     }
 
     public boolean hasTransparency(Bitmap bitmap) {
-        for (int y = 0; y < bitmap.getWidth(); y++) {
-            for (int x = 0; x < bitmap.getHeight(); x++) {
+        for (int y = 0; y < bitmap.getHeight(); y++) {
+            for (int x = 0; x < bitmap.getWidth(); x++) {
                 if (Color.alpha(bitmap.getPixel(x, y)) < 255) {
                     return true;
                 }
