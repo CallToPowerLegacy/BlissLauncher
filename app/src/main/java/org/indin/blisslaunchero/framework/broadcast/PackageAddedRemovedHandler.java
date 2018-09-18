@@ -38,14 +38,15 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
         if ("android.intent.action.PACKAGE_CHANGED".equalsIgnoreCase(action)) {
             Log.i(TAG, "handleEvent: changed " + packageName);
             Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
-            if (launchIntent == null) {
-                return;
+            if (launchIntent != null) {
+                BlissLauncher.getApplication(ctx).getIconsHandler().resetIconDrawableForPackage(
+                        launchIntent.getComponent(), user);
             }
-            BlissLauncher.getApplication(ctx).getIconsHandler().resetIconDrawableForPackage(
-                    launchIntent.getComponent(), user);
+
             AppChangeEvent appChangeEvent = new AppChangeEvent();
             appChangeEvent.packageName = packageName;
             EventBus.getDefault().post(appChangeEvent);
+
         }
         if ("android.intent.action.PACKAGE_REMOVED".equals(action) && !replacing) {
             Log.i(TAG, "handleEvent: removed " + packageName);

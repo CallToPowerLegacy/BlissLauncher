@@ -15,6 +15,19 @@
  */
 package org.indin.blisslaunchero.framework.utils;
 
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.AllAppsList;
+import org.indin.blisslaunchero.features.launcher.AppProvider;
+import org.indin.blisslaunchero.framework.IconsHandler;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
+
 import android.app.ActivityOptions;
 import android.content.ComponentName;
 import android.content.Context;
@@ -32,19 +45,6 @@ import android.os.UserManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.util.Log;
-
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.features.launcher.AllAppsList;
-import org.indin.blisslaunchero.features.launcher.AppProvider;
-import org.indin.blisslaunchero.framework.IconsHandler;
-import org.indin.blisslaunchero.framework.database.model.AppItem;
-
-import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 public class AppUtils {
 
