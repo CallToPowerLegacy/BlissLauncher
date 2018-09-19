@@ -839,7 +839,7 @@ public class LauncherActivity extends AppCompatActivity implements
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
-                    BlissFrameLayout view = prepareApp(appItem, true);
+                    BlissFrameLayout view = prepareSuggestedApp(appItem);
                     addAppToGrid(suggestedAppsGridLayout, view);
                 }
                 i++;
@@ -1060,7 +1060,7 @@ public class LauncherActivity extends AppCompatActivity implements
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
-                    BlissFrameLayout view = prepareApp(appItem, true);
+                    BlissFrameLayout view = prepareSuggestedApp(appItem);
                     addAppToGrid(suggestedAppsGridLayout, view);
                 }
                 i++;
@@ -1577,6 +1577,78 @@ public class LauncherActivity extends AppCompatActivity implements
                 folderFromDock = !(v.getParent().getParent() instanceof HorizontalPager);
                 displayFolder(app, v);
             }
+        });
+
+        return v;
+    }
+
+    private BlissFrameLayout prepareSuggestedApp(final AppItem app) {
+        final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(R.layout.app_view,
+                null);
+        final TextView label = v.findViewById(R.id.app_label);
+        final SquareFrameLayout icon = v.findViewById(R.id.app_icon);
+        final SquareImageView squareImageView = v.findViewById(
+                R.id.icon_image_view);
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
+        layoutParams.leftMargin = mDeviceProfile.iconDrawablePaddingPx / 2;
+        layoutParams.rightMargin = mDeviceProfile.iconDrawablePaddingPx / 2;
+
+        label.setPadding((int) Utilities.pxFromDp(4, this),
+                (int) Utilities.pxFromDp(0, this),
+                (int) Utilities.pxFromDp(4, this),
+                (int) Utilities.pxFromDp(0, this));
+
+        if (app.isFolder()) {
+            v.applyBadge(checkHasApp(app, mAppsWithNotifications), true);
+        } else {
+            v.applyBadge(mAppsWithNotifications.contains(app.getPackageName()), true);
+        }
+
+        if (app.isClock()) {
+            final CustomAnalogClock analogClock = v.findViewById(
+                    R.id.icon_clock);
+            analogClock.setAutoUpdate(true);
+            analogClock.setVisibility(View.VISIBLE);
+            squareImageView.setVisibility(GONE);
+        } else if (app.isCalendar()) {
+
+            TextView monthTextView = v.findViewById(R.id.calendar_month_textview);
+            monthTextView.getLayoutParams().height = mDeviceProfile.monthTextviewHeight;
+            monthTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
+            int monthPx = mDeviceProfile.monthTextSize;
+            monthTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, monthPx / 2);
+
+            TextView dateTextView = v.findViewById(R.id.calendar_date_textview);
+            dateTextView.getLayoutParams().height = mDeviceProfile.dateTextviewHeight;
+            dateTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
+            int datePx = mDeviceProfile.dateTextSize;
+            dateTextView.setPadding(0, mDeviceProfile.dateTextTopPadding, 0,
+                    mDeviceProfile.dateTextBottomPadding);
+
+            dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, datePx / 2);
+
+            v.findViewById(R.id.icon_calendar).setVisibility(View.VISIBLE);
+            squareImageView.setVisibility(GONE);
+
+            CalendarIcon calendarIcon = new CalendarIcon(monthTextView, dateTextView);
+            updateCalendarIcon(calendarIcon, Calendar.getInstance());
+            mCalendarIcons.add(calendarIcon);
+        }
+
+        final Intent intent = app.getIntent();
+        if (!app.isClock() || !app.isCalendar()) {
+            squareImageView.setImageDrawable(app.getIcon());
+        }
+        label.setText(app.getLabel());
+        label.setTextSize(12);
+        List<Object> tags = new ArrayList<>();
+        tags.add(squareImageView);
+        tags.add(label);
+        tags.add(app);
+        v.setTag(tags);
+
+        icon.setOnClickListener(view -> {
+            AppUtils.startActivityWithAnimation(getApplicationContext(), intent);
         });
 
         return v;
