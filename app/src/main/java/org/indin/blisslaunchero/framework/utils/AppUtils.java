@@ -160,6 +160,9 @@ public class AppUtils {
         try {
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
+            if (!appInfo.enabled) {
+                return null;
+            }
             Intent intent = packageManager.getLaunchIntentForPackage(packageName);
 
             if (appInfo.packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)

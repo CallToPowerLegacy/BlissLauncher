@@ -495,20 +495,71 @@ public class LauncherActivity extends AppCompatActivity implements
             }
         }
 
+        for (int j = 0; j < mDock.getChildCount(); j++) {
+            AppItem appItem = getAppDetails(mDock.getChildAt(j));
+            if (appItem.isFolder()) {
+                for (AppItem folderItem : appItem.getSubApps()) {
+                    if (folderItem.getPackageName().equalsIgnoreCase(packageName)) {
+                        appItem.getSubApps().remove(folderItem);
+                        if (appItem.getSubApps().size() == 0) {
+                            mDock.removeViewAt(j);
+                            return;
+                        }
+                        appItem.setIcon(
+                                new GraphicsUtil(this).generateFolderIcon(this, appItem));
+                        BlissFrameLayout blissFrameLayout = prepareApp(appItem, false);
+                        mDock.removeViewAt(j);
+                        addAppToDock(blissFrameLayout, j);
+                        return;
+                    }
+                }
+            } else if (appItem.getPackageName().equalsIgnoreCase(packageName)) {
+                mDock.removeViewAt(j);
+                launchableApps.remove(appItem);
+                return;
+            }
+        }
+
+
         for (int i = 0; i < pages.size(); i++) {
             GridLayout grid = getGridFromPage(pages.get(i));
             for (int j = 0; j < grid.getChildCount(); j++) {
                 AppItem appItem = getAppDetails(grid.getChildAt(j));
-                if (appItem.getPackageName().equals(packageName)) {
+                if (appItem.isFolder()) {
+                    for (AppItem folderItem : appItem.getSubApps()) {
+                        if (folderItem.getPackageName().equalsIgnoreCase(packageName)) {
+                            appItem.getSubApps().remove(folderItem);
+                            if (appItem.getSubApps().size() == 0) {
+                                grid.removeViewAt(j);
+                                return;
+                            }
+                            appItem.setIcon(
+                                    new GraphicsUtil(this).generateFolderIcon(this, appItem));
+                            BlissFrameLayout blissFrameLayout = prepareApp(appItem, false);
+                            grid.removeViewAt(j);
+                            addAppToGrid(grid, blissFrameLayout, j);
+                            return;
+                        }
+                    }
+                } else if (appItem.getPackageName().equalsIgnoreCase(packageName)) {
                     grid.removeViewAt(j);
                     launchableApps.remove(appItem);
-                    break;
+                    return;
                 }
             }
         }
     }
 
     private void updateApp(String packageName) {
+        handleWobbling(false);
+        AppItem updatedAppItem = AppUtils.createAppItem(this, packageName);
+        Log.d(TAG, "updateApp() called with: packageName = [" + packageName + "]");
+
+        if (updatedAppItem == null) {
+            removePackageFromLauncher(packageName);
+            return;
+        }
+
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
                 GridLayout gridLayout = (GridLayout) mFolderAppsViewPager.getChildAt(i);
@@ -517,7 +568,6 @@ public class LauncherActivity extends AppCompatActivity implements
                             (BlissFrameLayout) gridLayout.getChildAt(j);
                     final AppItem existingAppItem = getAppDetails(viewGroup);
                     if (existingAppItem.getPackageName().equalsIgnoreCase(packageName)) {
-                        AppItem updatedAppItem = AppUtils.createAppItem(this, packageName);
                         updatedAppItem.setPinnedApp(existingAppItem.isPinnedApp());
                         BlissFrameLayout blissFrameLayout = prepareApp(updatedAppItem, true);
                         GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
@@ -525,39 +575,6 @@ public class LauncherActivity extends AppCompatActivity implements
                         iconLayoutParams.width = mDeviceProfile.cellWidthPx;
                         gridLayout.removeViewAt(j);
                         gridLayout.addView(blissFrameLayout, j, iconLayoutParams);
-                        return;
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < pages.size(); i++) {
-            GridLayout gridLayout = pages.get(i);
-            for (int j = 0; j < gridLayout.getChildCount(); j++) {
-                BlissFrameLayout viewGroup =
-                        (BlissFrameLayout) gridLayout.getChildAt(j);
-                AppItem existingAppItem = getAppDetails(viewGroup);
-                if (existingAppItem.isFolder()) {
-                    for (int k = 0; k < existingAppItem.getSubApps().size(); k++) {
-                        if (existingAppItem.getSubApps().get(k).getPackageName().equalsIgnoreCase(
-                                packageName)) {
-                            existingAppItem.getSubApps().set(k,
-                                    AppUtils.createAppItem(this, packageName));
-                            existingAppItem.setIcon(
-                                    new GraphicsUtil(this).generateFolderIcon(this,
-                                            existingAppItem));
-                            BlissFrameLayout blissFrameLayout = prepareApp(existingAppItem, true);
-                            gridLayout.removeViewAt(j);
-                            addAppToGrid(gridLayout, blissFrameLayout, j);
-                            return;
-
-                        }
-                    }
-                } else {
-                    if (existingAppItem.getPackageName().equalsIgnoreCase(packageName)) {
-                        AppItem updatedAppItem = AppUtils.createAppItem(this, packageName);
-                        BlissFrameLayout blissFrameLayout = prepareApp(updatedAppItem, true);
-                        gridLayout.removeViewAt(j);
-                        addAppToGrid(gridLayout, blissFrameLayout, j);
                         return;
                     }
                 }
@@ -572,24 +589,56 @@ public class LauncherActivity extends AppCompatActivity implements
                 for (int k = 0; k < existingAppItem.getSubApps().size(); k++) {
                     if (existingAppItem.getSubApps().get(k).getPackageName().equalsIgnoreCase(
                             packageName)) {
-                        existingAppItem.getSubApps().set(k,
-                                AppUtils.createAppItem(this, packageName));
+                        existingAppItem.getSubApps().set(k, updatedAppItem);
                         existingAppItem.setIcon(
                                 new GraphicsUtil(this).generateFolderIcon(this, existingAppItem));
                         BlissFrameLayout blissFrameLayout = prepareApp(existingAppItem, false);
                         mDock.removeViewAt(i);
                         addAppToDock(blissFrameLayout, i);
+                        return;
                     }
                 }
             } else {
                 if (existingAppItem.getPackageName().equalsIgnoreCase(packageName)) {
-                    AppItem updatedAppItem = AppUtils.createAppItem(this, packageName);
                     BlissFrameLayout blissFrameLayout = prepareApp(updatedAppItem, false);
                     mDock.removeViewAt(i);
                     addAppToDock(blissFrameLayout, i);
+                    return;
                 }
             }
+        }
 
+        for (int i = 0; i < pages.size(); i++) {
+            GridLayout gridLayout = pages.get(i);
+            for (int j = 0; j < gridLayout.getChildCount(); j++) {
+                BlissFrameLayout viewGroup =
+                        (BlissFrameLayout) gridLayout.getChildAt(j);
+                AppItem existingAppItem = getAppDetails(viewGroup);
+                if (existingAppItem.isFolder()) {
+                    for (int k = 0; k < existingAppItem.getSubApps().size(); k++) {
+                        if (existingAppItem.getSubApps().get(k).getPackageName().equalsIgnoreCase(
+                                packageName)) {
+                            existingAppItem.getSubApps().set(k, updatedAppItem);
+                            existingAppItem.setIcon(
+                                    new GraphicsUtil(this).generateFolderIcon(this,
+                                            existingAppItem));
+                            BlissFrameLayout blissFrameLayout = prepareApp(existingAppItem, true);
+                            gridLayout.removeViewAt(j);
+                            addAppToGrid(gridLayout, blissFrameLayout, j);
+                            return;
+
+                        }
+                    }
+                } else {
+                    if (existingAppItem.getPackageName().equalsIgnoreCase(packageName)) {
+                        BlissFrameLayout blissFrameLayout = prepareApp(updatedAppItem, true);
+                        gridLayout.removeViewAt(j);
+                        addAppToGrid(gridLayout, blissFrameLayout, j);
+                        return;
+                    }
+                }
+            }
+            addNewApp(packageName);
         }
     }
 
@@ -607,6 +656,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void createOrUpdateBadgeCount() {
+        getCompositeDisposable().dispose();
         getCompositeDisposable().add(
                 NotificationRepository.getNotificationRepository().getNotifications().subscribeWith(
                         new DisposableObserver<Set<String>>() {
@@ -789,7 +839,7 @@ public class LauncherActivity extends AppCompatActivity implements
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
-                    BlissFrameLayout view = prepareApp(appItem, true);
+                    BlissFrameLayout view = prepareSuggestedApp(appItem);
                     addAppToGrid(suggestedAppsGridLayout, view);
                 }
                 i++;
@@ -870,7 +920,13 @@ public class LauncherActivity extends AppCompatActivity implements
                 JSONObject currentDockItemData = storageData.dock.getJSONArray(0).getJSONObject(i);
                 AppItem appItem = prepareAppFromJSON(currentDockItemData);
                 if (appItem != null) {
-                    keySet.add(appItem.getPackageName());
+                    if (appItem.isFolder()) {
+                        for (AppItem item : appItem.getSubApps()) {
+                            keySet.add(item.getPackageName());
+                        }
+                    } else {
+                        keySet.add(appItem.getPackageName());
+                    }
                     BlissFrameLayout appView = prepareApp(appItem, false);
                     if (appView != null) {
                         addAppToDock(appView, INVALID);
@@ -914,6 +970,7 @@ public class LauncherActivity extends AppCompatActivity implements
         LinkedHashMap<String, AppItem> map = allLoadedApps.launchableApps;
         map.keySet().removeAll(keySet);
         for (Map.Entry<String, AppItem> stringAppItemEntry : map.entrySet()) {
+            int size = pages.size();
             if (pages.get(pages.size() - 1).getChildCount() < mDeviceProfile.maxAppsPerPage) {
                 BlissFrameLayout appView = prepareApp(stringAppItemEntry.getValue(), true);
                 if (appView != null) {
@@ -1003,7 +1060,7 @@ public class LauncherActivity extends AppCompatActivity implements
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
                 if (appItem != null) {
-                    BlissFrameLayout view = prepareApp(appItem, true);
+                    BlissFrameLayout view = prepareSuggestedApp(appItem);
                     addAppToGrid(suggestedAppsGridLayout, view);
                 }
                 i++;
@@ -1520,6 +1577,78 @@ public class LauncherActivity extends AppCompatActivity implements
                 folderFromDock = !(v.getParent().getParent() instanceof HorizontalPager);
                 displayFolder(app, v);
             }
+        });
+
+        return v;
+    }
+
+    private BlissFrameLayout prepareSuggestedApp(final AppItem app) {
+        final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(R.layout.app_view,
+                null);
+        final TextView label = v.findViewById(R.id.app_label);
+        final SquareFrameLayout icon = v.findViewById(R.id.app_icon);
+        final SquareImageView squareImageView = v.findViewById(
+                R.id.icon_image_view);
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) icon.getLayoutParams();
+        layoutParams.leftMargin = mDeviceProfile.iconDrawablePaddingPx / 2;
+        layoutParams.rightMargin = mDeviceProfile.iconDrawablePaddingPx / 2;
+
+        label.setPadding((int) Utilities.pxFromDp(4, this),
+                (int) Utilities.pxFromDp(0, this),
+                (int) Utilities.pxFromDp(4, this),
+                (int) Utilities.pxFromDp(0, this));
+
+        if (app.isFolder()) {
+            v.applyBadge(checkHasApp(app, mAppsWithNotifications), true);
+        } else {
+            v.applyBadge(mAppsWithNotifications.contains(app.getPackageName()), true);
+        }
+
+        if (app.isClock()) {
+            final CustomAnalogClock analogClock = v.findViewById(
+                    R.id.icon_clock);
+            analogClock.setAutoUpdate(true);
+            analogClock.setVisibility(View.VISIBLE);
+            squareImageView.setVisibility(GONE);
+        } else if (app.isCalendar()) {
+
+            TextView monthTextView = v.findViewById(R.id.calendar_month_textview);
+            monthTextView.getLayoutParams().height = mDeviceProfile.monthTextviewHeight;
+            monthTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
+            int monthPx = mDeviceProfile.monthTextSize;
+            monthTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, monthPx / 2);
+
+            TextView dateTextView = v.findViewById(R.id.calendar_date_textview);
+            dateTextView.getLayoutParams().height = mDeviceProfile.dateTextviewHeight;
+            dateTextView.getLayoutParams().width = mDeviceProfile.calendarIconWidth;
+            int datePx = mDeviceProfile.dateTextSize;
+            dateTextView.setPadding(0, mDeviceProfile.dateTextTopPadding, 0,
+                    mDeviceProfile.dateTextBottomPadding);
+
+            dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, datePx / 2);
+
+            v.findViewById(R.id.icon_calendar).setVisibility(View.VISIBLE);
+            squareImageView.setVisibility(GONE);
+
+            CalendarIcon calendarIcon = new CalendarIcon(monthTextView, dateTextView);
+            updateCalendarIcon(calendarIcon, Calendar.getInstance());
+            mCalendarIcons.add(calendarIcon);
+        }
+
+        final Intent intent = app.getIntent();
+        if (!app.isClock() || !app.isCalendar()) {
+            squareImageView.setImageDrawable(app.getIcon());
+        }
+        label.setText(app.getLabel());
+        label.setTextSize(12);
+        List<Object> tags = new ArrayList<>();
+        tags.add(squareImageView);
+        tags.add(label);
+        tags.add(app);
+        v.setTag(tags);
+
+        icon.setOnClickListener(view -> {
+            AppUtils.startActivityWithAnimation(getApplicationContext(), intent);
         });
 
         return v;
