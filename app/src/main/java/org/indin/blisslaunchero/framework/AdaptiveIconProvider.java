@@ -1,9 +1,5 @@
 package org.indin.blisslaunchero.framework;
 
-import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
-import org.indin.blisslaunchero.framework.utils.ResourceUtils;
-import org.xmlpull.v1.XmlPullParser;
-
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -12,6 +8,10 @@ import android.content.res.XmlResourceParser;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
+
+import org.indin.blisslaunchero.framework.customviews.AdaptiveIconDrawableCompat;
+import org.indin.blisslaunchero.framework.utils.ResourceUtils;
+import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Created by falcon on 19/4/18.
@@ -43,7 +43,7 @@ public class AdaptiveIconProvider {
 
             XmlResourceParser manifestParser;
             String iconName = null;
-            int iconId;
+            int iconId = 0;
             try {
                 manifestParser = assetManager.openXmlResourceParser("AndroidManifest.xml");
                 int eventType;
@@ -52,18 +52,20 @@ public class AdaptiveIconProvider {
                 while ((eventType = manifestParser.nextToken()) != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && manifestParser.getName().equals(
                             matcher)) {
-                        iconId = manifestParser.getAttributeResourceValue(
-                                ANDROID_SCHEMA, "icon",
-                                0);
-
+                        for (int i = 0; i < manifestParser.getAttributeCount(); i++) {
+                            if (manifestParser.getAttributeName(i).equalsIgnoreCase("icon")) {
+                                iconId = Integer.parseInt(
+                                        manifestParser.getAttributeValue(i).substring(1));
+                                break;
+                            }
+                        }
                         if (iconId != 0) {
                             iconName = resources.getResourceName(iconId);
                             if (iconName.contains("/")) {
                                 iconName = iconName.split("/")[1];
                             }
                             break;
-                        }
-                        if (iconId == 0) {
+                        } else {
                             matcher = "activity";
                         }
                     }
@@ -73,15 +75,21 @@ public class AdaptiveIconProvider {
             }
 
             XmlResourceParser parser = null;
+            if (iconId != 0) {
+                parser = resources.getXml(iconId);
+            }
+
             for (int dir = 0; dir < IC_DIRS.length && parser == null; dir++) {
                 for (int config = 0; config < IC_CONFIGS.length && parser == null; config++) {
                     for (String name : iconName != null && !iconName.equals("ic_launcher")
                             ? new String[]{iconName, "ic_launcher"} : new String[]{"ic_launcher"}) {
                         try {
-                            parser = assetManager.openXmlResourceParser(
-                                    "res/" + IC_DIRS[dir] + IC_CONFIGS[config] + "/" + name
-                                            + ".xml");
+                            String path = "res/" + IC_DIRS[dir] + IC_CONFIGS[config] + "/" + name
+                                    + ".xml";
+                            Log.i(TAG, "path: " + path);
+                            parser = assetManager.openXmlResourceParser(path);
                         } catch (Exception e) {
+                            e.printStackTrace();
                             continue;
                         }
 
@@ -96,7 +104,8 @@ public class AdaptiveIconProvider {
             if (parser != null) {
                 int event;
                 while ((event = parser.getEventType()) != XmlPullParser.END_DOCUMENT) {
-                    Log.i(TAG, packageName + ":parserName: " + parser.getName()+" "+parser.getAttributeCount());
+                    Log.i(TAG, packageName + ":parserName: " + parser.getName() + " "
+                            + parser.getAttributeCount());
                     if (event == XmlPullParser.START_TAG) {
                         switch (parser.getName()) {
                             case "background":

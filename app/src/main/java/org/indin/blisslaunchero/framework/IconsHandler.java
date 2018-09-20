@@ -182,6 +182,7 @@ public class IconsHandler {
 
         systemIcon = new AdaptiveIconProvider().load(ctx, componentName.getPackageName());
         if(systemIcon != null){
+            Log.i(TAG, "getDrawableIconForPackage: herrrre");
             cacheStoreDrawable(componentName.toString(), systemIcon);
             return systemIcon;
         }
