@@ -44,7 +44,6 @@ import android.os.Bundle;
 import android.os.UserManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 public class AppUtils {
 
