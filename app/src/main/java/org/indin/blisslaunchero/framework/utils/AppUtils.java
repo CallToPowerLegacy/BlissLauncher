@@ -84,7 +84,6 @@ public class AppUtils {
 
                 Drawable appIcon = iconsHandler.getDrawableIconForPackage(
                         activityInfo.getComponentName(), user);
-                Log.i(TAG, "loadAll: here");
                 boolean isSystemApp = false;
 
                 if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
