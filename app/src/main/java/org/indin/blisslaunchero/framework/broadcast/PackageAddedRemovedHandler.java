@@ -30,6 +30,9 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
             if (launchIntent == null) {//for some plugin app
                 return;
             }
+
+            BlissLauncher.getApplication(ctx).resetIconsHandler();
+
             AppAddEvent appAddEvent = new AppAddEvent();
             appAddEvent.packageName = packageName;
             EventBus.getDefault().post(appAddEvent);
@@ -43,6 +46,8 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
                         launchIntent.getComponent(), user);
             }
 
+            BlissLauncher.getApplication(ctx).resetIconsHandler();
+
             AppChangeEvent appChangeEvent = new AppChangeEvent();
             appChangeEvent.packageName = packageName;
             EventBus.getDefault().post(appChangeEvent);
@@ -55,8 +60,6 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
             appRemoveEvent.packageName = packageName;
             EventBus.getDefault().post(appRemoveEvent);
         }
-
-        BlissLauncher.getApplication(ctx).resetIconsHandler();
 
         // Reload application list
         final AppProvider provider = BlissLauncher.getApplication(ctx).getAppProvider();

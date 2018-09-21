@@ -33,8 +33,6 @@ subprojects {
     spotless {
         java {
             target '**/*.java'
-
-            importOrder 'java', 'javax', 'org', 'com', 'com.diffplug', ''	// A sequence of package names
             removeUnusedImports() // removes any unused imports
         }
     }
