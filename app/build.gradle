@@ -50,7 +50,7 @@ dependencies {
     implementation 'org.cyanogenmod:platform.sdk:6.0'
 
     debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
-    debugImplementation 'com.google.firebase:firebase-core:16.0.3'
+    debugImplementation 'com.google.firebase:firebase-core:16.0.4'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
 
