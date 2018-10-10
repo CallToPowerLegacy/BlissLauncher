@@ -9,7 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.android.tools.build:gradle:3.2.0'
         classpath 'io.fabric.tools:gradle:1.25.4'
         classpath 'com.google.gms:google-services:4.0.0'
     }
@@ -39,13 +39,13 @@ subprojects {
 }
 
 ext{
-    compileSdkVersion = 27
+    compileSdkVersion = 28
     buildToolsVersion = '26.0.2'
     minSdkVersion = 23
-    targetSdkVersion = 27
+    targetSdkVersion = 28
     sourceCompatibilityVersion = '1.7'
     targetCompatibilityVersion = '1.7'
-    supportLibraryVersion = '27.1.1'
+    supportLibraryVersion = '28.0.0'
     junitVersion = '4.12'
     mockitoVersion = '2.16.0'
     hamcrestVersion = '1.3'
