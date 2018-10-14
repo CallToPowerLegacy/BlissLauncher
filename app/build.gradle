@@ -47,11 +47,10 @@ dependencies {
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
 
-    implementation 'org.cyanogenmod:platform.sdk:6.0'
+    implementation files('libs/lineage-sdk.jar')
 
     debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
     debugImplementation 'com.google.firebase:firebase-core:16.0.4'
-
     implementation 'org.greenrobot:eventbus:3.1.1'
 
     // Support Libs

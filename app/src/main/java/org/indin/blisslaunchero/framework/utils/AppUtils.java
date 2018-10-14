@@ -15,26 +15,13 @@
  */
 package org.indin.blisslaunchero.framework.utils;
 
-import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.features.launcher.AllAppsList;
-import org.indin.blisslaunchero.features.launcher.AppProvider;
-import org.indin.blisslaunchero.framework.IconsHandler;
-import org.indin.blisslaunchero.framework.database.model.AppItem;
-
+import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -45,13 +32,27 @@ import android.os.UserManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.AllAppsList;
+import org.indin.blisslaunchero.features.launcher.AppProvider;
+import org.indin.blisslaunchero.framework.IconsHandler;
+import org.indin.blisslaunchero.framework.database.model.AppItem;
+
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class AppUtils {
 
     private static final String TAG = "AppUtils";
-
     /**
      * Uses the PackageManager to find all launchable apps.
      */
+    @SuppressLint("CheckResult")
     public static AllAppsList loadAll(Context context) {
 
         List<AppItem> launchableApps = new ArrayList<>();
@@ -67,50 +68,53 @@ public class AppUtils {
         // Handle multi-profile support introduced in Android 5 (#542)
         for (android.os.UserHandle profile : manager.getUserProfiles()) {
             UserHandle user = new UserHandle(manager.getSerialNumberForUser(profile), profile);
-            for (LauncherActivityInfo activityInfo : launcher.getActivityList(null, profile)) {
-                ApplicationInfo appInfo = activityInfo.getApplicationInfo();
 
-                if (appInfo.packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)
-                        || appInfo.packageName.equalsIgnoreCase(AppProvider.MUPDF_PACKAGE)) {
-                    continue;
-                }
+            launchableApps = launcher.getActivityList(null, profile).parallelStream()
+                    .filter(activityInfo -> {
+                        ApplicationInfo appInfo = activityInfo.getApplicationInfo();
+                        return !appInfo.packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)
+                                && !appInfo.packageName.equalsIgnoreCase(AppProvider.MUPDF_PACKAGE);
+                    })
+                    .map(activityInfo -> {
+                        ApplicationInfo appInfo = activityInfo.getApplicationInfo();
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                        intent.setComponent(activityInfo.getComponentName());
+                        intent.setFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK
+                                        | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
-                Intent intent = new Intent(Intent.ACTION_MAIN);
-                intent.addCategory(Intent.CATEGORY_LAUNCHER);
-                intent.setComponent(activityInfo.getComponentName());
-                intent.setFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                        Drawable appIcon = iconsHandler.getDrawableIconForPackage(
+                                activityInfo.getComponentName(), user);
+                        boolean isSystemApp = false;
 
-                Drawable appIcon = iconsHandler.getDrawableIconForPackage(
-                        activityInfo.getComponentName(), user);
-                boolean isSystemApp = false;
+                        if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                            isSystemApp = true;
+                        }
 
-                if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
-                    isSystemApp = true;
-                }
+                        String labelName = activityInfo.getLabel().toString();
 
-                String labelName = activityInfo.getLabel().toString();
-
-                if (appInfo.packageName.equalsIgnoreCase("com.generalmagic.magicearth")) {
-                    labelName = "Maps";
-                }
-                AppItem launchableApp = new AppItem(labelName,
-                        appInfo.packageName,
-                        appIcon,
-                        intent,
-                        activityInfo.getComponentName().toString(),
-                        isSystemApp,
-                        iconsHandler.isClock(activityInfo.getComponentName().toString()),
-                        iconsHandler.isCalendar(activityInfo.getComponentName().toString()));
-                launchableApps.add(launchableApp);
-            }
+                        if (appInfo.packageName.equalsIgnoreCase("com.generalmagic.magicearth")) {
+                            labelName = "Maps";
+                        }
+                        return new AppItem(labelName,
+                                appInfo.packageName,
+                                appIcon,
+                                intent,
+                                activityInfo.getComponentName().toString(),
+                                isSystemApp,
+                                iconsHandler.isClock(activityInfo.getComponentName().toString()),
+                                iconsHandler.isCalendar(
+                                        activityInfo.getComponentName().toString()));
+                    })
+                    .collect(Collectors.toList());
         }
+
 
         Collections.sort(launchableApps, (app1, app2) -> {
             Collator collator = Collator.getInstance();
             return collator.compare(app1.getLabel().toString(), app2.getLabel().toString());
         });
-
         LinkedHashMap<String, AppItem> appArrayMap = new LinkedHashMap<>();
         for (AppItem appItem : launchableApps) {
             appArrayMap.put(appItem.getPackageName(), appItem);
@@ -133,6 +137,7 @@ public class AppUtils {
                 }
             }
         }
+
         AllAppsList allAppsList = new AllAppsList(appArrayMap, defaultPinnedAppsPackages);
         return allAppsList;
     }

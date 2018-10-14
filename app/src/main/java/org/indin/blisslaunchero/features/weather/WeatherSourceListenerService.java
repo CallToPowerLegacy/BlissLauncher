@@ -1,17 +1,18 @@
 package org.indin.blisslaunchero.features.weather;
 
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import cyanogenmod.weather.CMWeatherManager;
+
+import org.indin.blisslaunchero.framework.Preferences;
+import org.indin.blisslaunchero.framework.utils.Constants;
+
+import lineageos.weather.LineageWeatherManager;
 
 public class WeatherSourceListenerService extends Service
-        implements CMWeatherManager.WeatherServiceProviderChangeListener {
+        implements LineageWeatherManager.WeatherServiceProviderChangeListener {
 
     private static final String TAG = WeatherSourceListenerService.class.getSimpleName();
     private static final boolean D = Constants.DEBUG;
@@ -39,8 +40,8 @@ public class WeatherSourceListenerService extends Service
     @Override
     public void onCreate() {
         mContext = getApplicationContext();
-        final CMWeatherManager weatherManager
-                = CMWeatherManager.getInstance(mContext);
+        final LineageWeatherManager weatherManager
+                = LineageWeatherManager.getInstance(mContext);
         weatherManager.registerWeatherServiceProviderChangeListener(this);
         mRegistered = true;
         if (D) Log.d(TAG, "Listener registered");
@@ -54,7 +55,7 @@ public class WeatherSourceListenerService extends Service
     @Override
     public void onDestroy() {
         if (mRegistered) {
-            final CMWeatherManager weatherManager = CMWeatherManager.getInstance(mContext);
+            final LineageWeatherManager weatherManager = LineageWeatherManager.getInstance(mContext);
             weatherManager.unregisterWeatherServiceProviderChangeListener(this);
         }
     }

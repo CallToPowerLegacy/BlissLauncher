@@ -1,14 +1,15 @@
 package org.indin.blisslaunchero.features.weather;
 
-import java.text.DecimalFormat;
+import android.content.Context;
+import android.content.res.Resources;
 
 import org.indin.blisslaunchero.R;
 
-import android.content.Context;
-import android.content.res.Resources;
-import cyanogenmod.app.CMContextConstants;
-import cyanogenmod.providers.WeatherContract;
-import cyanogenmod.providers.WeatherContract.WeatherColumns.WeatherCode;
+import java.text.DecimalFormat;
+
+import lineageos.app.LineageContextConstants;
+import lineageos.providers.WeatherContract;
+import lineageos.providers.WeatherContract.WeatherColumns.WeatherCode;
 
 public final class WeatherUtils {
 
@@ -104,7 +105,7 @@ public final class WeatherUtils {
      * @param context Application context to access resources
      * @param windSpeed The wind speed
      * @param windSpeedUnit The speed unit. See
-     *        {@link cyanogenmod.providers.WeatherContract.WeatherColumns.WindSpeedUnit}
+     *        {@link lineageos.providers.WeatherContract.WeatherColumns.WindSpeedUnit}
      * @return The formatted string if a valid speed and speed unit a provided.
      * {@link R.string#unknown} otherwise
      */
@@ -172,7 +173,7 @@ public final class WeatherUtils {
     public static boolean isWeatherServiceAvailable(Context context) {
         if (!weatherServiceFeatureCached) {
             weatherServiceAvailable = context.getPackageManager()
-                    .hasSystemFeature(CMContextConstants.Features.WEATHER_SERVICES);
+                    .hasSystemFeature(LineageContextConstants.Features.WEATHER_SERVICES);
             weatherServiceFeatureCached = true;
         }
         return weatherServiceAvailable;

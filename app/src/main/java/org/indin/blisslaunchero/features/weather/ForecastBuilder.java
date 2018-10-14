@@ -1,16 +1,7 @@
 package org.indin.blisslaunchero.features.weather;
 
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
-import static cyanogenmod.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
-
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
+import static lineageos.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
+import static lineageos.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -20,8 +11,18 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import cyanogenmod.weather.WeatherInfo;
-import cyanogenmod.weather.util.WeatherUtils;
+
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.framework.Preferences;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import lineageos.weather.WeatherInfo;
+import lineageos.weather.util.WeatherUtils;
 
 public class ForecastBuilder {
 
@@ -91,15 +92,15 @@ public class ForecastBuilder {
             double highTemp = d.getHigh();
             int tempUnit = weatherTempUnit;
             if (weatherTempUnit == FAHRENHEIT && useMetric) {
-                lowTemp = cyanogenmod.weather.util.WeatherUtils.fahrenheitToCelsius(lowTemp);
-                highTemp = cyanogenmod.weather.util.WeatherUtils.fahrenheitToCelsius(highTemp);
+                lowTemp = lineageos.weather.util.WeatherUtils.fahrenheitToCelsius(lowTemp);
+                highTemp = lineageos.weather.util.WeatherUtils.fahrenheitToCelsius(highTemp);
                 tempUnit = CELSIUS;
             } else if (weatherTempUnit == CELSIUS && !useMetric) {
-                lowTemp = cyanogenmod.weather.util.WeatherUtils.celsiusToFahrenheit(lowTemp);
-                highTemp = cyanogenmod.weather.util.WeatherUtils.celsiusToFahrenheit(highTemp);
+                lowTemp = lineageos.weather.util.WeatherUtils.celsiusToFahrenheit(lowTemp);
+                highTemp = lineageos.weather.util.WeatherUtils.celsiusToFahrenheit(highTemp);
                 tempUnit = FAHRENHEIT;
             }
-            String dayLow = cyanogenmod.weather.util.WeatherUtils.formatTemperature(lowTemp, tempUnit);
+            String dayLow = lineageos.weather.util.WeatherUtils.formatTemperature(lowTemp, tempUnit);
             String dayHigh = WeatherUtils.formatTemperature(highTemp, tempUnit);
             TextView temps = forecastItem.findViewById(R.id.weather_temps);
             temps.setText(String.format("%s\n%s", dayLow, dayHigh));

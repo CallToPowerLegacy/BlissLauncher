@@ -1,9 +1,5 @@
 package org.indin.blisslaunchero.features.weather;
 
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
-
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -24,12 +20,17 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
-import cyanogenmod.weather.CMWeatherManager;
+
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.framework.Preferences;
+import org.indin.blisslaunchero.framework.utils.Constants;
+
+import lineageos.weather.LineageWeatherManager;
 
 
 public class WeatherPreferences extends PreferenceActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener,
-        CMWeatherManager.WeatherServiceProviderChangeListener {
+        LineageWeatherManager.WeatherServiceProviderChangeListener {
     private static final String TAG = "WeatherPreferences";
     public static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
@@ -75,7 +76,7 @@ public class WeatherPreferences extends PreferenceActivity implements
 
         if(!mUseCustomLoc.isChecked()){
             if (!hasLocationPermission(this)) {
-                String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
+                String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
                 requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE);
             }else{
                 LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -98,7 +99,7 @@ public class WeatherPreferences extends PreferenceActivity implements
             mPostResumeRunnable = null;
         }
 
-        final CMWeatherManager weatherManager = CMWeatherManager.getInstance(mContext);
+        final LineageWeatherManager weatherManager = LineageWeatherManager.getInstance(mContext);
         weatherManager.registerWeatherServiceProviderChangeListener(this);
 
         mWeatherSource.setEnabled(true);
@@ -113,7 +114,7 @@ public class WeatherPreferences extends PreferenceActivity implements
         super.onPause();
         getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(
                 this);
-        final CMWeatherManager weatherManager = CMWeatherManager.getInstance(mContext);
+        final LineageWeatherManager weatherManager = LineageWeatherManager.getInstance(mContext);
         weatherManager.unregisterWeatherServiceProviderChangeListener(this);
     }
 
@@ -197,9 +198,6 @@ public class WeatherPreferences extends PreferenceActivity implements
             }
             mContext.startService(updateIntent);
         }
-
-        /*Intent updateIntent = new Intent(mContext, ClockWidgetProvider.class);
-        mContext.sendBroadcast(updateIntent);*/
     }
 
     public static boolean hasLocationPermission(Context context) {
@@ -249,8 +247,6 @@ public class WeatherPreferences extends PreferenceActivity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult() called with: requestCode = [" + requestCode
-                + "], resultCode = [" + resultCode + "], data = [" + data + "]");
         if (requestCode == 203) {
             LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
@@ -312,7 +308,7 @@ public class WeatherPreferences extends PreferenceActivity implements
     }
 
     private String getWeatherProviderName() {
-        final CMWeatherManager weatherManager = CMWeatherManager.getInstance(mContext);
+        final LineageWeatherManager weatherManager = LineageWeatherManager.getInstance(mContext);
         return weatherManager.getActiveWeatherServiceProviderLabel();
     }
 }

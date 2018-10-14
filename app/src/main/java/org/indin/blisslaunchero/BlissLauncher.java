@@ -1,20 +1,16 @@
 package org.indin.blisslaunchero;
 
-import org.indin.blisslaunchero.features.launcher.AppProvider;
-import org.indin.blisslaunchero.features.weather.DeviceStatusService;
-import org.indin.blisslaunchero.features.weather.WeatherSourceListenerService;
-import org.indin.blisslaunchero.features.weather.WeatherUpdateService;
-import org.indin.blisslaunchero.features.weather.WeatherUtils;
-import org.indin.blisslaunchero.framework.DeviceProfile;
-import org.indin.blisslaunchero.framework.IconsHandler;
-
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.util.Log;
+
+import org.indin.blisslaunchero.features.launcher.AppProvider;
+import org.indin.blisslaunchero.framework.DeviceProfile;
+import org.indin.blisslaunchero.framework.IconsHandler;
+
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
 public class BlissLauncher extends Application {
@@ -32,14 +28,6 @@ public class BlissLauncher extends Application {
                 .setDefaultFontPath("Roboto-Regular.ttf")
                 .setFontAttrId(R.attr.fontPath)
                 .build());
-
-        if (WeatherUtils.isWeatherServiceAvailable(this)) {
-            Log.i(TAG, "onCreate: weather avail ");
-            startService(new Intent(this, WeatherSourceListenerService.class));
-            startService(new Intent(this, DeviceStatusService.class));
-            WeatherUpdateService.scheduleNextUpdate(this, true);
-        }
-
     }
 
     public static BlissLauncher getApplication(Context context) {

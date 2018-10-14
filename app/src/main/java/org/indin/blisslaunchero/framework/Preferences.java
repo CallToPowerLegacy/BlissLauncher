@@ -1,18 +1,19 @@
 package org.indin.blisslaunchero.framework;
 
-import java.util.ArrayList;
-import java.util.Locale;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 
 import org.indin.blisslaunchero.framework.utils.Constants;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import cyanogenmod.weather.WeatherInfo;
-import cyanogenmod.weather.WeatherLocation;
+import java.util.ArrayList;
+import java.util.Locale;
+
+import lineageos.weather.WeatherInfo;
+import lineageos.weather.WeatherLocation;
 
 public class Preferences {
 
@@ -44,6 +45,9 @@ public class Preferences {
     private static final String DAY_FORECAST_HIGH = "high";
 
     private static final String NOTIFICATION_ACCESS = "notification_access";
+
+    private static final String ENABLE_LOCATION = "enable_location";
+
 
     /**
      * User Preference related keys and constants.
@@ -354,5 +358,14 @@ public class Preferences {
 
     public static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE);
+    }
+
+    public static void setEnableLocation(Context context) {
+        getPrefs(context).edit().putBoolean(ENABLE_LOCATION, true).apply();
+    }
+
+    public static boolean getEnableLocation(
+            Context context) {
+        return getPrefs(context).getBoolean(ENABLE_LOCATION, false);
     }
 }

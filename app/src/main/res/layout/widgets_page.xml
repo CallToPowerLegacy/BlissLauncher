@@ -18,10 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/search_widget"
-            android:paddingBottom="8dp"
-            android:paddingEnd="8dp"
-            android:paddingStart="8dp"
-            android:paddingTop="8dp">
+            android:padding="8dp">
 
             <org.indin.blisslaunchero.framework.customviews.BlissInput
                 android:id="@+id/search_input"
@@ -43,6 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
+                android:visibility="gone"
                 android:src="@drawable/ic_cancel_white_24dp"/>
         </RelativeLayout>
 
