@@ -621,7 +621,6 @@ public class LauncherActivity extends AppCompatActivity implements
                     }
                 }
             }
-            addNewApp(packageName);
         }
     }
 
