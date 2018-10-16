@@ -102,6 +102,7 @@ import org.indin.blisslaunchero.framework.events.AppRemoveEvent;
 import org.indin.blisslaunchero.framework.network.RetrofitService;
 import org.indin.blisslaunchero.framework.utils.AppUtils;
 import org.indin.blisslaunchero.framework.utils.GraphicsUtil;
+import org.indin.blisslaunchero.framework.utils.ListUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -117,14 +118,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import cyanogenmod.weather.WeatherInfo;
+import cyanogenmod.weather.util.WeatherUtils;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
-import cyanogenmod.weather.WeatherInfo;
-import cyanogenmod.weather.util.WeatherUtils;
 import me.relex.circleindicator.CircleIndicator;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
@@ -178,6 +179,8 @@ public class LauncherActivity extends AppCompatActivity implements
     private View mWeatherPanel;
     private View mWeatherSetupTextView;
     private boolean allAppsDisplayed;
+
+    private List<UsageStats> mUsageStats;
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
         @Override
@@ -621,7 +624,6 @@ public class LauncherActivity extends AppCompatActivity implements
                     }
                 }
             }
-            addNewApp(packageName);
         }
     }
 
@@ -805,19 +807,25 @@ public class LauncherActivity extends AppCompatActivity implements
     private void refreshSuggestedApps() {
         AppUsageStats appUsageStats = new AppUsageStats(this);
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
-
         if (usageStats.size() > 0) {
-            if (suggestedAppsGridLayout != null && suggestedAppsGridLayout.getChildCount() > 0) {
-                suggestedAppsGridLayout.removeAllViews();
-            }
-            int i = 0;
-            while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
-                AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
-                if (appItem != null) {
-                    BlissFrameLayout view = prepareSuggestedApp(appItem);
-                    addAppToGrid(suggestedAppsGridLayout, view);
+            // Check if usage stats have been changed or not to avoid unnecessary flickering
+            if (mUsageStats == null || mUsageStats.size() != usageStats.size()
+                    || !ListUtil.areEqualLists(mUsageStats, usageStats)) {
+                mUsageStats = usageStats;
+                if (suggestedAppsGridLayout != null
+                        && suggestedAppsGridLayout.getChildCount() > 0) {
+                    suggestedAppsGridLayout.removeAllViews();
                 }
-                i++;
+                int i = 0;
+                while (suggestedAppsGridLayout.getChildCount() < 4 && i < mUsageStats.size()) {
+                    AppItem appItem = AppUtils.createAppItem(this,
+                            mUsageStats.get(i).getPackageName());
+                    if (appItem != null) {
+                        BlissFrameLayout view = prepareSuggestedApp(appItem);
+                        addAppToGrid(suggestedAppsGridLayout, view);
+                    }
+                    i++;
+                }
             }
         }
     }
@@ -1030,6 +1038,7 @@ public class LauncherActivity extends AppCompatActivity implements
         AppUsageStats appUsageStats = new AppUsageStats(this);
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
+            mUsageStats = usageStats;
             int i = 0;
             while (suggestedAppsGridLayout.getChildCount() < 4 && i < usageStats.size()) {
                 AppItem appItem = AppUtils.createAppItem(this, usageStats.get(i).getPackageName());
@@ -1103,7 +1112,8 @@ public class LauncherActivity extends AppCompatActivity implements
         mWeatherPanel = findViewById(R.id.weather_panel);
         updateWeatherPanel();
 
-        if (org.indin.blisslaunchero.features.weather.WeatherUtils.isWeatherServiceAvailable(this)) {
+        if (org.indin.blisslaunchero.features.weather.WeatherUtils.isWeatherServiceAvailable(
+                this)) {
             startService(new Intent(this, WeatherSourceListenerService.class));
             startService(new Intent(this, DeviceStatusService.class));
         }
@@ -1118,7 +1128,8 @@ public class LauncherActivity extends AppCompatActivity implements
                         WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE);
             } else {
                 LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) && Preferences.getEnableLocation(this)) {
+                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+                        && Preferences.getEnableLocation(this)) {
                     showLocationEnableDialog();
                     Preferences.setEnableLocation(this);
                 } else {

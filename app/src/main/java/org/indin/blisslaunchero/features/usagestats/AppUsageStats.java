@@ -2,16 +2,6 @@ package org.indin.blisslaunchero.features.usagestats;
 
 import static android.app.usage.UsageStatsManager.INTERVAL_BEST;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.indin.blisslaunchero.R;
-
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
@@ -19,6 +9,16 @@ import android.content.Intent;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.indin.blisslaunchero.R;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AppUsageStats {
 
@@ -58,7 +58,6 @@ public class AppUsageStats {
                     mContext.getString(R.string.explanation_access_to_appusage_is_not_enabled),
                     Toast.LENGTH_LONG).show();
             mContext.startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-            Log.i(TAG, "getUsageStats: here");
         } else {
             Set<Map.Entry<String, UsageStats>> set = aggregatedStats.entrySet();
             List<Map.Entry<String, UsageStats>> list = new ArrayList<>(set);
@@ -69,8 +68,6 @@ public class AppUsageStats {
                 usageStats.add(stringUsageStatsEntry.getValue());
             }
         }
-        Log.i(TAG, "getUsageStats: here2");
-
         return usageStats;
     }
 }
