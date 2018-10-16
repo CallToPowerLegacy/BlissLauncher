@@ -28,7 +28,17 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+    }
 
+    flavorDimensions "api"
+    productFlavors {
+        apiNougat {
+            dimension "api"
+        }
+        apiOreo {
+            dimension "api"
+            minSdkVersion 26
+        }
     }
 
     // Always show the result of every unit test, even if it passes.
@@ -47,10 +57,12 @@ dependencies {
     implementation 'me.relex:circleindicator:1.2.2@aar'
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
 
-    implementation files('libs/lineage-sdk.jar')
+    apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
+    apiOreoImplementation files('libs/lineage-sdk.jar')
 
     debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
     debugImplementation 'com.google.firebase:firebase-core:16.0.4'
+
     implementation 'org.greenrobot:eventbus:3.1.1'
 
     // Support Libs
