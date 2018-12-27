@@ -1,7 +1,7 @@
 package org.indin.blisslaunchero.features.launcher;
 
 import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.framework.DeviceProfile;
+import org.indin.blisslaunchero.core.DeviceProfile;
 
 import android.content.Context;
 import android.util.AttributeSet;

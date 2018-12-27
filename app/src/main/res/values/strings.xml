@@ -4,7 +4,9 @@
     <string name="untitled">Untitled</string>
 
     <string name="app_suggestion">APP SUGGESTIONS</string>
-    <string name="explanation_access_to_appusage_is_not_enabled">Enable appusage access to display app suggestions.</string>
+    <string name="explanation_access_to_appusage_is_not_enabled">Enable appusage access to display
+        app suggestions.
+    </string>
 
     <string name="unknown">Unknown</string>
     <string name="cancel">Cancel</string>
@@ -114,14 +116,20 @@
     <string name="weather_refresh_interval">Update interval</string>
     <string name="weather_use_metric">Use metric (°C)</string>
     <string name="weather_retrieve_location_dialog_title">Cannot retrieve location!</string>
-    <string name="weather_retrieve_location_dialog_message">Network geolocation is disabled.\n\nEnable location to work with Weather widget.</string>
+    <string name="weather_retrieve_location_dialog_message">Network geolocation is
+        disabled.\n\nEnable location to work with Weather widget.
+    </string>
     <string name="weather_retrieve_location_dialog_enable_button">Enable</string>
     <string name="weather_invert_lowhigh">Invert low/high temperatures</string>
     <string name="weather_progress_title">Verifying location</string>
     <string name="weather_alternate_icons_title">Use color icons</string>
-    <string name="weather_alternate_icons_summary">Select to toggle between the default (Color) and the alternate (White) icons</string>
+    <string name="weather_alternate_icons_summary">Select to toggle between the default (Color) and
+        the alternate (White) icons
+    </string>
     <string name="weather_show_when_minimized_title">Show when minimized</string>
-    <string name="weather_show_when_minimized_summary">Display summary weather information when the widget is minimized</string>
+    <string name="weather_show_when_minimized_summary">Display summary weather information when the
+        widget is minimized
+    </string>
     <string name="weather_select_location">Select location</string>
 
     <!-- Weather icon sets -->
@@ -141,5 +149,17 @@
     <string name="weather_setting">Weather Setting Icon</string>
     <string name="weather_condition_image">Weather Condition Image</string>
     <string name="icon_set">Icon set image</string>
+
+    <!-- Permissions: -->
+    <skip/>
+    <!-- Permission short label -->
+    <string name="permlab_install_shortcut">install shortcuts</string>
+    <!-- Permission description -->
+    <string name="permdesc_install_shortcut">Allows an app to add
+        shortcuts without user intervention.
+    </string>
+    <string name="place_automatically">Add automatically</string>
+    <string name="action_add_to_workspace">Add to Home Screen</string>
+    <string name="tap_to_setup_usageaccess">Tap to setup App Suggestions</string>
 
 </resources>

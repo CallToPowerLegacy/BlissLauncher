@@ -22,8 +22,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
+import org.indin.blisslaunchero.core.Preferences;
+import org.indin.blisslaunchero.core.utils.Constants;
 
 import lineageos.weather.LineageWeatherManager;
 
@@ -50,7 +50,7 @@ public class WeatherPreferences extends PreferenceActivity implements
         addPreferencesFromResource(R.xml.preferences_weather);
         mContext = this;
 
-        // Load items that need custom summaries etc.
+        // Load networkItems that need custom summaries etc.
         mUseCustomLoc = (SwitchPreference) findPreference(Constants.WEATHER_USE_CUSTOM_LOCATION);
         mCustomWeatherLoc = (EditTextPreference) findPreference(
                 Constants.WEATHER_CUSTOM_LOCATION_CITY);
@@ -74,11 +74,11 @@ public class WeatherPreferences extends PreferenceActivity implements
         Preferences.setUseMetricUnits(mContext, defValue);
         mUseMetric.setChecked(defValue);
 
-        if(!mUseCustomLoc.isChecked()){
+        if (!mUseCustomLoc.isChecked()) {
             if (!hasLocationPermission(this)) {
                 String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
                 requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE);
-            }else{
+            } else {
                 LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                 if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                     showDialog();

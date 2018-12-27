@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
+import org.indin.blisslaunchero.core.Preferences;
+import org.indin.blisslaunchero.core.utils.Constants;
 
 import cyanogenmod.weather.CMWeatherManager;
 

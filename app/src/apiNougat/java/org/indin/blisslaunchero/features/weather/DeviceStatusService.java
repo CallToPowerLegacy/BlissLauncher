@@ -9,7 +9,7 @@ import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.indin.blisslaunchero.framework.utils.Constants;
+import org.indin.blisslaunchero.core.utils.Constants;
 
 public class DeviceStatusService extends Service {
 

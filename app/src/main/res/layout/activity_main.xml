@@ -7,7 +7,7 @@
                 android:fitsSystemWindows="false"
                 tools:context="org.indin.blisslaunchero.features.launcher.LauncherActivity">
 
-    <org.indin.blisslaunchero.framework.customviews.HorizontalPager
+    <org.indin.blisslaunchero.core.customviews.HorizontalPager
         android:id="@+id/pages_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -42,9 +42,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#E6000000"
+        android:clickable="true"
         android:visibility="gone">
 
-        <org.indin.blisslaunchero.framework.customviews.BlissInput
+        <org.indin.blisslaunchero.core.customviews.BlissInput
             android:id="@+id/folder_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

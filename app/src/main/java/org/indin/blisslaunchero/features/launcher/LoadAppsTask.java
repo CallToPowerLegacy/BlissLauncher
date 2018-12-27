@@ -1,13 +1,15 @@
 package org.indin.blisslaunchero.features.launcher;
 
-import java.lang.ref.WeakReference;
-
-import org.indin.blisslaunchero.framework.utils.AppUtils;
-
 import android.content.Context;
 import android.os.AsyncTask;
 
-public class LoadAppsTask extends AsyncTask<Void, Void, AllAppsList> {
+import org.indin.blisslaunchero.core.database.model.ApplicationItem;
+import org.indin.blisslaunchero.core.utils.AppUtils;
+
+import java.lang.ref.WeakReference;
+import java.util.Map;
+
+public class LoadAppsTask extends AsyncTask<Void, Void, Map<String, ApplicationItem>> {
 
     private final WeakReference<Context> mContext;
     private WeakReference<AppProvider> mAppProvider;
@@ -22,15 +24,15 @@ public class LoadAppsTask extends AsyncTask<Void, Void, AllAppsList> {
     }
 
     @Override
-    protected AllAppsList doInBackground(Void... voids) {
+    protected Map<String, ApplicationItem> doInBackground(Void... voids) {
         return AppUtils.loadAll(mContext.get());
     }
 
     @Override
-    protected void onPostExecute(AllAppsList appItemArrayMap) {
-        super.onPostExecute(appItemArrayMap);
+    protected void onPostExecute(Map<String, ApplicationItem> appItemPair) {
+        super.onPostExecute(appItemPair);
         if (mAppProvider != null) {
-            mAppProvider.get().loadAppsOver(appItemArrayMap);
+            mAppProvider.get().loadAppsOver(appItemPair);
         }
     }
 }

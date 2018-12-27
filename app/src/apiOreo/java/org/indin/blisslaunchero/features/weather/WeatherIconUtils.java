@@ -1,7 +1,7 @@
 package org.indin.blisslaunchero.features.weather;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.utils.Constants;
+import org.indin.blisslaunchero.core.utils.Constants;
 
 import android.content.Context;
 import android.content.pm.PackageManager;

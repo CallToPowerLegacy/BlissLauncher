@@ -1,11 +1,5 @@
 package org.indin.blisslaunchero.features.weather;
 
-import java.util.HashSet;
-import java.util.List;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -15,9 +9,17 @@ import android.os.Handler;
 import android.preference.EditTextPreference;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.core.Preferences;
+
+import java.util.HashSet;
+import java.util.List;
+
 import lineageos.weather.LineageWeatherManager;
 import lineageos.weather.WeatherLocation;
 
@@ -38,6 +40,8 @@ public class CustomLocationPreference extends EditTextPreference
     private ProgressDialog mProgressDialog;
     private int mCustomLocationRequestId;
     private Handler mHandler;
+
+    private static final String TAG = "CustomLocationPreferenc";
 
     @Override
     protected void showDialog(Bundle state) {
@@ -146,6 +150,7 @@ public class CustomLocationPreference extends EditTextPreference
     public void onLookupCityRequestCompleted(int status, final List<WeatherLocation> locations) {
         mHandler.post(() -> {
             final Context context = getContext();
+            Log.i(TAG, "onLookupCityRequestCompleted: "+status+" "+(locations == null));
             if (locations == null || locations.isEmpty()) {
                 Toast.makeText(context,
                         context.getString(R.string.weather_retrieve_location_dialog_title),

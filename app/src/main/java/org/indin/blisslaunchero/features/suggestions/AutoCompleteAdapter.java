@@ -1,12 +1,5 @@
 package org.indin.blisslaunchero.features.suggestions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.features.launcher.LauncherActivity;
-
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -19,7 +12,15 @@ import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.widget.TextView;
+
+import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.features.launcher.LauncherActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class AutoCompleteAdapter extends
         RecyclerView.Adapter<AutoCompleteAdapter.AutoCompleteViewHolder> {
@@ -67,7 +68,7 @@ public class AutoCompleteAdapter extends
         } else {
             holder.mSuggestionTextView.setText(suggestion);
         }
-
+        setFadeAnimation(holder.itemView);
     }
 
     @Override
@@ -93,5 +94,11 @@ public class AutoCompleteAdapter extends
 
     public interface OnSuggestionClickListener {
         void onClick(String suggestion);
+    }
+
+    private void setFadeAnimation(View view) {
+        AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+        anim.setDuration(300);
+        view.startAnimation(anim);
     }
 }

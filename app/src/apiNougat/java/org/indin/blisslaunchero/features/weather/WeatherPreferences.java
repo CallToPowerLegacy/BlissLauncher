@@ -22,8 +22,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
+import org.indin.blisslaunchero.core.Preferences;
+import org.indin.blisslaunchero.core.utils.Constants;
 
 import cyanogenmod.weather.CMWeatherManager;
 
@@ -50,7 +50,7 @@ public class WeatherPreferences extends PreferenceActivity implements
         addPreferencesFromResource(R.xml.preferences_weather);
         mContext = this;
 
-        // Load items that need custom summaries etc.
+        // Load networkItems that need custom summaries etc.
         mUseCustomLoc = (SwitchPreference) findPreference(Constants.WEATHER_USE_CUSTOM_LOCATION);
         mCustomWeatherLoc = (EditTextPreference) findPreference(
                 Constants.WEATHER_CUSTOM_LOCATION_CITY);

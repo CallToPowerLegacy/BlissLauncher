@@ -3,7 +3,7 @@ package org.indin.blisslaunchero.features.notification;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
-import org.indin.blisslaunchero.framework.utils.ListUtil;
+import org.indin.blisslaunchero.core.utils.ListUtil;
 
 /**
  * Created by falcon on 14/3/18.

@@ -2,6 +2,8 @@ package org.indin.blisslaunchero.features.weather;
 
 import static lineageos.providers.WeatherContract.WeatherColumns.TempUnit.CELSIUS;
 import static lineageos.providers.WeatherContract.WeatherColumns.TempUnit.FAHRENHEIT;
+import static lineageos.providers.WeatherContract.WeatherColumns.WindSpeedUnit.KPH;
+import static lineageos.providers.WeatherContract.WeatherColumns.WindSpeedUnit.MPH;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -13,7 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
+import org.indin.blisslaunchero.core.Preferences;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -29,13 +31,105 @@ public class ForecastBuilder {
     private static final String TAG = "ForecastBuilder";
 
     /**
-     * This method is used to build the small, horizontal forecasts panel
-     * @param context Context to be used
-     * @param smallPanel a horizontal linearlayout that will contain the forecasts
-     * @param w the Weather info object that contains the forecast data
+     * This method is used to build the forecast panel
+     *
+     * @param context      Context to be used
+     * @param weatherPanel a view that will contain the forecast
+     * @param w            the Weather info object that contains the forecast data
      */
     @SuppressLint("InflateParams")
-    public static void buildSmallPanel(Context context, LinearLayout smallPanel, WeatherInfo w) {
+    public static void buildLargePanel(Context context, View weatherPanel, WeatherInfo w) {
+        if (weatherPanel == null) {
+            Log.d(TAG, "Invalid view passed");
+            return;
+        }
+
+        int color = Preferences.weatherFontColor(context);
+        final boolean useMetric = Preferences.useMetricUnits(context);
+        double temp = w.getTemperature();
+        double todayLow = w.getTodaysLow();
+        double todayHigh = w.getTodaysHigh();
+
+        int tempUnit = w.getTemperatureUnit();
+        if (tempUnit == FAHRENHEIT && useMetric) {
+            temp = WeatherUtils.fahrenheitToCelsius(temp);
+            todayLow = WeatherUtils.fahrenheitToCelsius(todayLow);
+            todayHigh = WeatherUtils.fahrenheitToCelsius(todayHigh);
+            tempUnit = CELSIUS;
+        } else if (tempUnit == CELSIUS && !useMetric) {
+            temp = WeatherUtils.celsiusToFahrenheit(temp);
+            todayLow = WeatherUtils.celsiusToFahrenheit(todayLow);
+            todayHigh = WeatherUtils.celsiusToFahrenheit(todayHigh);
+            tempUnit = FAHRENHEIT;
+        }
+
+        // Set the current conditions
+        // Weather Image
+        ImageView weatherImage = weatherPanel.findViewById(R.id.weather_image);
+        String iconsSet = Preferences.getWeatherIconSet(context);
+        weatherImage.setImageBitmap(
+                WeatherIconUtils.getWeatherIconBitmap(context, iconsSet, color,
+                        w.getConditionCode(), WeatherIconUtils.getNextHigherDensity(context)));
+
+        // City
+        TextView city = weatherPanel.findViewById(R.id.weather_city);
+        city.setText(w.getCity());
+
+        // Weather Condition
+        TextView weatherCondition = weatherPanel.findViewById(R.id.weather_condition);
+        weatherCondition.setText(
+                org.indin.blisslaunchero.features.weather.WeatherUtils.resolveWeatherCondition(
+                        context,
+                        w.getConditionCode()));
+
+        // Weather Temps
+        TextView weatherTemp = weatherPanel.findViewById(
+                R.id.weather_current_temperature);
+        weatherTemp.setText(WeatherUtils.formatTemperature(temp, tempUnit));
+
+        // Weather Temps Panel additional networkItems
+        final String low = WeatherUtils.formatTemperature(todayLow, tempUnit);
+        final String high = WeatherUtils.formatTemperature(todayHigh, tempUnit);
+        TextView weatherLowHigh = weatherPanel.findViewById(R.id.weather_low_high);
+        weatherLowHigh.setText(String.format("%s / %s", low, high));
+
+        double windSpeed = w.getWindSpeed();
+        int windSpeedUnit = w.getWindSpeedUnit();
+        if (windSpeedUnit == MPH && useMetric) {
+            windSpeedUnit = KPH;
+            windSpeed = org.indin.blisslaunchero.features.weather.WeatherUtils.milesToKilometers(
+                    windSpeed);
+        } else if (windSpeedUnit == KPH && !useMetric) {
+            windSpeedUnit = MPH;
+            windSpeed = org.indin.blisslaunchero.features.weather.WeatherUtils.kilometersToMiles(
+                    windSpeed);
+        }
+
+
+        // Humidity and Wind
+        TextView weatherHumWind = weatherPanel.findViewById(R.id.weather_chance_rain);
+        weatherHumWind.setText(
+                String.format("%s, %s %s",
+                        org.indin.blisslaunchero.features.weather.WeatherUtils.formatHumidity(
+                                w.getHumidity()),
+                        org.indin.blisslaunchero.features.weather.WeatherUtils.formatWindSpeed(
+                                context, windSpeed, windSpeedUnit),
+                        org.indin.blisslaunchero.features.weather.WeatherUtils
+                                .resolveWindDirection(
+                                        context, w.getWindDirection())));
+        LinearLayout forecastView = weatherPanel.findViewById(R.id.forecast_view);
+        buildSmallPanel(context, forecastView, w);
+    }
+
+    /**
+     * This method is used to build the small, horizontal forecasts panel
+     *
+     * @param context    Context to be used
+     * @param smallPanel a horizontal {@link LinearLayout} that will contain the forecasts
+     * @param w          the Weather info object that contains the forecast data
+     */
+    @SuppressLint("InflateParams")
+    private static void buildSmallPanel(Context context, LinearLayout smallPanel, WeatherInfo w) {
         if (smallPanel == null) {
             Log.d(TAG, "Invalid view passed");
             return;
@@ -62,7 +156,7 @@ public class ForecastBuilder {
                 R.dimen.forecast_item_padding_side);
 
         // Iterate through the Forecasts
-        for (int count = 0; count < numForecasts; count ++) {
+        for (int count = 0; count < numForecasts; count++) {
             WeatherInfo.DayForecast d = forecasts.get(count);
 
             // Load the views
@@ -100,7 +194,8 @@ public class ForecastBuilder {
                 highTemp = lineageos.weather.util.WeatherUtils.celsiusToFahrenheit(highTemp);
                 tempUnit = FAHRENHEIT;
             }
-            String dayLow = lineageos.weather.util.WeatherUtils.formatTemperature(lowTemp, tempUnit);
+            String dayLow = lineageos.weather.util.WeatherUtils.formatTemperature(lowTemp,
+                    tempUnit);
             String dayHigh = WeatherUtils.formatTemperature(highTemp, tempUnit);
             TextView temps = forecastItem.findViewById(R.id.weather_temps);
             temps.setText(String.format("%s\n%s", dayLow, dayHigh));

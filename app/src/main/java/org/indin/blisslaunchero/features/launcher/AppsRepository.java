@@ -2,12 +2,14 @@ package org.indin.blisslaunchero.features.launcher;
 
 import com.jakewharton.rxrelay2.BehaviorRelay;
 
-import android.util.Log;
+import org.indin.blisslaunchero.core.database.model.LauncherItem;
+
+import java.util.List;
 
 public class AppsRepository {
 
     private static final String TAG = "AppsRepository";
-    private BehaviorRelay<AllAppsList> appsRelay;
+    private BehaviorRelay<List<LauncherItem>> appsRelay;
 
     private static AppsRepository sAppsRepository;
 
@@ -17,17 +19,16 @@ public class AppsRepository {
 
     public static AppsRepository getAppsRepository() {
         if (sAppsRepository == null) {
-            Log.d(TAG, "getAppsRepository() called");
             sAppsRepository = new AppsRepository();
         }
         return sAppsRepository;
     }
 
-    public void updateAppsRelay(AllAppsList allAppsList) {
-        this.appsRelay.accept(allAppsList);
+    public void updateAppsRelay(List<LauncherItem> launcherItems) {
+        this.appsRelay.accept(launcherItems);
     }
 
-    public BehaviorRelay<AllAppsList> getAppsRelay() {
+    public BehaviorRelay<List<LauncherItem>> getAppsRelay() {
         return appsRelay;
     }
 }

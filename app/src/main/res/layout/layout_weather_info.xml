@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
@@ -21,8 +21,10 @@
             android:padding="8dp"
             android:text="@string/weather"
             android:textAllCaps="true"
+            android:layout_centerVertical="true"
             android:textColor="#88FFFFFF"
             android:textSize="16sp"/>
+
         <ImageView
             android:id="@+id/weather_setting_imageview"
             android:layout_width="wrap_content"
@@ -30,8 +32,7 @@
             android:layout_alignParentEnd="true"
             android:contentDescription="@string/weather_setting"
             android:padding="8dp"
-            android:src="@drawable/ic_settings_white_24dp"
-        />
+            android:src="@drawable/ic_settings_white_24dp"/>
     </RelativeLayout>
     <FrameLayout
         android:layout_width="match_parent"
@@ -91,8 +92,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:maxLines="2"
                         android:textColor="@color/white"
-                        android:textSize="18sp"
-                        tools:text="Chhatarpur, New Delhi, India"/>
+                        android:textSize="18sp"/>
 
                     <TextView
                         android:id="@+id/weather_condition"
@@ -100,8 +100,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:textColor="@color/transparent_white"
-                        android:textSize="16sp"
-                        tools:text="Fair"/>
+                        android:textSize="16sp"/>
 
                     <TextView
                         android:id="@+id/weather_chance_rain"
@@ -109,8 +108,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:textColor="@color/transparent_white"
-                        android:textSize="14sp"
-                        tools:text="40%, 11kpH SW"/>
+                        android:textSize="14sp"/>
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/weather_temperature_linearlayout"
@@ -126,7 +124,6 @@
                         android:layout_gravity="end"
                         android:fontFamily="sans-serif-light"
                         android:gravity="end"
-                        android:text="@string/dummy_weather_temp"
                         android:textColor="@color/white"
                         android:textSize="32sp"/>
 
@@ -135,7 +132,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="end"
-                        android:text="@string/dummy_weather_temp_min_max"
                         android:textColor="@color/white"/>
                 </LinearLayout>
             </RelativeLayout>
@@ -150,7 +146,6 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:scrollbars="none">
-
                 <LinearLayout
                     android:id="@+id/forecast_view"
                     android:layout_width="wrap_content"

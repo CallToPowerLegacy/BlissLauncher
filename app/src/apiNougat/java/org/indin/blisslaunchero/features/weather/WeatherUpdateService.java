@@ -28,9 +28,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
-import org.indin.blisslaunchero.framework.utils.Constants;
-import org.indin.blisslaunchero.framework.utils.PackageManagerUtils;
+import org.indin.blisslaunchero.core.Preferences;
+import org.indin.blisslaunchero.core.utils.Constants;
+import org.indin.blisslaunchero.core.utils.PackageManagerUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Date;

@@ -3,18 +3,27 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="org.indin.blisslaunchero">
 
+    <permission
+        android:name="com.android.launcher.permission.INSTALL_SHORTCUT"
+        android:description="@string/permdesc_install_shortcut"
+        android:label="@string/permlab_install_shortcut"
+        android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
+        android:protectionLevel="dangerous"/>
+
     <!-- General -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-                     tools:ignore="ProtectedPermissions"/>
-    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
-                     tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.BIND_APPWIDGET" />
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions"/>
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-
     <uses-permission android:name="lineageos.permission.ACCESS_WEATHER_MANAGER"/>
     <uses-permission android:name="lineageos.permission.READ_WEATHER"/>
 
@@ -35,6 +44,7 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.HOME"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
@@ -64,7 +74,28 @@
         <service android:name=".features.weather.WeatherSourceListenerService"/>
         <service android:name=".features.launcher.AppProvider"/>
 
-        <receiver android:name=".framework.broadcast.PackageAddedRemovedHandler"/>
+        <receiver android:name=".core.broadcast.PackageAddedRemovedHandler"/>
+
+        <!-- Intent received used to install shortcuts from other applications -->
+        <receiver
+            android:name=".features.shortcuts.InstallShortcutReceiver"
+            android:enabled="true"
+            android:permission="com.android.launcher.permission.INSTALL_SHORTCUT">
+            <intent-filter>
+                <action android:name="com.android.launcher.action.INSTALL_SHORTCUT"/>
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".features.shortcuts.AddItemActivity"
+            android:autoRemoveFromRecents="true"
+            android:excludeFromRecents="true"
+            android:label="@string/action_add_to_workspace"
+            android:theme="@android:style/Theme.DeviceDefault.Light.Dialog.Alert">
+            <intent-filter>
+                <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT"/>
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

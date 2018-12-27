@@ -14,7 +14,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
-import org.indin.blisslaunchero.framework.Preferences;
+import org.indin.blisslaunchero.core.Preferences;
 
 import java.util.HashSet;
 import java.util.List;

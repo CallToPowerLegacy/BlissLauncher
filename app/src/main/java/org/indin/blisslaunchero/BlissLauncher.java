@@ -8,8 +8,8 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 import org.indin.blisslaunchero.features.launcher.AppProvider;
-import org.indin.blisslaunchero.framework.DeviceProfile;
-import org.indin.blisslaunchero.framework.IconsHandler;
+import org.indin.blisslaunchero.core.DeviceProfile;
+import org.indin.blisslaunchero.core.IconsHandler;
 
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 

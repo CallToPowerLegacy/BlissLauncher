@@ -11,6 +11,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.core.Preferences;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,12 +53,13 @@ public class AppUsageStats {
             }
         }
 
-        if (aggregatedStats.size() == 0) {
+        if (aggregatedStats.size() == 0 && Preferences.shouldOpenUsageAccess(mContext)) {
             Log.i(TAG, "The user may not allow the access to apps usage. ");
             Toast.makeText(mContext,
                     mContext.getString(R.string.explanation_access_to_appusage_is_not_enabled),
                     Toast.LENGTH_LONG).show();
             mContext.startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+            Preferences.setNotOpenUsageAccess(mContext);
         } else {
             Set<Map.Entry<String, UsageStats>> set = aggregatedStats.entrySet();
             List<Map.Entry<String, UsageStats>> list = new ArrayList<>(set);
