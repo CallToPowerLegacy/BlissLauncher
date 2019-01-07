@@ -3,7 +3,6 @@ package org.indin.blisslaunchero.features.launcher;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Process;
-import android.util.Log;
 
 import org.indin.blisslaunchero.features.shortcuts.DeepShortcutManager;
 import org.indin.blisslaunchero.features.shortcuts.ShortcutInfoCompat;
