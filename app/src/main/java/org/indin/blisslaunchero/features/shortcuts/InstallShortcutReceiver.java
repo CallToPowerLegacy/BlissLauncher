@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Parcelable;
 import android.os.Process;
@@ -13,11 +14,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.core.IconsHandler;
 import org.indin.blisslaunchero.core.Utilities;
+import org.indin.blisslaunchero.core.database.LauncherDB;
 import org.indin.blisslaunchero.core.database.model.ShortcutItem;
 import org.indin.blisslaunchero.core.events.ShortcutAddEvent;
 import org.indin.blisslaunchero.core.utils.Constants;
 
-import java.util.UUID;
+import java.io.ByteArrayOutputStream;
 
 public class InstallShortcutReceiver extends BroadcastReceiver {
     private static final String TAG = "InstallShortcutReceiver";
@@ -47,12 +49,13 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         if (!ACTION_INSTALL_SHORTCUT.equals(data.getAction())) {
             return;
         }
-        ShortcutItem info = createShortcutInfo(data, context);
-        EventBus.getDefault().post(new ShortcutAddEvent(info));
-    }
-
-    private void queuePendingShortcutInfo(ShortcutItem info, Context context) {
-
+        ShortcutItem shortcutItem = createShortcutItem(data, context);
+        new Thread(() -> {
+            long id = LauncherDB.getDatabase(context).launcherDao().insert(shortcutItem);
+            if (id > 0) {
+                EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
+            }
+        }).start();
     }
 
     public static void queueShortcut(ShortcutInfoCompat info, Context context) {
@@ -67,10 +70,15 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         shortcutItem.icon = BlissLauncher.getApplication(context).getIconsHandler().convertIcon(
                 icon);
         shortcutItem.launchIntent = info.makeIntent();
-        EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
+        new Thread(() -> {
+            long id = LauncherDB.getDatabase(context).launcherDao().insert(shortcutItem);
+            if (id > 0) {
+                EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
+            }
+        }).start();
     }
 
-    private static ShortcutItem createShortcutInfo(Intent data, Context context) {
+    private static ShortcutItem createShortcutItem(Intent data, Context context) {
 
         Intent intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
         String name = data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME);
@@ -103,12 +111,27 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
                     context).getIconsHandler().getFullResDefaultActivityIcon();
         }
         item.packageName = intent.getPackage();
-        item.id = UUID.randomUUID().toString();
         item.container = Constants.CONTAINER_DESKTOP;
         item.title = Utilities.trim(name);
         item.icon = BlissLauncher.getApplication(context).getIconsHandler().convertIcon(icon);
+        if (item.icon != null) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            convertToBitmap(item.icon).compress(Bitmap.CompressFormat.PNG, 100, baos);
+            item.icon_blob = baos.toByteArray();
+        }
         item.launchIntent = intent;
+        item.launchIntentUri = item.launchIntent.toUri(0);
+        item.id = item.packageName + "/" + item.launchIntentUri;
         return item;
     }
 
+    private static Bitmap convertToBitmap(Drawable drawable) {
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
+    }
 }

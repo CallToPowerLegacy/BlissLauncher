@@ -9,6 +9,12 @@
         android:label="@string/permlab_install_shortcut"
         android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
         android:protectionLevel="dangerous"/>
+    <permission
+        android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT"
+        android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
+        android:protectionLevel="dangerous"
+        android:label="@string/permlab_uninstall_shortcut"
+        android:description="@string/permdesc_uninstall_shortcut"/>
 
     <!-- General -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -44,7 +50,6 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.HOME"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
@@ -86,6 +91,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- Intent received used to uninstall shortcuts from other applications -->
+        <receiver
+            android:name=".features.shortcuts.UninstallShortcutReceiver"
+            android:enabled="true"
+            android:permission="com.android.launcher.permission.UNINSTALL_SHORTCUT">
+            <intent-filter>
+                <action android:name="com.android.launcher.action.UNINSTALL_SHORTCUT" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".features.shortcuts.AddItemActivity"
             android:autoRemoveFromRecents="true"
@@ -95,6 +110,14 @@
             <intent-filter>
                 <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT"/>
             </intent-filter>
+        </activity>
+
+        <activity android:name=".features.widgets.WidgetsActivity"
+                  android:autoRemoveFromRecents="true"
+                  android:excludeFromRecents="true"
+                  android:theme="@android:style/Theme.Material.Light.DarkActionBar"
+                  android:label="Widgets">
+
         </activity>
     </application>
 

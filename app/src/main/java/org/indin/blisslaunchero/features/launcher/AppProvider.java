@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -21,8 +24,7 @@ import android.util.Log;
 import android.util.LongSparseArray;
 
 import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.features.shortcuts.DeepShortcutManager;
-import org.indin.blisslaunchero.features.shortcuts.ShortcutInfoCompat;
+import org.indin.blisslaunchero.core.Utilities;
 import org.indin.blisslaunchero.core.broadcast.PackageAddedRemovedHandler;
 import org.indin.blisslaunchero.core.database.DatabaseManager;
 import org.indin.blisslaunchero.core.database.model.ApplicationItem;
@@ -32,6 +34,8 @@ import org.indin.blisslaunchero.core.database.model.ShortcutItem;
 import org.indin.blisslaunchero.core.utils.Constants;
 import org.indin.blisslaunchero.core.utils.GraphicsUtil;
 import org.indin.blisslaunchero.core.utils.UserHandle;
+import org.indin.blisslaunchero.features.shortcuts.DeepShortcutManager;
+import org.indin.blisslaunchero.features.shortcuts.ShortcutInfoCompat;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -163,7 +167,11 @@ public class AppProvider extends Service implements Provider {
         shortcutsLoaded = false;
         databaseLoaded = false;
         initializeAppLoading(new LoadAppsTask(this));
-        initializeShortcutsLoading(new LoadShortcutTask(this));
+        if (Utilities.ATLEAST_OREO) {
+            initializeShortcutsLoading(new LoadShortcutTask(this));
+        } else {
+            shortcutsLoaded = true; // will be loaded from database automatically.
+        }
         initializeDatabaseLoading(new LoadDatabaseTask(this));
     }
 
@@ -246,23 +254,18 @@ public class AppProvider extends Service implements Provider {
                     folderItems.put(applicationItem.container, items);
                 }
             } else if (databaseItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
-                ShortcutItem shortcutItem = new ShortcutItem();
-                ShortcutInfoCompat info = mShortcutInfoCompats.get(databaseItem.id);
-                if(info == null){
+                ShortcutItem shortcutItem;
+                if (Utilities.ATLEAST_OREO) {
+                    shortcutItem = prepareShortcutForOreo(databaseItem);
+                } else {
+                    shortcutItem = prepareShortcutForNougat(databaseItem);
+                }
+
+                if (shortcutItem == null) {
                     DatabaseManager.getManager(this).removeLauncherItem(databaseItem.id);
                     continue;
                 }
-                shortcutItem.id = info.getId();
-                shortcutItem.packageName = info.getPackage();
-                shortcutItem.title = info.getShortLabel().toString();
-                Drawable icon = DeepShortcutManager.getInstance(this).getShortcutIconDrawable(info,
-                        getResources().getDisplayMetrics().densityDpi);
-                shortcutItem.icon = BlissLauncher.getApplication(
-                        this).getIconsHandler().convertIcon(icon);
-                shortcutItem.launchIntent = info.makeIntent();
-                shortcutItem.container = databaseItem.container;
-                shortcutItem.screenId = databaseItem.screenId;
-                shortcutItem.cell = databaseItem.cell;
+
                 if (shortcutItem.container == Constants.CONTAINER_DESKTOP
                         || shortcutItem.container == Constants.CONTAINER_HOTSEAT) {
                     mLauncherItems.add(shortcutItem);
@@ -286,18 +289,16 @@ public class AppProvider extends Service implements Provider {
             }
         }
 
-        Log.i(TAG, "prepareLauncherItems: "+folderItems.size()+" "+foldersIndex.size());
-
         //TODO: Fix crash here.
         if (foldersIndex.size() > 0) {
             for (int i = 0; i < foldersIndex.size(); i++) {
                 FolderItem folderItem =
                         (FolderItem) mLauncherItems.get(foldersIndex.get(foldersIndex.keyAt(i)));
                 folderItem.items = (folderItems.get(Long.parseLong(folderItem.id)));
-                if(folderItem.items == null || folderItem.items.size() == 0){
+                if (folderItem.items == null || folderItem.items.size() == 0) {
                     mLauncherItems.remove(folderItem);
                     DatabaseManager.getManager(this).removeLauncherItem(folderItem.id);
-                }else{
+                } else {
                     folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this, folderItem);
                 }
             }
@@ -307,6 +308,44 @@ public class AppProvider extends Service implements Provider {
         for (ApplicationItem applicationItem : applicationItems) {
             mLauncherItems.add(applicationItem);
         }
+    }
+
+    private ShortcutItem prepareShortcutForNougat(LauncherItem databaseItem) {
+        ShortcutItem shortcutItem = new ShortcutItem();
+        shortcutItem.id = databaseItem.id;
+        shortcutItem.packageName = databaseItem.packageName;
+        shortcutItem.title = databaseItem.title.toString();
+        shortcutItem.icon_blob = databaseItem.icon_blob;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(databaseItem.icon_blob, 0,
+                databaseItem.icon_blob.length);
+        shortcutItem.icon = new BitmapDrawable(getResources(), bitmap);
+        shortcutItem.launchIntent = databaseItem.getIntent();
+        shortcutItem.launchIntentUri = databaseItem.launchIntentUri;
+        shortcutItem.container = databaseItem.container;
+        shortcutItem.screenId = databaseItem.screenId;
+        shortcutItem.cell = databaseItem.cell;
+        return shortcutItem;
+    }
+
+    private ShortcutItem prepareShortcutForOreo(LauncherItem databaseItem) {
+        ShortcutInfoCompat info = mShortcutInfoCompats.get(databaseItem.id);
+        if (info == null) {
+            return null;
+        }
+
+        ShortcutItem shortcutItem = new ShortcutItem();
+        shortcutItem.id = info.getId();
+        shortcutItem.packageName = info.getPackage();
+        shortcutItem.title = info.getShortLabel().toString();
+        Drawable icon = DeepShortcutManager.getInstance(this).getShortcutIconDrawable(info,
+                getResources().getDisplayMetrics().densityDpi);
+        shortcutItem.icon = BlissLauncher.getApplication(
+                this).getIconsHandler().convertIcon(icon);
+        shortcutItem.launchIntent = info.makeIntent();
+        shortcutItem.container = databaseItem.container;
+        shortcutItem.screenId = databaseItem.screenId;
+        shortcutItem.cell = databaseItem.cell;
+        return shortcutItem;
     }
 
     private void prepareDefaultLauncherItems() {

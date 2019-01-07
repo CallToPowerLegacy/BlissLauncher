@@ -13,6 +13,8 @@ import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.usage.UsageStats;
+import android.appwidget.AppWidgetHost;
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -135,6 +137,7 @@ public class LauncherActivity extends AppCompatActivity implements
     public static final int REORDER_TIMEOUT = 350;
     private final static int INVALID = -999;
     private static final int REQUEST_PERMISSION_CALL_PHONE = 14;
+    private static final int REQUEST_LOCATION_SOURCE_SETTING = 267;
     public static boolean longPressed;
     private final Alarm mReorderAlarm = new Alarm();
     private final Alarm mDockReorderAlarm = new Alarm();
@@ -196,6 +199,9 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private static final String TAG = "LauncherActivity";
     private TextView openUsageAccessTextView;
+    private AppWidgetManager mAppWidgetManager;
+    private AppWidgetHost mAppWidgetHost;
+    private LinearLayout widgetHolderLinearLayout;
 
     @SuppressLint("InflateParams")
     @Override
@@ -207,6 +213,9 @@ public class LauncherActivity extends AppCompatActivity implements
         prepareBroadcastReceivers();
 
         mDeviceProfile = BlissLauncher.getApplication(this).getDeviceProfile();
+
+        mAppWidgetManager = BlissLauncher.getApplication(this).getAppWidgetManager();
+        mAppWidgetHost = BlissLauncher.getApplication(this).getAppWidgetHost();
 
         mLauncherView = LayoutInflater.from(this).inflate(R.layout.activity_main, null);
         setContentView(mLauncherView);
@@ -354,6 +363,33 @@ public class LauncherActivity extends AppCompatActivity implements
         if (suggestedAppsGridLayout != null) {
             refreshSuggestedApps(forceRefreshSuggestedApps);
         }
+
+        // TODO: Add widget manager after pushing shortcut feature.
+        /*WidgetManager widgetManager = WidgetManager.getInstance();
+        Integer id = widgetManager.dequeRemoveId();
+        while (id != null) {
+            for (int i = 0; i < widgetHolderLinearLayout.getChildCount(); i++) {
+                if (widgetHolderLinearLayout.getChildAt(i) instanceof AppWidgetHostView) {
+                    AppWidgetHostView appWidgetHostView =
+                            (AppWidgetHostView) widgetHolderLinearLayout.getChildAt(i);
+                    if (appWidgetHostView.getAppWidgetId() == id) {
+                        widgetHolderLinearLayout.removeViewAt(i);
+                        break;
+                    }
+                }
+            }
+            id = widgetManager.dequeRemoveId();
+        }
+
+        AppWidgetHostView appWidgetHostView = widgetManager.dequeAddWidgetView();
+        while (appWidgetHostView != null) {
+            appWidgetHostView.setOnTouchListener((v, event) -> {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            });
+            widgetHolderLinearLayout.addView(appWidgetHostView);
+            appWidgetHostView = widgetManager.dequeAddWidgetView();
+        }*/
     }
 
     @Override
@@ -391,23 +427,18 @@ public class LauncherActivity extends AppCompatActivity implements
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShortcutAddEvent(ShortcutAddEvent shortcutAddEvent) {
-        addLauncherItem(shortcutAddEvent.getShortcutItem());
+        updateOrAddShortcut(shortcutAddEvent.getShortcutItem());
         Toast.makeText(this, "Shortcut has been added", Toast.LENGTH_SHORT).show();
     }
 
     private void addLauncherItem(LauncherItem launcherItem) {
-        if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
-            AppExecutors.getInstance().diskIO().execute(() -> {
-                ShortcutKey shortcutKey = ShortcutKey.fromItem((ShortcutItem) launcherItem);
-                DeepShortcutManager.getInstance(this).pinShortcut(shortcutKey);
-            });
-        }
-
+        Log.d(TAG, "addLauncherItem() called with: launcherItem = [" + launcherItem + "]");
         if (pages == null || pages.size() == 0) {
             return;
         }
         if (launcherItem != null) {
             BlissFrameLayout view = prepareLauncherItem(launcherItem);
+
             int current = 0;
             while ((current < pages.size() && pages.get(current).getChildCount()
                     == mDeviceProfile.maxAppsPerPage)) {
@@ -429,12 +460,111 @@ public class LauncherActivity extends AppCompatActivity implements
             launcherItem.screenId = current;
             launcherItem.cell = pages.get(current).getChildCount() - 1;
             launcherItem.container = Constants.CONTAINER_DESKTOP;
-            new Thread(() -> {
-                Log.i(TAG, "saveInDatabase called");
-                LauncherDB.getDatabase(this).launcherDao().insert(launcherItem);
-            }).start();
             addAppToGrid(pages.get(current), view);
         }
+    }
+
+    private void updateOrAddShortcut(ShortcutItem shortcutItem) {
+        if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
+            for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
+                GridLayout gridLayout = (GridLayout) mFolderAppsViewPager.getChildAt(i);
+                for (int j = 0; j < gridLayout.getChildCount(); j++) {
+                    BlissFrameLayout viewGroup =
+                            (BlissFrameLayout) gridLayout.getChildAt(j);
+                    final LauncherItem existingItem = getAppDetails(viewGroup);
+                    if(existingItem.itemType == Constants.ITEM_TYPE_SHORTCUT){
+                        ShortcutItem existingShortcutItem = (ShortcutItem) existingItem;
+                        if (existingShortcutItem.id.equalsIgnoreCase(shortcutItem.id)) {
+                            BlissFrameLayout blissFrameLayout = prepareLauncherItem(shortcutItem);
+                            GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
+                            iconLayoutParams.height = mDeviceProfile.cellHeightPx;
+                            iconLayoutParams.width = mDeviceProfile.cellWidthPx;
+                            gridLayout.removeViewAt(j);
+                            gridLayout.addView(blissFrameLayout, j, iconLayoutParams);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < mDock.getChildCount(); i++) {
+            BlissFrameLayout viewGroup =
+                    (BlissFrameLayout) mDock.getChildAt(i);
+            LauncherItem launcherItem = getAppDetails(viewGroup);
+            if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
+                FolderItem folderItem = (FolderItem) launcherItem;
+                for (int k = 0; k < folderItem.items.size(); k++) {
+                    if (folderItem.items.get(k).itemType == Constants.ITEM_TYPE_SHORTCUT) {
+                        ShortcutItem existingShortcutItem = (ShortcutItem) folderItem.items.get(k);
+                        if (existingShortcutItem.id.equalsIgnoreCase(
+                                shortcutItem.id)) {
+                            folderItem.items.set(k, shortcutItem);
+                            folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this,
+                                    folderItem);
+                            BlissFrameLayout blissFrameLayout = prepareLauncherItem(
+                                    launcherItem);
+                            mDock.removeViewAt(i);
+                            addAppToDock(blissFrameLayout, i);
+                            return;
+                        }
+                    }
+
+                }
+            } else {
+                if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
+                    ShortcutItem existingShortcutItem = (ShortcutItem) launcherItem;
+                    if (existingShortcutItem.id.equalsIgnoreCase(shortcutItem.id)) {
+                        BlissFrameLayout blissFrameLayout = prepareLauncherItem(shortcutItem);
+                        mDock.removeViewAt(i);
+                        addAppToDock(blissFrameLayout, i);
+                        return;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < pages.size(); i++) {
+            GridLayout gridLayout = pages.get(i);
+            for (int j = 0; j < gridLayout.getChildCount(); j++) {
+                BlissFrameLayout viewGroup =
+                        (BlissFrameLayout) gridLayout.getChildAt(j);
+                LauncherItem launcherItem = getAppDetails(viewGroup);
+                if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
+                    FolderItem folderItem = (FolderItem) launcherItem;
+                    for (int k = 0; k < folderItem.items.size(); k++) {
+                        if (folderItem.items.get(k).itemType == Constants.ITEM_TYPE_SHORTCUT) {
+                            ShortcutItem existingShortcutItem =
+                                    (ShortcutItem) folderItem.items.get(k);
+                            if (existingShortcutItem.id.equalsIgnoreCase(
+                                    shortcutItem.id)) {
+                                folderItem.items.set(k, shortcutItem);
+                                folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this,
+                                        folderItem);
+                                BlissFrameLayout blissFrameLayout = prepareLauncherItem(
+                                        launcherItem);
+                                gridLayout.removeViewAt(j);
+                                addAppToGrid(gridLayout, blissFrameLayout, j);
+                                return;
+                            }
+                        }
+
+                    }
+                } else {
+                    if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
+                        ShortcutItem existingShortcutItem = (ShortcutItem) launcherItem;
+                        if (existingShortcutItem.id.equalsIgnoreCase(shortcutItem.id)) {
+                            BlissFrameLayout blissFrameLayout = prepareLauncherItem(shortcutItem);
+                            gridLayout.removeViewAt(j);
+                            addAppToGrid(gridLayout, blissFrameLayout, j);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        addLauncherItem(shortcutItem);
     }
 
     private void removePackageFromLauncher(String packageName) {
@@ -593,17 +723,21 @@ public class LauncherActivity extends AppCompatActivity implements
                 for (int j = 0; j < gridLayout.getChildCount(); j++) {
                     BlissFrameLayout viewGroup =
                             (BlissFrameLayout) gridLayout.getChildAt(j);
-                    final ApplicationItem existingAppItem =
-                            (ApplicationItem) getAppDetails(viewGroup);
-                    if (existingAppItem.packageName.equalsIgnoreCase(packageName)) {
-                        BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
-                        GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
-                        iconLayoutParams.height = mDeviceProfile.cellHeightPx;
-                        iconLayoutParams.width = mDeviceProfile.cellWidthPx;
-                        gridLayout.removeViewAt(j);
-                        gridLayout.addView(blissFrameLayout, j, iconLayoutParams);
-                        return;
+                    final LauncherItem existingItem =
+                            getAppDetails(viewGroup);
+                    if(existingItem.itemType == Constants.ITEM_TYPE_APPLICATION){
+                        ApplicationItem existingAppItem = (ApplicationItem) existingItem;
+                        if (existingAppItem.packageName.equalsIgnoreCase(packageName)) {
+                            BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
+                            GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
+                            iconLayoutParams.height = mDeviceProfile.cellHeightPx;
+                            iconLayoutParams.width = mDeviceProfile.cellWidthPx;
+                            gridLayout.removeViewAt(j);
+                            gridLayout.addView(blissFrameLayout, j, iconLayoutParams);
+                            return;
+                        }
                     }
+
                 }
             }
         }
@@ -970,6 +1104,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createWidgetsPage() {
         ScrollView layout = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
+        widgetHolderLinearLayout = layout.findViewById(R.id.widget_container);
         layout.setPadding(0,
                 (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
                 0, 0);
@@ -980,6 +1115,8 @@ public class LauncherActivity extends AppCompatActivity implements
 
         layout.findViewById(R.id.used_apps_layout).setClipToOutline(true);
 
+        // Prepare app suggestions view
+        // [[BEGIN]]
         suggestedAppsGridLayout = layout.findViewById(R.id.suggestedAppGrid);
         openUsageAccessTextView = layout.findViewById(R.id.openUsageAccessSettings);
         openUsageAccessTextView.setOnClickListener(
@@ -991,12 +1128,16 @@ public class LauncherActivity extends AppCompatActivity implements
                         - 2
                         * mDeviceProfile.cellWidthPx);
         suggestedAppsGridLayout.setPadding(padding, 0, padding, 0);
+        // [[END]]
 
+        // Prepare search suggestion view
+        // [[BEGIN]]
         ImageView clearSuggestions = layout.findViewById(R.id.clearSuggestionImageView);
         clearSuggestions.setOnClickListener(v -> {
             mSearchInput.setText("");
             mSearchInput.clearFocus();
         });
+
         mSearchInput = layout.findViewById(R.id.search_input);
         mSearchInput.addTextChangedListener(new TextWatcher() {
             @Override
@@ -1100,7 +1241,14 @@ public class LauncherActivity extends AppCompatActivity implements
             }
             return false;
         });
+        // [[END]]
 
+        // Prepare edit widgets button
+        //findViewById(R.id.edit_widgets_button).setOnClickListener(
+          //      view -> startActivity(new Intent(this, WidgetsActivity.class)));
+
+        // Prepare weather widget view
+        // [[BEGIN]]
         findViewById(R.id.weather_setting_imageview).setOnClickListener(
                 v -> startActivity(new Intent(this, WeatherPreferences.class)));
 
@@ -1137,6 +1285,20 @@ public class LauncherActivity extends AppCompatActivity implements
             startService(new Intent(this, WeatherUpdateService.class)
                     .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
         }
+        // [[END]]
+
+        // TODO: After pushing shortcut feature.
+        /*for (int id : mAppWidgetHost.getAppWidgetIds()) {
+            AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
+            AppWidgetHostView hostView = mAppWidgetHost.createView(getApplicationContext(), id,
+                    appWidgetInfo);
+            hostView.setOnTouchListener((v, event) -> {
+                v.getParent().getParent().getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            });
+            hostView.setAppWidget(id, appWidgetInfo);
+            widgetHolderLinearLayout.addView(hostView);
+        }*/
     }
 
     @Override
@@ -1187,7 +1349,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                     intent.setFlags(
                             Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivityForResult(intent, 203);
+                    startActivityForResult(intent, REQUEST_LOCATION_SOURCE_SETTING);
                 });
         builder.setNegativeButton(R.string.cancel, null);
         dialog = builder.create();
@@ -1196,7 +1358,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 203) {
+        if (requestCode == REQUEST_LOCATION_SOURCE_SETTING) {
             LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 Toast.makeText(this, "Set custom location in weather settings.",
@@ -2450,7 +2612,12 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        returnToHomeScreen();
+        final boolean alreadyOnHome =
+                ((intent.getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
+                        != Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+        if (alreadyOnHome) {
+            returnToHomeScreen();
+        }
     }
 
     private void returnToHomeScreen() {

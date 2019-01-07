@@ -14,6 +14,8 @@ import android.support.annotation.NonNull;
 
 import org.indin.blisslaunchero.core.utils.Constants;
 
+import java.net.URISyntaxException;
+
 
 @Entity(tableName = "launcher_items", indices = {@Index(value = {"item_id"},
         unique = true)})
@@ -88,11 +90,44 @@ public class LauncherItem {
     @Ignore
     public Drawable icon;
 
+    /**
+     * Used for shortcuts on api lower than oreo.
+     */
+    @ColumnInfo(name = "icon", typeAffinity = ColumnInfo.BLOB)
+    public byte[] icon_blob;
+
+    /**
+     * Intent used to launch this shortcut.
+     */
+    @Ignore
+    public Intent launchIntent;
+
+    @ColumnInfo(name = "intent_uri")
+    public String launchIntentUri;
+
+    /**
+     * Package name of the respective launcher item. For folders it would be "FOLDER".
+     */
+    @ColumnInfo(name = "package")
+    public String packageName;
+
     public LauncherItem() {
         user = Process.myUserHandle();
     }
 
     public Intent getIntent() {
+        if(launchIntent != null){
+            return launchIntent;
+        }
+        if (launchIntentUri != null) {
+            try {
+                launchIntent = Intent.parseUri(launchIntentUri, 0);
+                return launchIntent;
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
         return null;
     }
 
@@ -113,9 +148,9 @@ public class LauncherItem {
 
     @Override
     public boolean equals(Object obj) {
-        if(this == obj) return true;
+        if (this == obj) return true;
 
-        if(!(obj instanceof LauncherItem)){
+        if (!(obj instanceof LauncherItem)) {
             return false;
         }
 

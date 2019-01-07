@@ -16,16 +16,6 @@ public class ApplicationItem extends LauncherItem {
     public static final int FLAG_SYSTEM_YES = 1 << 0;
     public static final int FLAG_SYSTEM_NO = 1 << 1;
 
-    /**
-     * Package name of the application.
-     */
-    public String packageName;
-
-    /**
-     * Intent used to start the application.
-     */
-    public Intent intent;
-
     public ComponentName componentName;
 
     /**
@@ -46,11 +36,6 @@ public class ApplicationItem extends LauncherItem {
         itemType = Constants.ITEM_TYPE_APPLICATION;
     }
 
-    @Override
-    public Intent getIntent() {
-        return intent;
-    }
-
     /**
      * Must not hold the Context.
      */
@@ -65,7 +50,7 @@ public class ApplicationItem extends LauncherItem {
         this.container = LauncherItem.NO_ID;
         this.user = user;
 
-        intent = makeLaunchIntent(info);
+        launchIntent = makeLaunchIntent(info);
 
         isSystemApp = (info.getApplicationInfo().flags & ApplicationInfo.FLAG_SYSTEM) == 0
                 ? FLAG_SYSTEM_NO : FLAG_SYSTEM_YES;

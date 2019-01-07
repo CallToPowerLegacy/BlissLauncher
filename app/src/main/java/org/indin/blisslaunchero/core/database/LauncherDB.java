@@ -10,7 +10,7 @@ import org.indin.blisslaunchero.core.database.converters.CharSequenceConverter;
 import org.indin.blisslaunchero.core.database.daos.LauncherDao;
 import org.indin.blisslaunchero.core.database.model.LauncherItem;
 
-@Database(entities = {LauncherItem.class}, version = 2, exportSchema = false)
+@Database(entities = {LauncherItem.class}, version = 3, exportSchema = false)
 @TypeConverters({CharSequenceConverter.class})
 public abstract class LauncherDB extends RoomDatabase {
 

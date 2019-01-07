@@ -154,8 +154,12 @@
     <skip/>
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">install shortcuts</string>
+    <string name="permlab_uninstall_shortcut">uninstall shortcuts</string>
     <!-- Permission description -->
     <string name="permdesc_install_shortcut">Allows an app to add
+        shortcuts without user intervention.
+    </string>
+    <string name="permdesc_uninstall_shortcut">Allows an app to remove
         shortcuts without user intervention.
     </string>
     <string name="place_automatically">Add automatically</string>

@@ -95,4 +95,9 @@ public class DatabaseManager {
             }
         }
     }
+
+    public void removeShortcut(String name){
+        mAppExecutors.diskIO().execute(
+                () -> LauncherDB.getDatabase(mContext).launcherDao().deleteShortcut(name));
+    }
 }

@@ -1,6 +1,8 @@
 package org.indin.blisslaunchero;
 
 import android.app.Application;
+import android.appwidget.AppWidgetHost;
+import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +21,9 @@ public class BlissLauncher extends Application {
 
     private AppProvider mAppProvider;
 
+    private AppWidgetHost sAppWidgetHost;
+    private AppWidgetManager sAppWidgetManager;
+
     private static final String TAG = "BlissLauncher";
     @Override
     public void onCreate() {
@@ -28,6 +33,11 @@ public class BlissLauncher extends Application {
                 .setDefaultFontPath("Roboto-Regular.ttf")
                 .setFontAttrId(R.attr.fontPath)
                 .build());
+
+        sAppWidgetManager = AppWidgetManager.getInstance(getApplicationContext());
+        sAppWidgetHost = new AppWidgetHost(getApplicationContext(),
+                R.id.APPWIDGET_HOST_ID);
+        sAppWidgetHost.startListening();
     }
 
     public static BlissLauncher getApplication(Context context) {
@@ -81,4 +91,14 @@ public class BlissLauncher extends Application {
         return mAppProvider;
     }
 
+    public AppWidgetHost getAppWidgetHost() { return sAppWidgetHost; }
+
+    public AppWidgetManager getAppWidgetManager() { return sAppWidgetManager; }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        sAppWidgetHost.stopListening();
+        sAppWidgetHost = null;
+    }
 }

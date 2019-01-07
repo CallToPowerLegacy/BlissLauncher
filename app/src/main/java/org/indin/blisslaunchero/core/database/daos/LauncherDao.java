@@ -6,6 +6,7 @@ import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 
 import org.indin.blisslaunchero.core.database.model.LauncherItem;
+import org.indin.blisslaunchero.core.utils.Constants;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ import java.util.List;
 public interface LauncherDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(LauncherItem launcherItem);
+    long insert(LauncherItem launcherItem);
 
     @Query("SELECT * FROM launcher_items ORDER BY container, screen_id, cell")
     List<LauncherItem> getAllItems();
@@ -23,4 +24,8 @@ public interface LauncherDao {
 
     @Query("DELETE FROM launcher_items WHERE item_id = :id")
     void delete(String id);
+
+    @Query("DELETE FROM launcher_items WHERE title = :name and item_type = "
+            + Constants.ITEM_TYPE_SHORTCUT)
+    void deleteShortcut(String name);
 }

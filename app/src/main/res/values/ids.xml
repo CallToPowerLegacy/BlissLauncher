@@ -3,4 +3,6 @@
     <item name="uninstall_app" type="id"/>
     <item name="app_icon" type="id"/>
     <item name="notification_count" type="id"/>
+    <item name="APPWIDGET_HOST_ID" type="id"/>
+    <item name="REQUEST_PICK_APPWIDGET" type="id"/>
 </resources>
