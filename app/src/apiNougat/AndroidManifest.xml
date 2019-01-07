@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="org.indin.blisslaunchero">
+          package="foundation.e.blisslauncher">
     <uses-permission android:name="cyanogenmod.permission.ACCESS_WEATHER_MANAGER"/>
     <uses-permission android:name="cyanogenmod.permission.READ_WEATHER"/>
 </manifest>

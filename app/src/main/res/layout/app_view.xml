@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.indin.blisslaunchero.core.customviews.BlissFrameLayout
+<foundation.e.blisslauncher.core.customviews.BlissFrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -13,14 +13,14 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <org.indin.blisslaunchero.core.customviews.SquareFrameLayout
+        <foundation.e.blisslauncher.core.customviews.SquareFrameLayout
             android:id="@+id/app_icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:hapticFeedbackEnabled="false">
 
-            <org.indin.blisslaunchero.core.customviews.SquareImageView
+            <foundation.e.blisslauncher.core.customviews.SquareImageView
                 android:id="@+id/icon_image_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -28,7 +28,7 @@
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter"/>
 
-            <org.indin.blisslaunchero.core.customviews.CustomAnalogClock
+            <foundation.e.blisslauncher.core.customviews.CustomAnalogClock
                 android:id="@+id/icon_clock"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -40,7 +40,7 @@
                 layout="@layout/calendar_icon"
                 android:visibility="gone"/>
 
-        </org.indin.blisslaunchero.core.customviews.SquareFrameLayout>
+        </foundation.e.blisslauncher.core.customviews.SquareFrameLayout>
 
         <TextView
             android:id="@+id/app_label"
@@ -53,5 +53,7 @@
             android:maxLines="1"
             android:textColor="@color/app_label_color"
             android:textSize="@dimen/labelSize"/>
+
     </LinearLayout>
-</org.indin.blisslaunchero.core.customviews.BlissFrameLayout>
+
+</foundation.e.blisslauncher.core.customviews.BlissFrameLayout>
