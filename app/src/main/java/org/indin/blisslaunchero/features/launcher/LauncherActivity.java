@@ -78,7 +78,9 @@ import org.indin.blisslaunchero.core.Utilities;
 import org.indin.blisslaunchero.core.customviews.BlissDragShadowBuilder;
 import org.indin.blisslaunchero.core.customviews.BlissFrameLayout;
 import org.indin.blisslaunchero.core.customviews.BlissInput;
+import org.indin.blisslaunchero.core.customviews.DockGridLayout;
 import org.indin.blisslaunchero.core.customviews.HorizontalPager;
+import org.indin.blisslaunchero.core.customviews.PageIndicatorLinearLayout;
 import org.indin.blisslaunchero.core.customviews.SquareFrameLayout;
 import org.indin.blisslaunchero.core.customviews.SquareImageView;
 import org.indin.blisslaunchero.core.database.DatabaseManager;
@@ -428,11 +430,11 @@ public class LauncherActivity extends AppCompatActivity implements
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShortcutAddEvent(ShortcutAddEvent shortcutAddEvent) {
         updateOrAddShortcut(shortcutAddEvent.getShortcutItem());
+        DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         Toast.makeText(this, "Shortcut has been added", Toast.LENGTH_SHORT).show();
     }
 
     private void addLauncherItem(LauncherItem launcherItem) {
-        Log.d(TAG, "addLauncherItem() called with: launcherItem = [" + launcherItem + "]");
         if (pages == null || pages.size() == 0) {
             return;
         }

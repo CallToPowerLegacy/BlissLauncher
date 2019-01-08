@@ -16,7 +16,6 @@
 package org.indin.blisslaunchero.core.utils;
 
 import android.app.usage.UsageStats;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,12 +53,10 @@ public class ListUtil {
 
         Set<String> packages = new HashSet<>();
         for (UsageStats usageStats : first) {
-            Log.i("Package from first", usageStats.getPackageName());
             packages.add(usageStats.getPackageName());
         }
 
         for (UsageStats usageStats : second) {
-            Log.i("Package from second", usageStats.getPackageName());
             packages.remove(usageStats.getPackageName());
         }
 

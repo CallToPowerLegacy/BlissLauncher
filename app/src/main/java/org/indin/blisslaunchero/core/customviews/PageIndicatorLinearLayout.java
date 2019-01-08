@@ -1,12 +1,12 @@
-package org.indin.blisslaunchero.features.launcher;
-
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.core.DeviceProfile;
+package org.indin.blisslaunchero.core.customviews;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
+
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.core.DeviceProfile;
 
 public class PageIndicatorLinearLayout extends LinearLayout {
     private Context mContext;

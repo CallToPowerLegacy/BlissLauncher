@@ -14,7 +14,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.core.IconsHandler;
 import org.indin.blisslaunchero.core.Utilities;
-import org.indin.blisslaunchero.core.database.LauncherDB;
 import org.indin.blisslaunchero.core.database.model.ShortcutItem;
 import org.indin.blisslaunchero.core.events.ShortcutAddEvent;
 import org.indin.blisslaunchero.core.utils.Constants;
@@ -50,12 +49,7 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
             return;
         }
         ShortcutItem shortcutItem = createShortcutItem(data, context);
-        new Thread(() -> {
-            long id = LauncherDB.getDatabase(context).launcherDao().insert(shortcutItem);
-            if (id > 0) {
-                EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
-            }
-        }).start();
+        EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
     }
 
     public static void queueShortcut(ShortcutInfoCompat info, Context context) {
@@ -70,12 +64,7 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         shortcutItem.icon = BlissLauncher.getApplication(context).getIconsHandler().convertIcon(
                 icon);
         shortcutItem.launchIntent = info.makeIntent();
-        new Thread(() -> {
-            long id = LauncherDB.getDatabase(context).launcherDao().insert(shortcutItem);
-            if (id > 0) {
-                EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
-            }
-        }).start();
+        EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
     }
 
     private static ShortcutItem createShortcutItem(Intent data, Context context) {

@@ -1,4 +1,4 @@
-package org.indin.blisslaunchero.features.launcher;
+package org.indin.blisslaunchero.core.customviews;
 
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.core.DeviceProfile;

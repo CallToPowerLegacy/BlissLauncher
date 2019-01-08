@@ -14,7 +14,7 @@
         android:layout_above="@+id/page_indicator"
         android:layout_alignParentTop="true"/>
 
-    <org.indin.blisslaunchero.features.launcher.PageIndicatorLinearLayout
+    <org.indin.blisslaunchero.core.customviews.PageIndicatorLinearLayout
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,9 +24,9 @@
         android:orientation="horizontal"
         android:showDividers="middle">
 
-    </org.indin.blisslaunchero.features.launcher.PageIndicatorLinearLayout>
+    </org.indin.blisslaunchero.core.customviews.PageIndicatorLinearLayout>
 
-    <org.indin.blisslaunchero.features.launcher.DockGridLayout
+    <org.indin.blisslaunchero.core.customviews.DockGridLayout
         android:id="@+id/dock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
