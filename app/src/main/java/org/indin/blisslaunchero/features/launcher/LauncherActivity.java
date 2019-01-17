@@ -474,11 +474,12 @@ public class LauncherActivity extends AppCompatActivity implements
                     BlissFrameLayout viewGroup =
                             (BlissFrameLayout) gridLayout.getChildAt(j);
                     final LauncherItem existingItem = getAppDetails(viewGroup);
-                    if(existingItem.itemType == Constants.ITEM_TYPE_SHORTCUT){
+                    if (existingItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
                         ShortcutItem existingShortcutItem = (ShortcutItem) existingItem;
                         if (existingShortcutItem.id.equalsIgnoreCase(shortcutItem.id)) {
                             BlissFrameLayout blissFrameLayout = prepareLauncherItem(shortcutItem);
-                            GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
+                            GridLayout.LayoutParams iconLayoutParams =
+                                    new GridLayout.LayoutParams();
                             iconLayoutParams.height = mDeviceProfile.cellHeightPx;
                             iconLayoutParams.width = mDeviceProfile.cellWidthPx;
                             gridLayout.removeViewAt(j);
@@ -727,11 +728,12 @@ public class LauncherActivity extends AppCompatActivity implements
                             (BlissFrameLayout) gridLayout.getChildAt(j);
                     final LauncherItem existingItem =
                             getAppDetails(viewGroup);
-                    if(existingItem.itemType == Constants.ITEM_TYPE_APPLICATION){
+                    if (existingItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                         ApplicationItem existingAppItem = (ApplicationItem) existingItem;
                         if (existingAppItem.packageName.equalsIgnoreCase(packageName)) {
                             BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
-                            GridLayout.LayoutParams iconLayoutParams = new GridLayout.LayoutParams();
+                            GridLayout.LayoutParams iconLayoutParams =
+                                    new GridLayout.LayoutParams();
                             iconLayoutParams.height = mDeviceProfile.cellHeightPx;
                             iconLayoutParams.width = mDeviceProfile.cellWidthPx;
                             gridLayout.removeViewAt(j);
@@ -1247,7 +1249,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
         // Prepare edit widgets button
         //findViewById(R.id.edit_widgets_button).setOnClickListener(
-          //      view -> startActivity(new Intent(this, WidgetsActivity.class)));
+        //      view -> startActivity(new Intent(this, WidgetsActivity.class)));
 
         // Prepare weather widget view
         // [[BEGIN]]
@@ -1393,8 +1395,14 @@ public class LauncherActivity extends AppCompatActivity implements
             for (int i = 0; i < gridLayout.getChildCount(); i++) {
                 BlissFrameLayout blissFrameLayout = (BlissFrameLayout) gridLayout.getChildAt(i);
                 LauncherItem launcherItem = blissFrameLayout.getLauncherItem();
-                if (launcherItem.itemType != Constants.ITEM_TYPE_FOLDER
-                        && launcherItem.title.toString().toLowerCase().contains(query)) {
+                if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
+                    FolderItem folderItem = (FolderItem) launcherItem;
+                    for (LauncherItem item : folderItem.items) {
+                        if (item.title.toString().toLowerCase().contains(query)) {
+                            launcherItems.add(item);
+                        }
+                    }
+                } else if (launcherItem.title.toString().toLowerCase().contains(query)) {
                     launcherItems.add(launcherItem);
                 }
             }
@@ -1403,8 +1411,14 @@ public class LauncherActivity extends AppCompatActivity implements
         for (int i = 0; i < mDock.getChildCount(); i++) {
             BlissFrameLayout blissFrameLayout = (BlissFrameLayout) mDock.getChildAt(i);
             LauncherItem launcherItem = blissFrameLayout.getLauncherItem();
-            if (launcherItem.itemType != Constants.ITEM_TYPE_FOLDER
-                    && launcherItem.title.toString().toLowerCase().contains(query)) {
+            if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
+                FolderItem folderItem = (FolderItem) launcherItem;
+                for (LauncherItem item : folderItem.items) {
+                    if (item.title.toString().toLowerCase().contains(query)) {
+                        launcherItems.add(item);
+                    }
+                }
+            } else if (launcherItem.title.toString().toLowerCase().contains(query)) {
                 launcherItems.add(launcherItem);
             }
         }
