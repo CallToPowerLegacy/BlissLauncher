@@ -7,6 +7,7 @@ import static lineageos.providers.WeatherContract.WeatherColumns.WindSpeedUnit.M
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -211,5 +212,13 @@ public class ForecastBuilder {
                         itemSidePadding, LinearLayout.LayoutParams.MATCH_PARENT));
             }
         }
+
+        smallPanel.setOnClickListener(v -> {
+            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("foundation.e.weather");
+            if(launchIntent != null){
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(launchIntent);
+            }
+        });
     }
 }

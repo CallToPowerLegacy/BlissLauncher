@@ -209,7 +209,7 @@ public class DeepShortcutManager {
             try {
                 shortcutInfos = mLauncherApps.getShortcuts(q, user);
                 mWasLastCallSuccess = true;
-            } catch (SecurityException |IllegalStateException e) {
+            } catch (SecurityException | IllegalStateException e) {
                 Log.e(TAG, "Failed to query for shortcuts", e);
                 mWasLastCallSuccess = false;
             }

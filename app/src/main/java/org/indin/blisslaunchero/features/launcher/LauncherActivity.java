@@ -1258,6 +1258,13 @@ public class LauncherActivity extends AppCompatActivity implements
 
         mWeatherSetupTextView = findViewById(R.id.weather_setup_textview);
         mWeatherPanel = findViewById(R.id.weather_panel);
+        mWeatherPanel.setOnClickListener(v -> {
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("foundation.e.weather");
+            if(launchIntent != null){
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(launchIntent);
+            }
+        });
         updateWeatherPanel();
 
         if (org.indin.blisslaunchero.features.weather.WeatherUtils.isWeatherServiceAvailable(
