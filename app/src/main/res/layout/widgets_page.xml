@@ -23,7 +23,7 @@
             android:background="@drawable/search_widget"
             android:padding="8dp">
 
-            <org.indin.blisslaunchero.core.customviews.BlissInput
+            <foundation.e.blisslauncher.core.customviews.BlissInput
                 android:id="@+id/search_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

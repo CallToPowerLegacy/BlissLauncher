@@ -15,7 +15,8 @@
             android:id="@+id/preview"
             android:layout_width="match_parent"
             android:layout_height="64dp"
-            android:contentDescription="@string/icon_set" android:gravity="center_horizontal"/>
+            android:contentDescription="@string/icon_set"
+            android:gravity="center_horizontal"/>
 
         <TextView
             android:id="@+id/name"

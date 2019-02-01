@@ -3,7 +3,7 @@ apply plugin: 'io.fabric'
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "org.indin.blisslaunchero"
+        applicationId "foundation.e.blisslauncher"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -64,8 +64,8 @@ dependencies {
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
 
-    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
-    debugImplementation 'com.google.firebase:firebase-core:16.0.4'
+    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
+    debugImplementation 'com.google.firebase:firebase-core:16.0.6'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 
     implementation 'org.greenrobot:eventbus:3.1.1'

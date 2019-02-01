@@ -5,16 +5,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="false"
-                tools:context="org.indin.blisslaunchero.features.launcher.LauncherActivity">
+                tools:context="features.launcher.LauncherActivity">
 
-    <org.indin.blisslaunchero.core.customviews.HorizontalPager
+    <foundation.e.blisslauncher.core.customviews.HorizontalPager
         android:id="@+id/pages_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
         android:layout_alignParentTop="true"/>
-
-    <org.indin.blisslaunchero.core.customviews.PageIndicatorLinearLayout
+    <foundation.e.blisslauncher.core.customviews.PageIndicatorLinearLayout
         android:id="@+id/page_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,11 +21,9 @@
         android:divider="@drawable/gap"
         android:gravity="center"
         android:orientation="horizontal"
-        android:showDividers="middle">
+        android:showDividers="middle"/>
 
-    </org.indin.blisslaunchero.core.customviews.PageIndicatorLinearLayout>
-
-    <org.indin.blisslaunchero.core.customviews.DockGridLayout
+    <foundation.e.blisslauncher.core.customviews.DockGridLayout
         android:id="@+id/dock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -45,7 +42,7 @@
         android:clickable="true"
         android:visibility="gone">
 
-        <org.indin.blisslaunchero.core.customviews.BlissInput
+        <foundation.e.blisslauncher.core.customviews.BlissInput
             android:id="@+id/folder_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,12 +51,13 @@
             android:background="@null"
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions|textCapSentences"
-            android:paddingBottom="16dp"
             android:paddingTop="16dp"
+            android:paddingBottom="16dp"
             android:text="@string/untitled"
             android:textAlignment="center"
             android:textColor="@android:color/white"
             android:textSize="18sp"/>
+
         <LinearLayout
             android:id="@+id/folder_apps_background"
             android:layout_width="wrap_content"
@@ -67,6 +65,7 @@
             android:layout_centerInParent="true"
             android:background="@drawable/folder_window"
             android:orientation="vertical">
+
             <android.support.v4.view.ViewPager
                 android:id="@+id/folder_apps"
                 android:layout_width="wrap_content"
@@ -77,6 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="24dp"
                 android:paddingBottom="4dp"/>
+
         </LinearLayout>
 
     </RelativeLayout>
