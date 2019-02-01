@@ -87,6 +87,10 @@ public class DeviceProfile {
     public int cellHeightPx;
     public int workspaceCellPaddingXPx;
 
+    //Widget
+    public int maxWidgetWidth;
+    public int maxWidgetHeight;
+
     // Folder
     public int folderBackgroundOffset;
     public int folderIconSizePx;
@@ -147,7 +151,6 @@ public class DeviceProfile {
 
         availableWidthPx = smallestSize.x;
         availableHeightPx = largestSize.y;
-
 
         Point realSize = new Point();
         display.getRealSize(realSize);
@@ -267,6 +270,9 @@ public class DeviceProfile {
         folderIconSizePx = iconSizePx;
 
         fillResIconDpi = getLauncherIconDensity(iconSizePx);
+
+        maxWidgetWidth = availableWidthPx - (2 * Utilities.pxFromDp(8, dm));
+        maxWidgetHeight = getWorkspaceHeight();
     }
 
 
@@ -296,6 +302,14 @@ public class DeviceProfile {
 
     public int getPageIndicatorHeight() {
         return pageIndicatorSizePx + pageIndicatorBottomPaddingPx + pageIndicatorTopPaddingPx;
+    }
+
+    public int getMaxWidgetWidth(){
+        return maxWidgetWidth;
+    }
+
+    public int getMaxWidgetHeight() {
+        return maxWidgetHeight;
     }
 
     public int getCellHeight(int containerType) {

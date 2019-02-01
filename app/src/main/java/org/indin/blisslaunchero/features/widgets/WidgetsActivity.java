@@ -1,8 +1,6 @@
 package org.indin.blisslaunchero.features.widgets;
 
 import android.app.Activity;
-import android.appwidget.AppWidgetHost;
-import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.Intent;
@@ -14,6 +12,8 @@ import android.util.DisplayMetrics;
 
 import org.indin.blisslaunchero.BlissLauncher;
 import org.indin.blisslaunchero.R;
+import org.indin.blisslaunchero.core.customviews.RoundedWidgetView;
+import org.indin.blisslaunchero.core.customviews.WidgetHost;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
     private AddedWidgetsAdapter mAddedWidgetsAdapter;
 
     private AppWidgetManager mAppWidgetManager;
-    private AppWidgetHost mAppWidgetHost;
+    private WidgetHost mAppWidgetHost;
 
     private static final int REQUEST_PICK_APPWIDGET = 455;
     private static final int REQUEST_CREATE_APPWIDGET = 189;
@@ -94,10 +94,12 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_PICK_APPWIDGET) {
-            configureWidget(data);
-        } else if (requestCode == REQUEST_CREATE_APPWIDGET) {
-            createWidget(data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_PICK_APPWIDGET) {
+                configureWidget(data);
+            } else if (requestCode == REQUEST_CREATE_APPWIDGET) {
+                createWidget(data);
+            }
         } else if (resultCode == RESULT_CANCELED && data != null) {
             int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
             if (appWidgetId != -1) {
@@ -126,10 +128,12 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         Bundle extras = data.getExtras();
         int appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
         AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
-        AppWidgetHostView hostView = mAppWidgetHost.createView(getApplicationContext(), appWidgetId,
+        RoundedWidgetView hostView = (RoundedWidgetView) mAppWidgetHost.createView(
+                getApplicationContext(), appWidgetId,
                 appWidgetInfo);
         hostView.setAppWidget(appWidgetId, appWidgetInfo);
         WidgetManager.getInstance().enqueueAddWidget(hostView);
         refreshRecyclerView();
     }
+
 }

@@ -1,11 +1,5 @@
 package org.indin.blisslaunchero.core.customviews;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.indin.blisslaunchero.R;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -22,6 +16,12 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.Scroller;
+
+import org.indin.blisslaunchero.R;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class HorizontalPager extends ViewGroup {
     private static final String TAG = "HorizontalPager";
@@ -52,6 +52,7 @@ public class HorizontalPager extends ViewGroup {
     private int mTouchState = TOUCH_STATE_REST;
 
     private boolean mAllowLongPress;
+    private DockGridLayout mDock;
 
     private Set<OnScrollListener> mListeners = new HashSet<>();
     private boolean mIsUiCreated;
@@ -79,6 +80,10 @@ public class HorizontalPager extends ViewGroup {
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+    }
+
+    public void setDock(DockGridLayout dock) {
+        mDock = dock;
     }
 
     int getCurrentPage() {
@@ -341,14 +346,14 @@ public class HorizontalPager extends ViewGroup {
         final int action = ev.getAction();
         final float x = ev.getX();
         final float y = ev.getY();
-
+        Log.i(TAG, "motion x: " + x);
         if (mIsUiCreated) {
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
-                /*
-                * If being flinged and user touches, stop the fling. isFinished
-                * will be false if being flinged.
-                */
+                    /*
+                     * If being flinged and user touches, stop the fling. isFinished
+                     * will be false if being flinged.
+                     */
                     if (!mScroller.isFinished()) {
                         mScroller.abortAnimation();
                     }
@@ -371,6 +376,10 @@ public class HorizontalPager extends ViewGroup {
                         }
 
                         scrollBy(deltaX, 0);
+                        /*if ((currentPage == 0 && deltaX > 0) || (currentPage == 1 && deltaX < 0)) {
+                            Log.i(TAG, "onTouchEvent: "+getChildAt(currentPage).getLeft());
+                            mDock.setTranslationX(getChildAt(currentPage).getLeft());
+                        }*/
                     }
                     break;
                 case MotionEvent.ACTION_UP:

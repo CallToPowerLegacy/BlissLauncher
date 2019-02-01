@@ -13,8 +13,8 @@ import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.usage.UsageStats;
-import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -81,8 +81,10 @@ import org.indin.blisslaunchero.core.customviews.BlissInput;
 import org.indin.blisslaunchero.core.customviews.DockGridLayout;
 import org.indin.blisslaunchero.core.customviews.HorizontalPager;
 import org.indin.blisslaunchero.core.customviews.PageIndicatorLinearLayout;
+import org.indin.blisslaunchero.core.customviews.RoundedWidgetView;
 import org.indin.blisslaunchero.core.customviews.SquareFrameLayout;
 import org.indin.blisslaunchero.core.customviews.SquareImageView;
+import org.indin.blisslaunchero.core.customviews.WidgetHost;
 import org.indin.blisslaunchero.core.database.DatabaseManager;
 import org.indin.blisslaunchero.core.database.LauncherDB;
 import org.indin.blisslaunchero.core.database.model.ApplicationItem;
@@ -113,6 +115,8 @@ import org.indin.blisslaunchero.features.weather.ForecastBuilder;
 import org.indin.blisslaunchero.features.weather.WeatherPreferences;
 import org.indin.blisslaunchero.features.weather.WeatherSourceListenerService;
 import org.indin.blisslaunchero.features.weather.WeatherUpdateService;
+import org.indin.blisslaunchero.features.widgets.WidgetManager;
+import org.indin.blisslaunchero.features.widgets.WidgetsActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -202,8 +206,8 @@ public class LauncherActivity extends AppCompatActivity implements
     private static final String TAG = "LauncherActivity";
     private TextView openUsageAccessTextView;
     private AppWidgetManager mAppWidgetManager;
-    private AppWidgetHost mAppWidgetHost;
-    private LinearLayout widgetHolderLinearLayout;
+    private WidgetHost mAppWidgetHost;
+    private LinearLayout widgetContainer;
 
     @SuppressLint("InflateParams")
     @Override
@@ -366,16 +370,15 @@ public class LauncherActivity extends AppCompatActivity implements
             refreshSuggestedApps(forceRefreshSuggestedApps);
         }
 
-        // TODO: Add widget manager after pushing shortcut feature.
-        /*WidgetManager widgetManager = WidgetManager.getInstance();
+        WidgetManager widgetManager = WidgetManager.getInstance();
         Integer id = widgetManager.dequeRemoveId();
         while (id != null) {
-            for (int i = 0; i < widgetHolderLinearLayout.getChildCount(); i++) {
-                if (widgetHolderLinearLayout.getChildAt(i) instanceof AppWidgetHostView) {
-                    AppWidgetHostView appWidgetHostView =
-                            (AppWidgetHostView) widgetHolderLinearLayout.getChildAt(i);
+            for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+                if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                    RoundedWidgetView appWidgetHostView =
+                            (RoundedWidgetView) widgetContainer.getChildAt(i);
                     if (appWidgetHostView.getAppWidgetId() == id) {
-                        widgetHolderLinearLayout.removeViewAt(i);
+                        widgetContainer.removeViewAt(i);
                         break;
                     }
                 }
@@ -383,15 +386,30 @@ public class LauncherActivity extends AppCompatActivity implements
             id = widgetManager.dequeRemoveId();
         }
 
-        AppWidgetHostView appWidgetHostView = widgetManager.dequeAddWidgetView();
-        while (appWidgetHostView != null) {
-            appWidgetHostView.setOnTouchListener((v, event) -> {
-                v.getParent().requestDisallowInterceptTouchEvent(true);
-                return false;
-            });
-            widgetHolderLinearLayout.addView(appWidgetHostView);
-            appWidgetHostView = widgetManager.dequeAddWidgetView();
-        }*/
+        RoundedWidgetView widgetView = widgetManager.dequeAddWidgetView();
+        while (widgetView != null) {
+            int appWidgetId = widgetView.getAppWidgetId();
+            AppWidgetProviderInfo info = widgetView.getAppWidgetInfo();
+            widgetView.post(() -> updateWidgetOption(appWidgetId, info));
+            addWidgetToContainer(widgetContainer, widgetView);
+            widgetView = widgetManager.dequeAddWidgetView();
+        }
+    }
+
+    private void addWidgetToContainer(LinearLayout widgetHolderLinearLayout,
+            RoundedWidgetView widgetView) {
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        int margin = getResources().getDimensionPixelSize(R.dimen.widget_margin);
+        layoutParams.setMargins(0, margin, 0, margin);
+        widgetView.setLayoutParams(layoutParams);
+        widgetView.setPadding(0, 0, 0, 0);
+        widgetHolderLinearLayout.addView(widgetView);
+        widgetView.setOnTouchListener((v, event) -> {
+            v.getParent().getParent().getParent().requestDisallowInterceptTouchEvent(true);
+            return false;
+        });
     }
 
     @Override
@@ -1108,7 +1126,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createWidgetsPage() {
         ScrollView layout = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
-        widgetHolderLinearLayout = layout.findViewById(R.id.widget_container);
+        widgetContainer = layout.findViewById(R.id.widget_container);
         layout.setPadding(0,
                 (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
                 0, 0);
@@ -1248,8 +1266,8 @@ public class LauncherActivity extends AppCompatActivity implements
         // [[END]]
 
         // Prepare edit widgets button
-        //findViewById(R.id.edit_widgets_button).setOnClickListener(
-        //      view -> startActivity(new Intent(this, WidgetsActivity.class)));
+        findViewById(R.id.edit_widgets_button).setOnClickListener(
+              view -> startActivity(new Intent(this, WidgetsActivity.class)));
 
         // Prepare weather widget view
         // [[BEGIN]]
@@ -1259,8 +1277,9 @@ public class LauncherActivity extends AppCompatActivity implements
         mWeatherSetupTextView = findViewById(R.id.weather_setup_textview);
         mWeatherPanel = findViewById(R.id.weather_panel);
         mWeatherPanel.setOnClickListener(v -> {
-            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("foundation.e.weather");
-            if(launchIntent != null){
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage(
+                    "foundation.e.weather");
+            if (launchIntent != null) {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(launchIntent);
             }
@@ -1298,18 +1317,26 @@ public class LauncherActivity extends AppCompatActivity implements
         }
         // [[END]]
 
-        // TODO: After pushing shortcut feature.
-        /*for (int id : mAppWidgetHost.getAppWidgetIds()) {
+        for (int id : mAppWidgetHost.getAppWidgetIds()) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
-            AppWidgetHostView hostView = mAppWidgetHost.createView(getApplicationContext(), id,
-                    appWidgetInfo);
-            hostView.setOnTouchListener((v, event) -> {
-                v.getParent().getParent().getParent().requestDisallowInterceptTouchEvent(true);
-                return false;
-            });
-            hostView.setAppWidget(id, appWidgetInfo);
-            widgetHolderLinearLayout.addView(hostView);
-        }*/
+            if(appWidgetInfo != null){
+                RoundedWidgetView hostView = (RoundedWidgetView) mAppWidgetHost.createView(
+                        getApplicationContext(), id,
+                        appWidgetInfo);
+                hostView.setAppWidget(id, appWidgetInfo);
+                hostView.post(() -> updateWidgetOption(id, appWidgetInfo));
+                addWidgetToContainer(widgetContainer, hostView);
+            }
+        }
+    }
+
+    private void updateWidgetOption(int appWidgetId, AppWidgetProviderInfo info) {
+        Bundle newOps = new Bundle();
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, info.minWidth);
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, BlissLauncher.getApplication(this).getDeviceProfile().getMaxWidgetWidth());
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, info.minHeight);
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, BlissLauncher.getApplication(this).getDeviceProfile().getMaxWidgetHeight());
+        mAppWidgetManager.updateAppWidgetOptions(appWidgetId, newOps);
     }
 
     @Override

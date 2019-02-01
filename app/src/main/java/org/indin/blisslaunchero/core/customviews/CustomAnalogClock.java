@@ -1,10 +1,5 @@
 package org.indin.blisslaunchero.core.customviews;
 
-import java.util.Calendar;
-
-import org.indin.blisslaunchero.BlissLauncher;
-import org.indin.blisslaunchero.R;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
@@ -13,6 +8,11 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
+
+import org.indin.blisslaunchero.BlissLauncher;
+import org.indin.blisslaunchero.R;
+
+import java.util.Calendar;
 
 /**
  * Created by falcon on 8/3/18.
@@ -133,12 +133,7 @@ public class CustomAnalogClock extends View {
         mCalendar = calendar;
         invalidate();
         if (autoUpdate) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    setTime(Calendar.getInstance());
-                }
-            }, 1000);
+            new Handler().postDelayed(() -> setTime(Calendar.getInstance()), 1000);
         }
     }
 

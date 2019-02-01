@@ -1,6 +1,6 @@
 package org.indin.blisslaunchero.features.widgets;
 
-import android.appwidget.AppWidgetHostView;
+import org.indin.blisslaunchero.core.customviews.RoundedWidgetView;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -9,7 +9,7 @@ public class WidgetManager {
     private static final WidgetManager ourInstance = new WidgetManager();
 
     private Queue<Integer> removeWidgetIds = new LinkedList<>();
-    private Queue<AppWidgetHostView> addWidgetViews = new LinkedList<>();
+    private Queue<RoundedWidgetView> addWidgetViews = new LinkedList<>();
 
     public static WidgetManager getInstance() {
         return ourInstance;
@@ -22,7 +22,7 @@ public class WidgetManager {
         removeWidgetIds.add(id);
     }
 
-    public void enqueueAddWidget(AppWidgetHostView view){
+    public void enqueueAddWidget(RoundedWidgetView view){
         addWidgetViews.add(view);
     }
 
@@ -30,7 +30,7 @@ public class WidgetManager {
         return removeWidgetIds.poll();
     }
 
-    public AppWidgetHostView dequeAddWidgetView(){
+    public RoundedWidgetView dequeAddWidgetView(){
         return addWidgetViews.poll();
     }
 }

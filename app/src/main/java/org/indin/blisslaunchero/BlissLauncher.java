@@ -1,7 +1,6 @@
 package org.indin.blisslaunchero;
 
 import android.app.Application;
-import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,9 +8,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
-import org.indin.blisslaunchero.features.launcher.AppProvider;
 import org.indin.blisslaunchero.core.DeviceProfile;
 import org.indin.blisslaunchero.core.IconsHandler;
+import org.indin.blisslaunchero.core.customviews.WidgetHost;
+import org.indin.blisslaunchero.features.launcher.AppProvider;
 
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
@@ -21,7 +21,7 @@ public class BlissLauncher extends Application {
 
     private AppProvider mAppProvider;
 
-    private AppWidgetHost sAppWidgetHost;
+    private WidgetHost sAppWidgetHost;
     private AppWidgetManager sAppWidgetManager;
 
     private static final String TAG = "BlissLauncher";
@@ -35,7 +35,7 @@ public class BlissLauncher extends Application {
                 .build());
 
         sAppWidgetManager = AppWidgetManager.getInstance(getApplicationContext());
-        sAppWidgetHost = new AppWidgetHost(getApplicationContext(),
+        sAppWidgetHost = new WidgetHost(getApplicationContext(),
                 R.id.APPWIDGET_HOST_ID);
         sAppWidgetHost.startListening();
     }
@@ -91,7 +91,7 @@ public class BlissLauncher extends Application {
         return mAppProvider;
     }
 
-    public AppWidgetHost getAppWidgetHost() { return sAppWidgetHost; }
+    public WidgetHost getAppWidgetHost() { return sAppWidgetHost; }
 
     public AppWidgetManager getAppWidgetManager() { return sAppWidgetManager; }
 

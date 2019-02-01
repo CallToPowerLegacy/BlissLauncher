@@ -34,7 +34,7 @@ public class AddedWidgetsAdapter extends
     @NonNull
     @Override
     public WidgetsViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.item_widget, viewGroup, false);
+        View view = LayoutInflater.from(mContext).inflate(R.layout.item_widget_all, viewGroup, false);
         WidgetsViewHolder widgetsViewHolder = new WidgetsViewHolder(view);
         widgetsViewHolder.actionBtn.setImageResource(R.drawable.ic_remove_widget_red_24dp);
         widgetsViewHolder.actionBtn.setOnClickListener(

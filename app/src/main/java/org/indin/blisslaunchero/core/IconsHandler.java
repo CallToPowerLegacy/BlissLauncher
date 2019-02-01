@@ -184,22 +184,23 @@ public class IconsHandler {
             return systemIcon;
         }
 
-        systemIcon = new AdaptiveIconProvider().load(ctx, componentName.getPackageName());
-        if(systemIcon != null){
-            cacheStoreDrawable(componentName.toString(), systemIcon);
-            return systemIcon;
-        }
-
         systemIcon = this.getDefaultAppDrawable(componentName, userHandle);
-        if (Utilities.ATLEAST_OREO
-                && systemIcon instanceof AdaptiveIconDrawable) {
+        if (Utilities.ATLEAST_OREO && systemIcon instanceof AdaptiveIconDrawable) {
             systemIcon = new AdaptiveIconDrawableCompat(
                     ((AdaptiveIconDrawable) systemIcon).getBackground(),
                     ((AdaptiveIconDrawable) systemIcon).getForeground());
         } else {
-            systemIcon = graphicsUtil.convertToRoundedCorner(ctx,
-                    graphicsUtil.addBackground(systemIcon, false));
+            Drawable adaptiveIcon = new AdaptiveIconProvider().load(ctx,
+                    componentName.getPackageName());
+            if (adaptiveIcon != null) {
+                systemIcon = adaptiveIcon;
+            } else {
+                systemIcon = graphicsUtil.convertToRoundedCorner(ctx,
+                        graphicsUtil.addBackground(systemIcon, false));
+
+            }
         }
+
         cacheStoreDrawable(componentName.toString(), systemIcon);
         return systemIcon;
     }
@@ -210,6 +211,7 @@ public class IconsHandler {
     }
 
     private void cacheStoreDrawable(String key, Drawable drawable) {
+        Log.i(TAG, "cacheStoreDrawable: " + key);
         Bitmap bitmap = getBitmapFromDrawable(drawable);
         File drawableFile = cacheGetFileName(key);
         FileOutputStream fos;
@@ -224,7 +226,8 @@ public class IconsHandler {
     }
 
     private Bitmap getBitmapFromDrawable(Drawable drawable) {
-        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(bmp);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
@@ -285,28 +288,28 @@ public class IconsHandler {
     }
 
     public void resetIconDrawableForPackage(ComponentName componentName, UserHandle user) {
-        if(!packagesDrawables.containsKey(componentName.toString())){
-            Drawable icon = new AdaptiveIconProvider().load(ctx, componentName.getPackageName());
-            if(icon != null){
-                cacheStoreDrawable(componentName.toString(), icon);
-                return;
-            }
-
-            icon = this.getDefaultAppDrawable(componentName, user);
-            if (Utilities.ATLEAST_OREO
-                    && icon instanceof AdaptiveIconDrawable) {
+        if (!packagesDrawables.containsKey(componentName.toString())) {
+            Drawable icon = this.getDefaultAppDrawable(componentName, user);
+            if (Utilities.ATLEAST_OREO && icon instanceof AdaptiveIconDrawable) {
                 icon = new AdaptiveIconDrawableCompat(
                         ((AdaptiveIconDrawable) icon).getBackground(),
                         ((AdaptiveIconDrawable) icon).getForeground());
             } else {
-                icon = graphicsUtil.convertToRoundedCorner(ctx,
-                        graphicsUtil.addBackground(icon, false));
+                Drawable adaptiveIcon = new AdaptiveIconProvider().load(ctx,
+                        componentName.getPackageName());
+                if (adaptiveIcon != null) {
+                    icon = adaptiveIcon;
+                } else {
+                    icon = graphicsUtil.convertToRoundedCorner(ctx,
+                            graphicsUtil.addBackground(icon, false));
+                }
             }
+
             cacheStoreDrawable(componentName.toString(), icon);
         }
     }
 
-    public Drawable convertIcon(Drawable icon){
+    public Drawable convertIcon(Drawable icon) {
         return graphicsUtil.convertToRoundedCorner(ctx,
                 graphicsUtil.addBackground(icon, false));
     }
@@ -315,7 +318,8 @@ public class IconsHandler {
      * Returns a drawable suitable for the all apps view. If the package or the resource do not
      * exist, it returns null.
      */
-    public static Drawable createIconDrawable(Intent.ShortcutIconResource iconRes, Context context) {
+    public static Drawable createIconDrawable(Intent.ShortcutIconResource iconRes,
+            Context context) {
         PackageManager packageManager = context.getPackageManager();
         // the resource
         try {
@@ -323,7 +327,8 @@ public class IconsHandler {
             if (resources != null) {
                 final int id = resources.getIdentifier(iconRes.resourceName, null, null);
                 return resources.getDrawableForDensity(
-                        id, BlissLauncher.getApplication(context).getDeviceProfile().fillResIconDpi);
+                        id,
+                        BlissLauncher.getApplication(context).getDeviceProfile().fillResIconDpi);
             }
         } catch (Exception e) {
             // Icon not found.
