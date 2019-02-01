@@ -67,13 +67,13 @@ public class IconsHandler {
         this.pm = ctx.getPackageManager();
         graphicsUtil = new GraphicsUtil(ctx);
         mIconDpi = BlissLauncher.getApplication(ctx).getDeviceProfile().fillResIconDpi;
-        loadIconsPack("org.indin.blissiconpack");
+        loadIconsPack("foundation.e.blissiconpack");
     }
 
 
     private boolean iconPackExists(PackageManager packageManager) {
         try {
-            packageManager.getPackageInfo("org.indin.blissiconpack",
+            packageManager.getPackageInfo("foundation.e.blissiconpack",
                     PackageManager.GET_META_DATA);
         } catch (PackageManager.NameNotFoundException e) {
             return false;
@@ -360,4 +360,3 @@ public class IconsHandler {
         return (d != null) ? d : getFullResDefaultActivityIcon();
     }
 }
-
