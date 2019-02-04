@@ -1875,9 +1875,6 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void removeShortcutView(ShortcutItem shortcutItem, BlissFrameLayout blissFrameLayout) {
-        ShortcutKey shortcutKey = ShortcutKey.fromItem(shortcutItem);
-        AppExecutors.getInstance().diskIO().execute(
-                () -> DeepShortcutManager.getInstance(this).unpinShortcut(shortcutKey));
         DatabaseManager.getManager(this).removeLauncherItem(shortcutItem.id);
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             activeFolder.items.remove(shortcutItem);

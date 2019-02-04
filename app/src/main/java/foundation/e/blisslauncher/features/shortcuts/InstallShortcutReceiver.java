@@ -76,7 +76,7 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
 
         if (intent == null) {
             // If the intent is null, we can't construct a valid ShortcutInfo, so we return null
-            Log.e(TAG, "Can't construct ShorcutInfo with null intent");
+            Log.e(TAG, "Can't construct ShortcutInfo with null intent");
             return null;
         }
 

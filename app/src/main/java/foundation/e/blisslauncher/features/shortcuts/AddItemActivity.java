@@ -1,11 +1,13 @@
 package foundation.e.blisslauncher.features.shortcuts;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.LauncherApps;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-
+@TargetApi(Build.VERSION_CODES.O)
 public class AddItemActivity extends AppCompatActivity {
 
     @Override
