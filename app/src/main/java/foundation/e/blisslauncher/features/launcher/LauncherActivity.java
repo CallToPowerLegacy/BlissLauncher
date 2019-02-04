@@ -71,6 +71,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -107,7 +108,6 @@ import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
 import foundation.e.blisslauncher.core.events.ShortcutAddEvent;
-import foundation.e.blisslauncher.core.executors.AppExecutors;
 import foundation.e.blisslauncher.core.network.RetrofitService;
 import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
@@ -116,7 +116,6 @@ import foundation.e.blisslauncher.core.utils.ListUtil;
 import foundation.e.blisslauncher.features.notification.NotificationRepository;
 import foundation.e.blisslauncher.features.notification.NotificationService;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
-import foundation.e.blisslauncher.features.shortcuts.ShortcutKey;
 import foundation.e.blisslauncher.features.suggestions.AutoCompleteAdapter;
 import foundation.e.blisslauncher.features.suggestions.AutoCompleteService;
 import foundation.e.blisslauncher.features.suggestions.AutoCompleteServiceResult;
@@ -1318,7 +1317,9 @@ public class LauncherActivity extends AppCompatActivity implements
         }
         // [[END]]
 
-        for (int id : mAppWidgetHost.getAppWidgetIds()) {
+        int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
+        Arrays.sort(widgetIds);
+        for (int id : widgetIds) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
             if(appWidgetInfo != null){
                 RoundedWidgetView hostView = (RoundedWidgetView) mAppWidgetHost.createView(
