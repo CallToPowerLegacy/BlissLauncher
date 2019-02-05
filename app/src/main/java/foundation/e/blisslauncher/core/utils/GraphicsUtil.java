@@ -100,23 +100,18 @@ public class GraphicsUtil {
      * Scales icons to match the icon pack
      */
     public Drawable scaleImage(Context context, Drawable image, float scaleFactor) {
-        Log.i(TAG, "scaleImage: " + image.getIntrinsicWidth() + "*" + image.getIntrinsicHeight());
         if ((image == null) || !(image instanceof BitmapDrawable)) {
             return image;
         }
         Bitmap b = ((BitmapDrawable) image).getBitmap();
         int sizeX = Math.round(image.getIntrinsicWidth() * scaleFactor);
-        Log.i(TAG, "sizeX: " + sizeX);
         int sizeY = Math.round(image.getIntrinsicHeight() * scaleFactor);
-        Log.i(TAG, "sizeY: " + sizeY);
         Bitmap bitmapResized = Bitmap.createScaledBitmap(b, sizeX, sizeY, false);
         image = new BitmapDrawable(context.getResources(), bitmapResized);
-        Log.i(TAG, "scaleImage2: " + image.getIntrinsicWidth() + "*" + image.getIntrinsicHeight());
         return image;
     }
 
     public Bitmap addBackground(Bitmap bitmap, boolean isFolder) {
-
         if (!hasTransparency(bitmap)) {
             bitmap = Bitmap.createScaledBitmap(bitmap, appIconWidth,
                     (appIconWidth * bitmap.getHeight() / bitmap.getWidth()),
@@ -135,8 +130,7 @@ public class GraphicsUtil {
         Bitmap mergedBitmap = Bitmap.createBitmap(width, height, Bitmap
                 .Config.ARGB_8888);
         Canvas canvas = new Canvas(mergedBitmap);
-        canvas.drawColor(isFolder ? Color.WHITE
-                : getDominantColor(bitmap));
+        canvas.drawColor(isFolder ? Color.WHITE : getDominantColor(bitmap));
 
         Paint paint = new Paint(
                 Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
@@ -146,18 +140,16 @@ public class GraphicsUtil {
     }
 
     public Bitmap addBackground(Drawable appIcon, boolean isFolder) {
-        BitmapDrawable bitmapDrawable;
-        if(appIcon instanceof BitmapDrawable){
-            bitmapDrawable = ((BitmapDrawable) appIcon);
-        }else{
-            Bitmap bitmap = Bitmap.createBitmap(appIcon.getIntrinsicWidth(), appIcon.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap;
+        if (appIcon instanceof BitmapDrawable) {
+            bitmap = ((BitmapDrawable) appIcon).getBitmap();
+        } else {
+            bitmap = Bitmap.createBitmap(appIcon.getIntrinsicWidth(),
+                    appIcon.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
+            appIcon.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
             appIcon.draw(canvas);
-            bitmapDrawable = new BitmapDrawable(mContext.getResources(), bitmap);
         }
-
-        bitmapDrawable.setAntiAlias(true);
-        Bitmap bitmap = bitmapDrawable.getBitmap();
         return addBackground(bitmap, isFolder);
     }
 
@@ -185,8 +177,8 @@ public class GraphicsUtil {
      * @param drawable to get the dominant color of
      * @return the dominant color
      */
-    public int getDominantColor(Drawable drawable){
-        return getDominantColor(((BitmapDrawable)drawable).getBitmap());
+    public int getDominantColor(Drawable drawable) {
+        return getDominantColor(((BitmapDrawable) drawable).getBitmap());
     }
 
     /**
@@ -224,6 +216,7 @@ public class GraphicsUtil {
 
             return color;
         } else {
+            Log.i(TAG, "getDominantColor: white");
             return Color.WHITE;
         }
     }

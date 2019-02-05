@@ -10,15 +10,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 
-import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
-import foundation.e.blisslauncher.core.customviews.WidgetHost;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.R;
+import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
+import foundation.e.blisslauncher.core.customviews.WidgetHost;
 
 public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnActionClickListener {
 

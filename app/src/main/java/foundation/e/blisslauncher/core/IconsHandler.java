@@ -198,7 +198,6 @@ public class IconsHandler {
             } else {
                 systemIcon = graphicsUtil.convertToRoundedCorner(ctx,
                         graphicsUtil.addBackground(systemIcon, false));
-
             }
         }
 
