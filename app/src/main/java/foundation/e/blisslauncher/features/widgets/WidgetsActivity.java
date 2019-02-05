@@ -14,6 +14,7 @@ import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
 import foundation.e.blisslauncher.core.customviews.WidgetHost;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import foundation.e.blisslauncher.BlissLauncher;
@@ -21,7 +22,6 @@ import foundation.e.blisslauncher.R;
 
 public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnActionClickListener {
 
-    private RecyclerView addedWidgets;
     private AddedWidgetsAdapter mAddedWidgetsAdapter;
 
     private AppWidgetManager mAppWidgetManager;
@@ -38,7 +38,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         mAppWidgetManager = BlissLauncher.getApplication(this).getAppWidgetManager();
         mAppWidgetHost = BlissLauncher.getApplication(this).getAppWidgetHost();
 
-        addedWidgets = findViewById(R.id.added_widgets_recycler_view);
+        RecyclerView addedWidgets = findViewById(R.id.added_widgets_recycler_view);
         addedWidgets.setLayoutManager(new LinearLayoutManager(this));
         addedWidgets.setHasFixedSize(false);
         addedWidgets.setNestedScrollingEnabled(false);
@@ -60,7 +60,9 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
 
     private void refreshRecyclerView() {
         List<Widget> widgets = new ArrayList<>();
-        for (int id : mAppWidgetHost.getAppWidgetIds()) {
+        int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
+        Arrays.sort(widgetIds);
+        for (int id : widgetIds) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
             if (appWidgetInfo != null) {
                 Widget widget = new Widget();

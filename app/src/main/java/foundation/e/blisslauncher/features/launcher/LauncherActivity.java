@@ -71,6 +71,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -1316,7 +1317,9 @@ public class LauncherActivity extends AppCompatActivity implements
         }
         // [[END]]
 
-        for (int id : mAppWidgetHost.getAppWidgetIds()) {
+        int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
+        Arrays.sort(widgetIds);
+        for (int id : widgetIds) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
             if(appWidgetInfo != null){
                 RoundedWidgetView hostView = (RoundedWidgetView) mAppWidgetHost.createView(

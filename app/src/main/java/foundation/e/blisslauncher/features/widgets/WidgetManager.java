@@ -1,5 +1,6 @@
 package foundation.e.blisslauncher.features.widgets;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -18,19 +19,29 @@ public class WidgetManager {
     private WidgetManager() {
     }
 
-    public void enqueueRemoveId(int id){
+    public void enqueueRemoveId(int id) {
+        // If the widget is not yet created but scheduled to be created we have to prevent the
+        // creation, too.
+        Iterator<RoundedWidgetView> it = addWidgetViews.iterator();
+        while (it.hasNext()) {
+            RoundedWidgetView view = it.next();
+            if (id == view.getAppWidgetId()) {
+                addWidgetViews.remove(view);
+                break;
+            }
+        }
         removeWidgetIds.add(id);
     }
 
-    public void enqueueAddWidget(RoundedWidgetView view){
+    public void enqueueAddWidget(RoundedWidgetView view) {
         addWidgetViews.add(view);
     }
 
-    public Integer dequeRemoveId(){
+    public Integer dequeRemoveId() {
         return removeWidgetIds.poll();
     }
 
-    public RoundedWidgetView dequeAddWidgetView(){
+    public RoundedWidgetView dequeAddWidgetView() {
         return addWidgetViews.poll();
     }
 }
