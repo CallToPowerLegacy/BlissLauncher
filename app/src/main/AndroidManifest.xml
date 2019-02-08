@@ -115,10 +115,15 @@
         <activity android:name=".features.widgets.WidgetsActivity"
                   android:autoRemoveFromRecents="true"
                   android:excludeFromRecents="true"
-                  android:theme="@android:style/Theme.Material.Light.DarkActionBar"
-                  android:label="Widgets">
-
-        </activity>
+                  android:theme="@style/AppTheme"
+                  android:label="Widgets"/>
+        <activity android:name=".features.widgets.WidgetPicker"
+                  android:autoRemoveFromRecents="true"
+                  android:excludeFromRecents="true"
+                  android:theme="@style/WidgetPickerDialog"
+                  android:finishOnCloseSystemDialogs="true"
+                  android:label="Choose widget"
+        android:exported="true"/>
     </application>
 
 </manifest>

@@ -72,6 +72,8 @@
             android:id="@+id/edit_widgets_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/btn_rounded_corner"
+            android:fontFamily="sans-serif-medium"
             android:text="Edit"/>
     </LinearLayout>
 

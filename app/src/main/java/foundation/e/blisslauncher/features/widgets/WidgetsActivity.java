@@ -3,12 +3,14 @@ package foundation.e.blisslauncher.features.widgets;
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +83,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
 
     void selectWidget() {
         int appWidgetId = this.mAppWidgetHost.allocateAppWidgetId();
-        Intent pickIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_PICK);
+        Intent pickIntent = new Intent(this, WidgetPicker.class);
         pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         addEmptyData(pickIntent);
         startActivityForResult(pickIntent, REQUEST_PICK_APPWIDGET);
@@ -117,10 +119,11 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         int appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
         AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
         if (appWidgetInfo != null && appWidgetInfo.configure != null) {
-            Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE);
+            /*Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE);
             intent.setComponent(appWidgetInfo.configure);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-            startActivityForResult(intent, REQUEST_CREATE_APPWIDGET);
+            startActivityForResult(intent, REQUEST_CREATE_APPWIDGET);*/
+            startAppWidgetConfigureActivitySafely(appWidgetId);
         } else {
             createWidget(data);
         }
@@ -136,6 +139,15 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         hostView.setAppWidget(appWidgetId, appWidgetInfo);
         WidgetManager.getInstance().enqueueAddWidget(hostView);
         refreshRecyclerView();
+    }
+
+    void startAppWidgetConfigureActivitySafely(int appWidgetId) {
+        try {
+            mAppWidgetHost.startAppWidgetConfigureActivityForResult(this, appWidgetId, 0,
+                    REQUEST_CREATE_APPWIDGET, null);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, R.string.activity_not_found, Toast.LENGTH_SHORT).show();
+        }
     }
 
 }
