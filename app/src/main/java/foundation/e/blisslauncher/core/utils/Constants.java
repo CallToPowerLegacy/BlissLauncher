@@ -21,7 +21,7 @@ package foundation.e.blisslauncher.core.utils;
 
 public class Constants {
     public static final boolean DEBUG = true;
-    public static final String PREF_NAME = "BLISS_LAUNCHER";
+    public static final String PREF_NAME = "foundation.e.blisslauncher.prefs";
 
     public static final String WEATHER_SOURCE = "weather_source";
     public static final String WEATHER_USE_CUSTOM_LOCATION = "weather_use_custom_location";
@@ -46,8 +46,6 @@ public class Constants {
     public static final String DEFAULT_DARK_COLOR = "#80ffffff";
 
     public static final String USER_CREATION_TIME_KEY = "user_creation_time_";
-
-    public static final String LOAD_OVER = "org.indin.blisslaunchero.LOAD_OVER";
 
     /**
      * Represents types of item displayed in Launcher.

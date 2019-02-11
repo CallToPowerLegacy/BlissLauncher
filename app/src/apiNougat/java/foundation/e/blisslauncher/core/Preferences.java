@@ -48,18 +48,7 @@ public class Preferences {
 
     private static final String ENABLE_LOCATION = "enable_location";
 
-
-    /**
-     * User Preference related keys and constants.
-     */
-    public static final String MANAGED_USER_PREFERENCES_KEY = "org.indin.blisslaunchero.prefs";
-
-    /**
-     * Launcher related keys and constants.
-     */
-    public static final String LAYOUT_PRESENT = "layout_present";
-    public static final String FIRST_TIME = "org.indin.blisslaunchero.FIRST_TIME";
-    private static final String ACTION_USAGE = "org.indin.blisslaunchero.ACTION_USAGE";
+    private static final String ACTION_USAGE = "foundation.e.blisslauncher.ACTION_USAGE";
 
     private Preferences() {
     }
@@ -333,28 +322,20 @@ public class Preferences {
         getPrefs(context).edit().putLong(key, System.currentTimeMillis()).apply();
     }
 
-    public static boolean isFirstTime(Context context){
-        return getPrefs(context).getBoolean(FIRST_TIME, true);
-    }
-
-    public static void setFirstTimeDone(Context context){
-        getPrefs(context).edit().putBoolean(FIRST_TIME, false).apply();
-    }
-
-    public static boolean shouldOpenUsageAccess(Context context){
+    public static boolean shouldOpenUsageAccess(Context context) {
         return getPrefs(context).getBoolean(ACTION_USAGE, true);
     }
 
-    public static void setNotOpenUsageAccess(Context context){
+    public static void setNotOpenUsageAccess(Context context) {
         getPrefs(context).edit().putBoolean(ACTION_USAGE, false).apply();
     }
 
-    public static boolean getNotificationAccess(Context context){
-        return getPrefs(context).getBoolean(NOTIFICATION_ACCESS, false);
+    public static boolean shouldAskForNotificationAccess(Context context) {
+        return getPrefs(context).getBoolean(NOTIFICATION_ACCESS, true);
     }
 
-    public static void setNotificationAccess(Context context){
-        getPrefs(context).edit().putBoolean(NOTIFICATION_ACCESS, true).apply();
+    public static void setNotToAskForNotificationAccess(Context context) {
+        getPrefs(context).edit().putBoolean(NOTIFICATION_ACCESS, false).apply();
     }
 
     public static SharedPreferences getPrefs(Context context) {

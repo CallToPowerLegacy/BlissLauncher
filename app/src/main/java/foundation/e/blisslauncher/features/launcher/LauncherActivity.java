@@ -81,7 +81,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import foundation.e.blisslauncher.BlissLauncher;
-import foundation.e.blisslauncher.BuildConfig;
 import foundation.e.blisslauncher.R;
 import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
@@ -223,32 +222,39 @@ public class LauncherActivity extends AppCompatActivity implements
         mAppWidgetManager = BlissLauncher.getApplication(this).getAppWidgetManager();
         mAppWidgetHost = BlissLauncher.getApplication(this).getAppWidgetHost();
 
-        mLauncherView = LayoutInflater.from(this).inflate(foundation.e.blisslauncher.R.layout.activity_main, null);
+        mLauncherView = LayoutInflater.from(this).inflate(
+                foundation.e.blisslauncher.R.layout.activity_main, null);
         setContentView(mLauncherView);
         setupViews();
 
         mProgressBar.setVisibility(View.VISIBLE);
 
-        ContentResolver cr = getContentResolver();
-        String setting = "enabled_notification_listeners";
-        String permissionString = Settings.Secure.getString(cr, setting);
-        if (permissionString == null || !permissionString.contains(getPackageName())) {
-            if (BuildConfig.DEBUG) {
+        if (Preferences.shouldAskForNotificationAccess(this)) {
+            ContentResolver cr = getContentResolver();
+            String setting = "enabled_notification_listeners";
+            String permissionString = Settings.Secure.getString(cr, setting);
+            if (permissionString == null || !permissionString.contains(getPackageName())) {
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
-            } else if (!Preferences.getNotificationAccess(this)) {
-                ComponentName cn = new ComponentName(this, NotificationService.class);
-                if (permissionString == null) {
-                    permissionString = "";
-                } else {
-                    permissionString += ":";
-                }
-                permissionString += cn.flattenToString();
-                boolean success = Settings.Secure.putString(cr, setting, permissionString);
-                if (success) {
-                    Preferences.setNotificationAccess(this);
-                }
+                //TODO: Uncomment it when priv-app permission issue resolved.
+                /*if (BuildConfig.DEBUG) {
+
+                } else if (!Preferences.shouldAskForNotificationAccess(this)) {
+                    ComponentName cn = new ComponentName(this, NotificationService.class);
+                    if (permissionString == null) {
+                        permissionString = "";
+                    } else {
+                        permissionString += ":";
+                    }
+                    permissionString += cn.flattenToString();
+                    boolean success = Settings.Secure.putString(cr, setting, permissionString);
+                    if (success) {
+                        Preferences.setNotificationAccess(this);
+                    }
+                }*/
             }
+            Preferences.setNotToAskForNotificationAccess(this);
         }
+
         // Start NotificationService to add count badge to Icons
         Intent notificationServiceIntent = new Intent(this, NotificationService.class);
         startService(notificationServiceIntent);
@@ -1267,7 +1273,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
         // Prepare edit widgets button
         findViewById(R.id.edit_widgets_button).setOnClickListener(
-              view -> startActivity(new Intent(this, WidgetsActivity.class)));
+                view -> startActivity(new Intent(this, WidgetsActivity.class)));
 
         // Prepare weather widget view
         // [[BEGIN]]
@@ -1321,7 +1327,7 @@ public class LauncherActivity extends AppCompatActivity implements
         Arrays.sort(widgetIds);
         for (int id : widgetIds) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
-            if(appWidgetInfo != null){
+            if (appWidgetInfo != null) {
                 RoundedWidgetView hostView = (RoundedWidgetView) mAppWidgetHost.createView(
                         getApplicationContext(), id,
                         appWidgetInfo);
@@ -1335,9 +1341,11 @@ public class LauncherActivity extends AppCompatActivity implements
     private void updateWidgetOption(int appWidgetId, AppWidgetProviderInfo info) {
         Bundle newOps = new Bundle();
         newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, info.minWidth);
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, BlissLauncher.getApplication(this).getDeviceProfile().getMaxWidgetWidth());
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, BlissLauncher.getApplication(
+                this).getDeviceProfile().getMaxWidgetWidth());
         newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, info.minHeight);
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, BlissLauncher.getApplication(this).getDeviceProfile().getMaxWidgetHeight());
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, BlissLauncher.getApplication(
+                this).getDeviceProfile().getMaxWidgetHeight());
         mAppWidgetManager.updateAppWidgetOptions(appWidgetId, newOps);
     }
 
