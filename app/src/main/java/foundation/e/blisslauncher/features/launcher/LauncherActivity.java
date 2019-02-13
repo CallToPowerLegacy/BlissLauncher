@@ -6,6 +6,7 @@ import static android.view.View.VISIBLE;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.ArgbEvaluator;
 import android.animation.LayoutTransition;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -22,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
@@ -35,6 +37,7 @@ import android.os.StrictMode;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -207,6 +210,9 @@ public class LauncherActivity extends AppCompatActivity implements
     private AppWidgetManager mAppWidgetManager;
     private WidgetHost mAppWidgetHost;
     private LinearLayout widgetContainer;
+
+    ArgbEvaluator argbEvaluator = new ArgbEvaluator();
+
 
     @SuppressLint("InflateParams")
     @Override
@@ -412,10 +418,6 @@ public class LauncherActivity extends AppCompatActivity implements
         widgetView.setLayoutParams(layoutParams);
         widgetView.setPadding(0, 0, 0, 0);
         widgetHolderLinearLayout.addView(widgetView);
-        widgetView.setOnTouchListener((v, event) -> {
-            v.getParent().getParent().getParent().requestDisallowInterceptTouchEvent(true);
-            return false;
-        });
     }
 
     @Override
@@ -993,11 +995,19 @@ public class LauncherActivity extends AppCompatActivity implements
      * updated
      */
     private void createPageChangeListener() {
+        Integer color1 = Color.TRANSPARENT;
+        Integer color2 = ContextCompat.getColor(this, R.color.dark_grey_44);
         mHorizontalPager.addOnScrollListener(new HorizontalPager.OnScrollListener() {
             boolean isViewScrolling = true;
 
             @Override
             public void onScroll(int scrollX) {
+                if (scrollX >= 0 && scrollX < mDeviceProfile.availableWidthPx) {
+                    float fraction = (float) (mDeviceProfile.availableWidthPx - scrollX)
+                            / mDeviceProfile.availableWidthPx;
+                    mHorizontalPager.setBackgroundColor(
+                            (Integer) argbEvaluator.evaluate(fraction, color1, color2));
+                }
                 if (isViewScrolling) {
                     dragDropEnabled = false;
                 }
@@ -1005,6 +1015,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public void onViewScrollFinished(int page) {
+                mHorizontalPager.setBackgroundColor(page == 0 ? color2 : color1);
                 isViewScrolling = false;
 
                 if (currentPageNumber != page) {
@@ -1334,13 +1345,31 @@ public class LauncherActivity extends AppCompatActivity implements
                 hostView.setAppWidget(id, appWidgetInfo);
                 hostView.post(() -> updateWidgetOption(id, appWidgetInfo));
                 addWidgetToContainer(widgetContainer, hostView);
+                /*hostView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        Log.i(TAG, "onTouch: "+hostView);
+                        Log.d(TAG,
+                                "onTouch() called with: v = [" + v + "], event = [" + event + "]");
+                        layout.requestDisallowInterceptTouchEvent(true);
+                        int action = event.getAction();
+                        switch (action) {
+                            case MotionEvent.ACTION_UP:
+                                layout.getParent().requestDisallowInterceptTouchEvent(false);
+                                break;
+                        }
+
+                        return true;
+                    }
+                });*/
             }
         }
     }
 
     private void updateWidgetOption(int appWidgetId, AppWidgetProviderInfo info) {
         Bundle newOps = new Bundle();
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, info.minWidth);
+        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, BlissLauncher.getApplication(
+                this).getDeviceProfile().getMaxWidgetWidth());
         newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, BlissLauncher.getApplication(
                 this).getDeviceProfile().getMaxWidgetWidth());
         newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, info.minHeight);
@@ -1561,7 +1590,7 @@ public class LauncherActivity extends AppCompatActivity implements
         iconLayoutParams.setGravity(Gravity.CENTER);
         view.setLayoutParams(iconLayoutParams);
         view.setWithText(false);
-        if (index == LauncherItem.INVALID_CELL) {
+        if (index == LauncherItem.INVALID_CELL || index > mDock.getChildCount()) {
             mDock.addView(view);
         } else {
             mDock.addView(view, index);

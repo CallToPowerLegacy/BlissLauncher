@@ -7,4 +7,5 @@
     <dimen name="forecast_item_padding_side">16dp</dimen>
     <dimen name="corner_radius">12dp</dimen>
     <dimen name="widget_margin">8dp</dimen>
+    <dimen name="min_widget_height">200dp</dimen>
 </resources>

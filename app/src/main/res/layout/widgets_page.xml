@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@color/dark_grey_44"
     android:orientation="vertical"
     android:scrollbars="none"
     tools:ignore="ContentDescription">
@@ -74,6 +73,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/btn_rounded_corner"
             android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="8dp"
             android:text="Edit"/>
     </LinearLayout>
 
