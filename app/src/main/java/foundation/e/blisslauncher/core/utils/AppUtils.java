@@ -67,8 +67,7 @@ public class AppUtils {
             launchableApps = sLauncherApps.getActivityList(null, profile).parallelStream()
                     .filter(activityInfo -> {
                         ApplicationInfo appInfo = activityInfo.getApplicationInfo();
-                        return !appInfo.packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)
-                                && !appInfo.packageName.equalsIgnoreCase(AppProvider.MUPDF_PACKAGE);
+                        return !AppProvider.DISABLED_PACKAGE.contains(appInfo.packageName);
                     })
                     .map(activityInfo -> {
                         ApplicationItem applicationItem = new ApplicationItem(context, activityInfo,
@@ -109,8 +108,7 @@ public class AppUtils {
     }
 
     public static ApplicationItem createAppItem(Context context, String packageName) {
-        if (packageName.equalsIgnoreCase(AppProvider.MICROG_PACKAGE)
-                || packageName.equalsIgnoreCase(AppProvider.MUPDF_PACKAGE)) {
+        if (AppProvider.DISABLED_PACKAGE.contains(packageName)) {
             return null;
         }
         if (sLauncherApps == null) {

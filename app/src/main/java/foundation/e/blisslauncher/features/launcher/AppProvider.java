@@ -25,6 +25,7 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -71,8 +72,17 @@ public class AppProvider extends Service implements Provider {
 
     private AppsRepository mAppsRepository;
 
-    public static final String MICROG_PACKAGE = "com.google.android.gms";
-    public static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
+    private static final String MICROG_PACKAGE = "com.google.android.gms";
+    private static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
+    private static final String OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
+
+    public static HashSet<String> DISABLED_PACKAGE = new HashSet<>();
+
+    static {
+        DISABLED_PACKAGE.add(MICROG_PACKAGE);
+        DISABLED_PACKAGE.add(MUPDF_PACKAGE);
+        DISABLED_PACKAGE.add(OPENKEYCHAIN_PACKAGE);
+    }
 
     private IBinder mBinder = new LocalBinder();
     private PackageAddedRemovedHandler mPackageAddedRemovedHandler;
@@ -84,7 +94,6 @@ public class AppProvider extends Service implements Provider {
 
     @Override
     public void onCreate() {
-        Log.d(TAG, "onCreate() called");
         final UserManager manager = (UserManager) this.getSystemService(Context.USER_SERVICE);
         assert manager != null;
 
