@@ -75,6 +75,7 @@ public class AppProvider extends Service implements Provider {
     private static final String MICROG_PACKAGE = "com.google.android.gms";
     private static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
     private static final String OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
+    private static final String LIBREOFFICE_PACKAGE = "org.documentfoundation.libreoffice";
 
     public static HashSet<String> DISABLED_PACKAGE = new HashSet<>();
 
@@ -82,6 +83,7 @@ public class AppProvider extends Service implements Provider {
         DISABLED_PACKAGE.add(MICROG_PACKAGE);
         DISABLED_PACKAGE.add(MUPDF_PACKAGE);
         DISABLED_PACKAGE.add(OPENKEYCHAIN_PACKAGE);
+        DISABLED_PACKAGE.add(LIBREOFFICE_PACKAGE);
     }
 
     private IBinder mBinder = new LocalBinder();
