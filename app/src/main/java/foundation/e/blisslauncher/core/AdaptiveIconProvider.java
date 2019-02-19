@@ -22,7 +22,6 @@ public class AdaptiveIconProvider {
 
     private static final String TAG = "AdaptiveIconProvider";
 
-    private static final String ANDROID_SCHEMA = "http://schemas.android.com/apk/res/android";
     private static final String[] IC_DIRS = new String[]{"mipmap", "drawable"};
     private static final String[] IC_CONFIGS = new String[]{"-anydpi-v26", "-v26", ""};
 
@@ -72,7 +71,7 @@ public class AdaptiveIconProvider {
                     }
                 }
                 manifestParser.close();
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
 
             XmlResourceParser parser = null;
@@ -119,7 +118,7 @@ public class AdaptiveIconProvider {
                                         backgroundRes = parser.getAttributeResourceValue(
                                                 "http://schemas.android.com/apk/res/android",
                                                 "mipmap", 0);
-                                    } catch (Exception e1) {
+                                    } catch (Exception ignored) {
                                     }
                                 }
                                 break;
@@ -133,7 +132,7 @@ public class AdaptiveIconProvider {
                                         foregroundRes = parser.getAttributeResourceValue(
                                                 "http://schemas.android.com/apk/res/android",
                                                 "mipmap", 0);
-                                    } catch (Exception e1) {
+                                    } catch (Exception ignored) {
                                     }
                                 }
                                 break;
@@ -145,7 +144,7 @@ public class AdaptiveIconProvider {
                 parser.close();
             }
 
-            if (background == null && backgroundRes != 0) {
+            if (backgroundRes != -1) {
                 try {
                     background = ResourcesCompat.getDrawable(resources, backgroundRes, theme);
                 } catch (Resources.NotFoundException e) {
@@ -158,13 +157,13 @@ public class AdaptiveIconProvider {
                             background = ResourcesCompat.getDrawable(resources,
                                     resources.getIdentifier("ic_launcher_background", "drawable",
                                             packageName), theme);
-                        } catch (Resources.NotFoundException e2) {
+                        } catch (Resources.NotFoundException ignored) {
                         }
                     }
                 }
             }
 
-            if (foreground == null) {
+            if (foregroundRes != -1) {
                 try {
                     foreground = ResourcesCompat.getDrawable(resources, foregroundRes, theme);
                 } catch (Resources.NotFoundException e) {
@@ -177,7 +176,7 @@ public class AdaptiveIconProvider {
                             foreground = ResourcesCompat.getDrawable(resources,
                                     resources.getIdentifier("ic_launcher_foreground", "drawable",
                                             packageName), theme);
-                        } catch (Resources.NotFoundException e2) {
+                        } catch (Resources.NotFoundException ignored) {
                         }
                     }
                 }
