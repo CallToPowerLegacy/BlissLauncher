@@ -8,6 +8,7 @@ import java.util.List;
 
 import foundation.e.blisslauncher.core.database.LauncherDB;
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
+import foundation.e.blisslauncher.core.migrate.Migration;
 
 public class LoadDatabaseTask extends AsyncTask<Void, Void, List<LauncherItem>> {
 
@@ -25,6 +26,7 @@ public class LoadDatabaseTask extends AsyncTask<Void, Void, List<LauncherItem>> 
 
     @Override
     protected List<LauncherItem> doInBackground(Void... voids) {
+        Migration.migrateSafely(mContext.get());
         return LauncherDB.getDatabase(mContext.get()).launcherDao().getAllItems();
     }
 

@@ -28,4 +28,7 @@ public interface LauncherDao {
     @Query("DELETE FROM launcher_items WHERE title = :name and item_type = "
             + Constants.ITEM_TYPE_SHORTCUT)
     void deleteShortcut(String name);
+
+    @Query("UPDATE launcher_items SET item_id = :newComponentName WHERE item_id = :id")
+    int updateComponent(String id, String newComponentName);
 }

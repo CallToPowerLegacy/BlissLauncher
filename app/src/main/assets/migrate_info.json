@@ -1,0 +1,19 @@
+{
+  "currentVersion": 1,
+  "migrate_infos": [
+    {
+      "startVersion": 0,
+      "endVersion": 1,
+      "components": [
+        {
+          "old_component_name": "org.thoughtcrime.securesms/org.thoughtcrime.securesms.RoutingActivity",
+          "new_component_name": "com.moez.QKSMS/com.moez.QKSMS.feature.main.MainActivity"
+        },
+        {
+          "old_component_name": "org.lineageos.jelly/org.lineageos.jelly.MainActivity",
+          "new_component_name": "foundation.e.browser/com.google.android.apps.chrome.Main"
+        }
+      ]
+    }
+  ]
+}

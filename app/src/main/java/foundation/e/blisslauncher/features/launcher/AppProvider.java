@@ -37,6 +37,7 @@ import foundation.e.blisslauncher.core.database.model.ApplicationItem;
 import foundation.e.blisslauncher.core.database.model.FolderItem;
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
 import foundation.e.blisslauncher.core.database.model.ShortcutItem;
+import foundation.e.blisslauncher.core.executors.AppExecutors;
 import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
@@ -197,7 +198,7 @@ public class AppProvider extends Service implements Provider {
 
     private void initializeDatabaseLoading(LoadDatabaseTask loader) {
         loader.setAppProvider(this);
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        loader.executeOnExecutor(AppExecutors.getInstance().diskIO());
     }
 
     public void loadAppsOver(Map<String, ApplicationItem> appItemsPair) {

@@ -96,8 +96,15 @@ public class DatabaseManager {
         }
     }
 
-    public void removeShortcut(String name){
+    public void removeShortcut(String name) {
         mAppExecutors.diskIO().execute(
                 () -> LauncherDB.getDatabase(mContext).launcherDao().deleteShortcut(name));
+    }
+
+    // Already invoked in a disk io thread, so no need to execute in separate thread here.
+    public void migrateComponent(String old_component_name, String new_component_name) {
+        LauncherDB.getDatabase(mContext).launcherDao().delete(new_component_name);
+        LauncherDB.getDatabase(mContext).launcherDao().updateComponent(old_component_name,
+                new_component_name);
     }
 }

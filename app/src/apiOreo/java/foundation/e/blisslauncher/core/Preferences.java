@@ -50,6 +50,8 @@ public class Preferences {
 
     private static final String ACTION_USAGE = "foundation.e.blisslauncher.ACTION_USAGE";
 
+    private static final String CURRENT_MIGRATION_VERSION = "current_migration_version";
+
     private Preferences() {
     }
 
@@ -336,6 +338,14 @@ public class Preferences {
 
     public static void setNotToAskForNotificationAccess(Context context) {
         getPrefs(context).edit().putBoolean(NOTIFICATION_ACCESS, false).apply();
+    }
+
+    public static int getCurrentMigrationVersion(Context context){
+        return getPrefs(context).getInt(CURRENT_MIGRATION_VERSION, 0);
+    }
+
+    public static void setCurrentMigrationVersion(Context context, int version){
+        getPrefs(context).edit().putInt(CURRENT_MIGRATION_VERSION, version).apply();
     }
 
     public static SharedPreferences getPrefs(Context context) {
