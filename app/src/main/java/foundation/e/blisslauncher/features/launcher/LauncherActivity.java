@@ -143,7 +143,7 @@ public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener {
 
     public static final int REORDER_TIMEOUT = 350;
-    private final static int INVALID = -999;
+    private final static int INVALID = LauncherItem.INVALID_CELL;
     private static final int REQUEST_PERMISSION_CALL_PHONE = 14;
     private static final int REQUEST_LOCATION_SOURCE_SETTING = 267;
     public static boolean longPressed;
@@ -1345,23 +1345,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 hostView.setAppWidget(id, appWidgetInfo);
                 hostView.post(() -> updateWidgetOption(id, appWidgetInfo));
                 addWidgetToContainer(widgetContainer, hostView);
-                /*hostView.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        Log.i(TAG, "onTouch: "+hostView);
-                        Log.d(TAG,
-                                "onTouch() called with: v = [" + v + "], event = [" + event + "]");
-                        layout.requestDisallowInterceptTouchEvent(true);
-                        int action = event.getAction();
-                        switch (action) {
-                            case MotionEvent.ACTION_UP:
-                                layout.getParent().requestDisallowInterceptTouchEvent(false);
-                                break;
-                        }
-
-                        return true;
-                    }
-                });*/
             }
         }
     }
@@ -1569,10 +1552,10 @@ public class LauncherActivity extends AppCompatActivity implements
         view.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
         view.setLayoutParams(iconLayoutParams);
         view.setWithText(true);
-        if (index != INVALID) {
-            page.addView(view, index);
-        } else {
+        if (index == INVALID || index > page.getChildCount()) {
             page.addView(view);
+        } else {
+            page.addView(view, index);
         }
     }
 
@@ -1605,17 +1588,20 @@ public class LauncherActivity extends AppCompatActivity implements
      */
     @SuppressLint({"InflateParams", "ClickableViewAccessibility"})
     private BlissFrameLayout prepareLauncherItem(final LauncherItem launcherItem) {
-        final BlissFrameLayout v = (BlissFrameLayout) getLayoutInflater().inflate(
+        final BlissFrameLayout iconView = (BlissFrameLayout) getLayoutInflater().inflate(
                 R.layout.app_view,
                 null);
-        v.setLauncherItem(launcherItem);
-        final SquareFrameLayout icon = v.findViewById(R.id.app_icon);
+        iconView.setLauncherItem(launcherItem);
+        final SquareFrameLayout icon = iconView.findViewById(R.id.app_icon);
         if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
-            v.applyBadge(checkHasApp((FolderItem) launcherItem, mAppsWithNotifications),
+            iconView.applyBadge(checkHasApp((FolderItem) launcherItem, mAppsWithNotifications),
                     launcherItem.container != Constants.CONTAINER_HOTSEAT);
         } else if (launcherItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
             ApplicationItem applicationItem = (ApplicationItem) launcherItem;
-            v.applyBadge(mAppsWithNotifications.contains(applicationItem.packageName),
+            if(applicationItem.appType == ApplicationItem.TYPE_CALENDAR){
+                mCalendarIcons.add(iconView);
+            }
+            iconView.applyBadge(mAppsWithNotifications.contains(applicationItem.packageName),
                     launcherItem.container != Constants.CONTAINER_HOTSEAT);
         }
 
@@ -1638,18 +1624,18 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (longPressed || (!mLongClickStartsDrag
                             && (System.currentTimeMillis() - iconPressedAt) > 150)) {
                         longPressed = false;
-                        movingApp = v;
+                        movingApp = iconView;
                         dragShadowBuilder = new BlissDragShadowBuilder(
                                 icon, (event.getX() < 0 ? 0 : event.getX()),
                                 (event.getY() < 0 ? 0 : event.getY()));
-                        icon.startDrag(null, dragShadowBuilder, v, 0);
-                        if (v.getParent().getParent() instanceof HorizontalPager) {
+                        icon.startDrag(null, dragShadowBuilder, iconView, 0);
+                        if (iconView.getParent().getParent() instanceof HorizontalPager) {
                             parentPage = getCurrentAppsPageNumber();
                         } else {
                             parentPage = -99;
                         }
-                        v.clearAnimation();
-                        v.setVisibility(View.INVISIBLE);
+                        iconView.clearAnimation();
+                        iconView.setVisibility(View.INVISIBLE);
                         dragDropEnabled = true;
                         return true;
                     }
@@ -1667,12 +1653,12 @@ public class LauncherActivity extends AppCompatActivity implements
             if (launcherItem.itemType != Constants.ITEM_TYPE_FOLDER) {
                 startActivitySafely(getApplicationContext(), launcherItem, view);
             } else {
-                folderFromDock = !(v.getParent().getParent() instanceof HorizontalPager);
-                displayFolder((FolderItem) launcherItem, v);
+                folderFromDock = !(iconView.getParent().getParent() instanceof HorizontalPager);
+                displayFolder((FolderItem) launcherItem, iconView);
             }
         });
 
-        return v;
+        return iconView;
     }
 
     private BlissFrameLayout prepareSuggestedApp(final LauncherItem launcherItem) {
