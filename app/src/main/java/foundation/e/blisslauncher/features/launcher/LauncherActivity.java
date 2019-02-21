@@ -47,7 +47,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -100,7 +99,6 @@ import foundation.e.blisslauncher.core.customviews.SquareFrameLayout;
 import foundation.e.blisslauncher.core.customviews.SquareImageView;
 import foundation.e.blisslauncher.core.customviews.WidgetHost;
 import foundation.e.blisslauncher.core.database.DatabaseManager;
-import foundation.e.blisslauncher.core.database.LauncherDB;
 import foundation.e.blisslauncher.core.database.model.ApplicationItem;
 import foundation.e.blisslauncher.core.database.model.CalendarIcon;
 import foundation.e.blisslauncher.core.database.model.FolderItem;
@@ -143,7 +141,7 @@ public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener {
 
     public static final int REORDER_TIMEOUT = 350;
-    private final static int INVALID = LauncherItem.INVALID_CELL;
+    private final static int EMPTY_LOCATION_DRAG = -999;
     private static final int REQUEST_PERMISSION_CALL_PHONE = 14;
     private static final int REQUEST_LOCATION_SOURCE_SETTING = 267;
     public static boolean longPressed;
@@ -203,7 +201,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private BlissFrameLayout activeFolderView;
     private int activeDot;
     private int statusBarHeight;
-    private List<LauncherItem> mLauncherItems;
 
     private static final String TAG = "LauncherActivity";
     private TextView openUsageAccessTextView;
@@ -306,14 +303,14 @@ public class LauncherActivity extends AppCompatActivity implements
                                             LauncherActivity.this).getAppProvider().reload();
                                 } else {
                                     if (!allAppsDisplayed) {
-                                        mLauncherItems = launcherItems;
-                                        showApps();
+                                        showApps(launcherItems);
                                     }
                                 }
                             }
 
                             @Override
                             public void onError(Throwable e) {
+                                e.printStackTrace();
                             }
 
                             @Override
@@ -597,7 +594,6 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void removePackageFromLauncher(String packageName) {
-        Log.d(TAG, "removePackageFromLauncher() called with: packageName = [" + packageName + "]");
         handleWobbling(false);
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
@@ -851,9 +847,9 @@ public class LauncherActivity extends AppCompatActivity implements
         addLauncherItem(updatedAppItem);
     }
 
-    public void showApps() {
+    public void showApps(List<LauncherItem> launcherItems) {
         mProgressBar.setVisibility(GONE);
-        createUI();
+        createUI(launcherItems);
         isUiDone = true;
         createPageChangeListener();
         createFolderTitleListener();
@@ -1084,7 +1080,8 @@ public class LauncherActivity extends AppCompatActivity implements
     /**
      * Populates the pages and the mDock for the first time.
      */
-    private void createUI() {
+    private void createUI(
+            List<LauncherItem> launcherItems) {
         mHorizontalPager.setUiCreated(false);
         mDock.setEnabled(false);
 
@@ -1096,8 +1093,8 @@ public class LauncherActivity extends AppCompatActivity implements
         GridLayout workspaceScreen = preparePage();
         pages.add(workspaceScreen);
 
-        for (int i = 0; i < mLauncherItems.size(); i++) {
-            LauncherItem launcherItem = mLauncherItems.get(i);
+        for (int i = 0; i < launcherItems.size(); i++) {
+            LauncherItem launcherItem = launcherItems.get(i);
             BlissFrameLayout appView = prepareLauncherItem(launcherItem);
             if (launcherItem.container == Constants.CONTAINER_HOTSEAT) {
                 addAppToDock(appView, launcherItem.cell);
@@ -1124,8 +1121,7 @@ public class LauncherActivity extends AppCompatActivity implements
         currentPageNumber = 0;
 
         mHorizontalPager.setUiCreated(true);
-        new Thread(() -> LauncherDB.getDatabase(this).launcherDao().insertAll(
-                mLauncherItems)).start();
+        DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         mDock.setEnabled(true);
     }
 
@@ -1540,7 +1536,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void addAppToGrid(GridLayout page, BlissFrameLayout view) {
-        addAppToGrid(page, view, INVALID);
+        addAppToGrid(page, view, EMPTY_LOCATION_DRAG);
     }
 
     private void addAppToGrid(GridLayout page, BlissFrameLayout view, int index) {
@@ -1552,7 +1548,8 @@ public class LauncherActivity extends AppCompatActivity implements
         view.findViewById(R.id.app_label).setVisibility(View.VISIBLE);
         view.setLayoutParams(iconLayoutParams);
         view.setWithText(true);
-        if (index == INVALID || index > page.getChildCount()) {
+        if (index == EMPTY_LOCATION_DRAG || index == LauncherItem.INVALID_CELL
+                || index > page.getChildCount()) {
             page.addView(view);
         } else {
             page.addView(view, index);
@@ -1573,7 +1570,8 @@ public class LauncherActivity extends AppCompatActivity implements
         iconLayoutParams.setGravity(Gravity.CENTER);
         view.setLayoutParams(iconLayoutParams);
         view.setWithText(false);
-        if (index == LauncherItem.INVALID_CELL || index > mDock.getChildCount()) {
+        if (index == LauncherItem.INVALID_CELL || index == EMPTY_LOCATION_DRAG
+                || index > mDock.getChildCount()) {
             mDock.addView(view);
         } else {
             mDock.addView(view, index);
@@ -1598,7 +1596,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     launcherItem.container != Constants.CONTAINER_HOTSEAT);
         } else if (launcherItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
             ApplicationItem applicationItem = (ApplicationItem) launcherItem;
-            if(applicationItem.appType == ApplicationItem.TYPE_CALENDAR){
+            if (applicationItem.appType == ApplicationItem.TYPE_CALENDAR) {
                 mCalendarIcons.add(iconView);
             }
             iconView.applyBadge(mAppsWithNotifications.contains(applicationItem.packageName),
@@ -1983,14 +1981,14 @@ public class LauncherActivity extends AppCompatActivity implements
                     }
 
                     // If hovering over an empty location, ignore drag/drop
-                    if (index == INVALID) {
+                    if (index == EMPTY_LOCATION_DRAG) {
                         discardCollidingApp();
                     }
 
                     // If hovering over another app icon
                     // either move it or create a folder
                     // depending on time and distance
-                    if (index != INVALID) {
+                    if (index != EMPTY_LOCATION_DRAG) {
                         BlissFrameLayout latestCollidingApp =
                                 (BlissFrameLayout) mDock.getChildAt(index);
                         if (collidingApp != latestCollidingApp) {
@@ -2043,7 +2041,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                             "Dock is already full",
                                             Toast.LENGTH_SHORT).show();
                                 } else {
-                                    addAppToDock(movingApp, INVALID);
+                                    addAppToDock(movingApp, EMPTY_LOCATION_DRAG);
                                 }
                             }
                             movingApp.setVisibility(View.VISIBLE);
@@ -2130,14 +2128,14 @@ public class LauncherActivity extends AppCompatActivity implements
                         }
 
                         // If hovering over an empty location, ignore drag/drop
-                        if (index == INVALID) {
+                        if (index == EMPTY_LOCATION_DRAG) {
                             discardCollidingApp();
                         }
 
                         // If hovering over another app icon
                         // either move it or create a folder
                         // depending on time and distance
-                        if (index != INVALID) {
+                        if (index != EMPTY_LOCATION_DRAG) {
                             View latestCollidingApp = getGridFromPage(page).getChildAt(index);
                             if (collidingApp != latestCollidingApp) {
                                 if (collidingApp != null) {
@@ -2372,7 +2370,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 DatabaseManager.getManager(this).removeLauncherItem(activeFolder.id);
             } else {
                 if (activeFolder.items.size() == 1) {
-                    Log.i(TAG, "removeAppFromFolder: here");
                     LauncherItem item = activeFolder.items.get(0);
                     activeFolder.items.remove(item);
                     mFolderAppsViewPager.getAdapter().notifyDataSetChanged();
@@ -2578,7 +2575,7 @@ public class LauncherActivity extends AppCompatActivity implements
      */
     private int getIndex(ViewGroup page, float x, float y) {
         float minDistance = Float.MAX_VALUE;
-        int index = INVALID;
+        int index = EMPTY_LOCATION_DRAG;
 
 
         for (int i = 0; i < page.getChildCount(); i++) {

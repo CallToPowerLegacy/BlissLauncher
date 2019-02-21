@@ -174,9 +174,6 @@ public class AppProvider extends Service implements Provider {
 
     @Override
     public void reload() {
-        appsLoaded = false;
-        shortcutsLoaded = false;
-        databaseLoaded = false;
         initializeAppLoading(new LoadAppsTask(this));
         if (Utilities.ATLEAST_OREO) {
             initializeShortcutsLoading(new LoadShortcutTask(this));
@@ -187,16 +184,19 @@ public class AppProvider extends Service implements Provider {
     }
 
     private void initializeAppLoading(LoadAppsTask loader) {
+        appsLoaded = false;
         loader.setAppProvider(this);
         loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void initializeShortcutsLoading(LoadShortcutTask loader) {
+        shortcutsLoaded = false;
         loader.setAppProvider(this);
         loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void initializeDatabaseLoading(LoadDatabaseTask loader) {
+        databaseLoaded = false;
         loader.setAppProvider(this);
         loader.executeOnExecutor(AppExecutors.getInstance().diskIO());
     }
@@ -208,7 +208,6 @@ public class AppProvider extends Service implements Provider {
     }
 
     public void loadShortcutsOver(Map<String, ShortcutInfoCompat> shortcuts) {
-        Log.d(TAG, "loadShortcutsOver() called with: shortcuts = [" + shortcuts + "]");
         mShortcutInfoCompats = shortcuts;
         shortcutsLoaded = true;
         handleAllProviderLoaded();
@@ -317,9 +316,7 @@ public class AppProvider extends Service implements Provider {
         }
 
         applicationItems.removeAll(mDatabaseItems);
-        for (ApplicationItem applicationItem : applicationItems) {
-            mLauncherItems.add(applicationItem);
-        }
+        mLauncherItems.addAll(applicationItems);
     }
 
     private ShortcutItem prepareShortcutForNougat(LauncherItem databaseItem) {
