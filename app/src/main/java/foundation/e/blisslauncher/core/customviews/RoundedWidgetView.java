@@ -5,19 +5,22 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.view.MotionEvent;
+import android.view.ViewGroup;
 
 import foundation.e.blisslauncher.R;
+import foundation.e.blisslauncher.features.widgets.CheckLongPressHelper;
 
 public class RoundedWidgetView extends AppWidgetHostView {
 
     private final Path stencilPath = new Path();
-    private float cornerRadius = 0;
-
+    private float cornerRadius;
+    private CheckLongPressHelper mLongPressHelper;
     private static final String TAG = "RoundedWidgetView";
 
     public RoundedWidgetView(Context context) {
         super(context);
         this.cornerRadius = context.getResources().getDimensionPixelSize(R.dimen.corner_radius);
+        mLongPressHelper = new CheckLongPressHelper(this);
     }
 
     @Override
@@ -41,14 +44,40 @@ public class RoundedWidgetView extends AppWidgetHostView {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        /*getParent().requestDisallowInterceptTouchEvent(true);
-        int action = ev.getAction();
-        switch (action) {
-            case MotionEvent.ACTION_UP:
-                getParent().requestDisallowInterceptTouchEvent(false);
-                break;
-        }*/
 
-        return super.onInterceptTouchEvent(ev);
+        // Consume any touch events for ourselves after longpress is triggered
+        if (mLongPressHelper.hasPerformedLongPress()) {
+            mLongPressHelper.cancelLongPress();
+            return true;
+        }
+
+        // Watch for longpress events at this level to make sure
+        // users can always pick up this widget
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                mLongPressHelper.postCheckForLongPress();
+                break;
+            }
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                mLongPressHelper.cancelLongPress();
+                break;
+        }
+
+        // Otherwise continue letting touch events fall through to children
+        return false;
+    }
+
+    @Override
+    public void cancelLongPress() {
+        super.cancelLongPress();
+
+        mLongPressHelper.cancelLongPress();
+    }
+
+    @Override
+    public int getDescendantFocusability() {
+        return ViewGroup.FOCUS_BLOCK_DESCENDANTS;
     }
 }

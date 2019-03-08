@@ -127,6 +127,7 @@ import foundation.e.blisslauncher.features.weather.WeatherSourceListenerService;
 import foundation.e.blisslauncher.features.weather.WeatherUpdateService;
 import foundation.e.blisslauncher.features.weather.WeatherUtils;
 import foundation.e.blisslauncher.features.widgets.WidgetManager;
+import foundation.e.blisslauncher.features.widgets.WidgetViewBuilder;
 import foundation.e.blisslauncher.features.widgets.WidgetsActivity;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -397,9 +398,6 @@ public class LauncherActivity extends AppCompatActivity implements
 
         RoundedWidgetView widgetView = widgetManager.dequeAddWidgetView();
         while (widgetView != null) {
-            int appWidgetId = widgetView.getAppWidgetId();
-            AppWidgetProviderInfo info = widgetView.getAppWidgetInfo();
-            widgetView.post(() -> updateWidgetOption(appWidgetId, info));
             addWidgetToContainer(widgetContainer, widgetView);
             widgetView = widgetManager.dequeAddWidgetView();
         }
@@ -407,14 +405,15 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void addWidgetToContainer(LinearLayout widgetHolderLinearLayout,
             RoundedWidgetView widgetView) {
+        View view = WidgetViewBuilder.create(this, widgetView);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         int margin = getResources().getDimensionPixelSize(R.dimen.widget_margin);
         layoutParams.setMargins(0, margin, 0, margin);
-        widgetView.setLayoutParams(layoutParams);
-        widgetView.setPadding(0, 0, 0, 0);
-        widgetHolderLinearLayout.addView(widgetView);
+        view.setLayoutParams(layoutParams);
+        view.setPadding(0, 0, 0, 0);
+        widgetHolderLinearLayout.addView(view);
     }
 
     @Override
@@ -1026,8 +1025,12 @@ public class LauncherActivity extends AppCompatActivity implements
 
                         mIndicator.animate().alpha(0).setDuration(100).withEndAction(
                                 () -> mIndicator.setVisibility(GONE));
-
                         refreshSuggestedApps(forceRefreshSuggestedApps);
+                        if (Preferences.weatherRefreshIntervalInMs(LauncherActivity.this) == 0) {
+                            Intent intent = new Intent(LauncherActivity.this, WeatherUpdateService.class);
+                            intent.setAction(WeatherUpdateService.ACTION_FORCE_UPDATE);
+                            startService(intent);
+                        }
                     } else {
                         if (mIndicator.getAlpha() != 1.0f) {
                             mIndicator.setVisibility(View.VISIBLE);
@@ -1321,12 +1324,12 @@ public class LauncherActivity extends AppCompatActivity implements
                     Preferences.setEnableLocation(this);
                 } else {
                     startService(new Intent(this, WeatherUpdateService.class)
-                            .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                            .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
                 }
             }
         } else {
             startService(new Intent(this, WeatherUpdateService.class)
-                    .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                    .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
         }
         // [[END]]
 
@@ -1339,22 +1342,9 @@ public class LauncherActivity extends AppCompatActivity implements
                         getApplicationContext(), id,
                         appWidgetInfo);
                 hostView.setAppWidget(id, appWidgetInfo);
-                hostView.post(() -> updateWidgetOption(id, appWidgetInfo));
                 addWidgetToContainer(widgetContainer, hostView);
             }
         }
-    }
-
-    private void updateWidgetOption(int appWidgetId, AppWidgetProviderInfo info) {
-        Bundle newOps = new Bundle();
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, BlissLauncher.getApplication(
-                this).getDeviceProfile().getMaxWidgetWidth());
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, BlissLauncher.getApplication(
-                this).getDeviceProfile().getMaxWidgetWidth());
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, info.minHeight);
-        newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, BlissLauncher.getApplication(
-                this).getDeviceProfile().getMaxWidgetHeight());
-        mAppWidgetManager.updateAppWidgetOptions(appWidgetId, newOps);
     }
 
     @Override
@@ -1371,7 +1361,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     Preferences.setEnableLocation(this);
                 } else {
                     startService(new Intent(this, WeatherUpdateService.class)
-                            .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                            .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
                 }
             }
         }
@@ -1421,7 +1411,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         Toast.LENGTH_SHORT).show();
             } else {
                 startService(new Intent(this, WeatherUpdateService.class)
-                        .putExtra(WeatherUpdateService.ACTION_FORCE_UPDATE, true));
+                        .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);

@@ -9,9 +9,10 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.0'
+        classpath 'com.android.tools.build:gradle:3.3.1'
         classpath 'io.fabric.tools:gradle:1.26.1'
         classpath 'com.google.gms:google-services:4.2.0'
+        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.6'
     }
 }
 
@@ -38,13 +39,13 @@ subprojects {
     }
 }
 
-ext{
-    compileSdkVersion = 28
+ext {
+    compileSdkVersion = 27
     minSdkVersion = 24
-    targetSdkVersion = 28
+    targetSdkVersion = 27
     sourceCompatibilityVersion = '1.7'
     targetCompatibilityVersion = '1.7'
-    supportLibraryVersion = '28.0.0'
+    supportLibraryVersion = '27.1.1'
     junitVersion = '4.12'
     mockitoVersion = '2.16.0'
     hamcrestVersion = '1.3'

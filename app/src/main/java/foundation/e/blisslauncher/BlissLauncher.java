@@ -20,8 +20,10 @@ public class BlissLauncher extends Application {
 
     private AppProvider mAppProvider;
 
-    private WidgetHost sAppWidgetHost;
-    private AppWidgetManager sAppWidgetManager;
+    private static WidgetHost sAppWidgetHost;
+    private static AppWidgetManager sAppWidgetManager;
+
+    private static int sLongPressTimeout = 300;
 
     private static final String TAG = "BlissLauncher";
 
@@ -104,5 +106,9 @@ public class BlissLauncher extends Application {
         super.onTerminate();
         sAppWidgetHost.stopListening();
         sAppWidgetHost = null;
+    }
+
+    public static long getLongPressTimeout() {
+        return sLongPressTimeout;
     }
 }

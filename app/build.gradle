@@ -64,7 +64,7 @@ dependencies {
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
 
-    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
+    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
     debugImplementation 'com.google.firebase:firebase-core:16.0.6'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 
@@ -122,3 +122,4 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.getkeepsafe.dexcount'
