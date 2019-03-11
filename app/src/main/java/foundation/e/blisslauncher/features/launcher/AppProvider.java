@@ -257,12 +257,12 @@ public class AppProvider extends Service implements Provider {
                         || applicationItem.container == Constants.CONTAINER_HOTSEAT) {
                     mLauncherItems.add(applicationItem);
                 } else {
-                    List<LauncherItem> items = folderItems.get(applicationItem.container);
-                    if (items == null) {
-                        items = new ArrayList<>();
+                    FolderItem folderItem =
+                            (FolderItem) mLauncherItems.get(foldersIndex.get(applicationItem.container));
+                    if (folderItem.items == null) {
+                        folderItem.items = new ArrayList<>();
                     }
-                    items.add(applicationItem);
-                    folderItems.put(applicationItem.container, items);
+                    folderItem.items.add(applicationItem);
                 }
             } else if (databaseItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
                 ShortcutItem shortcutItem;
@@ -281,12 +281,12 @@ public class AppProvider extends Service implements Provider {
                         || shortcutItem.container == Constants.CONTAINER_HOTSEAT) {
                     mLauncherItems.add(shortcutItem);
                 } else {
-                    List<LauncherItem> items = folderItems.get(shortcutItem.container);
-                    if (items == null) {
-                        items = new ArrayList<>();
+                    FolderItem folderItem =
+                            (FolderItem) mLauncherItems.get(foldersIndex.get(shortcutItem.container));
+                    if (folderItem.items == null) {
+                        folderItem.items = new ArrayList<>();
                     }
-                    items.add(shortcutItem);
-                    folderItems.put(shortcutItem.container, items);
+                    folderItem.items.add(shortcutItem);
                 }
             } else if (databaseItem.itemType == Constants.ITEM_TYPE_FOLDER) {
                 FolderItem folderItem = new FolderItem();
@@ -300,18 +300,11 @@ public class AppProvider extends Service implements Provider {
             }
         }
 
-        //TODO: Fix crash here.
         if (foldersIndex.size() > 0) {
             for (int i = 0; i < foldersIndex.size(); i++) {
                 FolderItem folderItem =
                         (FolderItem) mLauncherItems.get(foldersIndex.get(foldersIndex.keyAt(i)));
-                folderItem.items = (folderItems.get(Long.parseLong(folderItem.id)));
-                if (folderItem.items == null || folderItem.items.size() == 0) {
-                    mLauncherItems.remove(folderItem);
-                    DatabaseManager.getManager(this).removeLauncherItem(folderItem.id);
-                } else {
-                    folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this, folderItem);
-                }
+                folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this, folderItem);
             }
         }
 
