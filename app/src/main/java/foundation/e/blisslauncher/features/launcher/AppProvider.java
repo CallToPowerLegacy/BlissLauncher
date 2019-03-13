@@ -304,7 +304,12 @@ public class AppProvider extends Service implements Provider {
             for (int i = 0; i < foldersIndex.size(); i++) {
                 FolderItem folderItem =
                         (FolderItem) mLauncherItems.get(foldersIndex.get(foldersIndex.keyAt(i)));
-                folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this, folderItem);
+                if(folderItem.items == null){
+                    DatabaseManager.getManager(this).removeLauncherItem(folderItem.id);
+                    mLauncherItems.remove(foldersIndex.get(foldersIndex.keyAt(i)));
+                }else {
+                    folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this, folderItem);
+                }
             }
         }
 
