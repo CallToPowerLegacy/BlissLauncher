@@ -83,6 +83,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import foundation.e.blisslauncher.BlissLauncher;
+import foundation.e.blisslauncher.BuildConfig;
 import foundation.e.blisslauncher.R;
 import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
@@ -239,9 +240,8 @@ public class LauncherActivity extends AppCompatActivity implements
             String permissionString = Settings.Secure.getString(cr, setting);
             if (permissionString == null || !permissionString.contains(getPackageName())) {
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
-                //TODO: Uncomment it when priv-app permission issue resolved.
-                /*if (BuildConfig.DEBUG) {
-
+                if (BuildConfig.DEBUG) {
+                    startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 } else if (!Preferences.shouldAskForNotificationAccess(this)) {
                     ComponentName cn = new ComponentName(this, NotificationService.class);
                     if (permissionString == null) {
@@ -252,11 +252,10 @@ public class LauncherActivity extends AppCompatActivity implements
                     permissionString += cn.flattenToString();
                     boolean success = Settings.Secure.putString(cr, setting, permissionString);
                     if (success) {
-                        Preferences.setNotificationAccess(this);
+                        Preferences.setNotToAskForNotificationAccess(this);
                     }
-                }*/
+                }
             }
-            Preferences.setNotToAskForNotificationAccess(this);
         }
 
         // Start NotificationService to add count badge to Icons
