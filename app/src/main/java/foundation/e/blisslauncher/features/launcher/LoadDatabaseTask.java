@@ -1,9 +1,7 @@
 package foundation.e.blisslauncher.features.launcher;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 import foundation.e.blisslauncher.core.database.LauncherDB;
@@ -12,29 +10,27 @@ import foundation.e.blisslauncher.core.migrate.Migration;
 
 public class LoadDatabaseTask extends AsyncTask<Void, Void, List<LauncherItem>> {
 
-    private final WeakReference<Context> mContext;
-    private WeakReference<AppProvider> mAppProvider;
+    private AppProvider mAppProvider;
 
-    LoadDatabaseTask(Context context) {
+    LoadDatabaseTask() {
         super();
-        this.mContext = new WeakReference<>(context);
     }
 
     public void setAppProvider(AppProvider appProvider) {
-        this.mAppProvider = new WeakReference<>(appProvider);
+        this.mAppProvider = appProvider;
     }
 
     @Override
     protected List<LauncherItem> doInBackground(Void... voids) {
-        Migration.migrateSafely(mContext.get());
-        return LauncherDB.getDatabase(mContext.get()).launcherDao().getAllItems();
+        Migration.migrateSafely(mAppProvider.getContext());
+        return LauncherDB.getDatabase(mAppProvider.getContext()).launcherDao().getAllItems();
     }
 
     @Override
     protected void onPostExecute(List<LauncherItem> launcherItems) {
         super.onPostExecute(launcherItems);
         if (mAppProvider != null) {
-            mAppProvider.get().loadDatabaseOver(launcherItems);
+            mAppProvider.loadDatabaseOver(launcherItems);
         }
     }
 }

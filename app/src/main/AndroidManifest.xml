@@ -77,7 +77,6 @@
         <service android:name=".features.weather.WeatherUpdateService"/>
         <service android:name=".features.weather.DeviceStatusService"/>
         <service android:name=".features.weather.WeatherSourceListenerService"/>
-        <service android:name=".features.launcher.AppProvider"/>
 
         <receiver android:name="core.broadcast.PackageAddedRemovedHandler"/>
 

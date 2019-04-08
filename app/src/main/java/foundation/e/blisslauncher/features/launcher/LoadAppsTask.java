@@ -1,9 +1,7 @@
 package foundation.e.blisslauncher.features.launcher;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
-import java.lang.ref.WeakReference;
 import java.util.Map;
 
 import foundation.e.blisslauncher.core.database.model.ApplicationItem;
@@ -11,28 +9,26 @@ import foundation.e.blisslauncher.core.utils.AppUtils;
 
 public class LoadAppsTask extends AsyncTask<Void, Void, Map<String, ApplicationItem>> {
 
-    private final WeakReference<Context> mContext;
-    private WeakReference<AppProvider> mAppProvider;
+    private AppProvider mAppProvider;
 
-    LoadAppsTask(Context context) {
+    LoadAppsTask() {
         super();
-        this.mContext = new WeakReference<>(context);
     }
 
     public void setAppProvider(AppProvider appProvider) {
-        this.mAppProvider = new WeakReference<>(appProvider);
+        this.mAppProvider = appProvider;
     }
 
     @Override
     protected Map<String, ApplicationItem> doInBackground(Void... voids) {
-        return AppUtils.loadAll(mContext.get());
+        return AppUtils.loadAll(mAppProvider.getContext());
     }
 
     @Override
     protected void onPostExecute(Map<String, ApplicationItem> appItemPair) {
         super.onPostExecute(appItemPair);
         if (mAppProvider != null) {
-            mAppProvider.get().loadAppsOver(appItemPair);
+            mAppProvider.loadAppsOver(appItemPair);
         }
     }
 }
