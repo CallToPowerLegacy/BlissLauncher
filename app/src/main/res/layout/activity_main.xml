@@ -38,7 +38,7 @@
         android:id="@+id/folder_window_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#E6000000"
+        android:background="@color/dark_grey_44"
         android:clickable="true"
         android:visibility="gone">
 

@@ -53,6 +53,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
@@ -241,7 +242,8 @@ public class LauncherActivity extends AppCompatActivity implements
             if (permissionString == null || !permissionString.contains(getPackageName())) {
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 if (BuildConfig.DEBUG) {
-                    startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                    startActivity(
+                            new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 } else if (!Preferences.shouldAskForNotificationAccess(this)) {
                     ComponentName cn = new ComponentName(this, NotificationService.class);
                     if (permissionString == null) {
@@ -1026,7 +1028,8 @@ public class LauncherActivity extends AppCompatActivity implements
                                 () -> mIndicator.setVisibility(GONE));
                         refreshSuggestedApps(forceRefreshSuggestedApps);
                         if (Preferences.weatherRefreshIntervalInMs(LauncherActivity.this) == 0) {
-                            Intent intent = new Intent(LauncherActivity.this, WeatherUpdateService.class);
+                            Intent intent = new Intent(LauncherActivity.this,
+                                    WeatherUpdateService.class);
                             intent.setAction(WeatherUpdateService.ACTION_FORCE_UPDATE);
                             startService(intent);
                         }
@@ -1739,7 +1742,18 @@ public class LauncherActivity extends AppCompatActivity implements
 
         mFolderWindowContainer.setAlpha(0f);
         mFolderWindowContainer.setVisibility(View.VISIBLE);
-        mFolderWindowContainer.animate().alpha(1.0f).setDuration(200);
+        mFolderWindowContainer.animate().alpha(1.0f).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(400);
+        mHorizontalPager.animate().scaleX(0f).scaleY(0f).alpha(0.5f).setInterpolator(
+                new AccelerateDecelerateInterpolator()).setDuration(400);
+        mIndicator.animate().scaleX(0f).scaleY(0f).alpha(0.5f).setInterpolator(
+                new AccelerateDecelerateInterpolator()).setDuration(400);
+        mDock.animate().scaleX(0f).scaleY(0f).alpha(0.5f).setInterpolator(
+                new AccelerateDecelerateInterpolator()).setDuration(400);
+        /*Bitmap map = Utilities.takeScreenShot(this);
+
+        Bitmap fast = BlurBuilder.blur(this, map);
+        final Drawable draw=new BitmapDrawable(getResources(),fast);
+        mFolderWindowContainer.setBackground(draw);*/
 
         mFolderTitleInput.setText(app.title);
         mFolderTitleInput.setCursorVisible(false);
@@ -2660,8 +2674,15 @@ public class LauncherActivity extends AppCompatActivity implements
         DatabaseManager.getManager(LauncherActivity.this).saveLayouts(pages, mDock);
         mFolderTitleInput.clearFocus();
         folderFromDock = false;
-        mFolderWindowContainer.animate().alpha(0f)
-                .setDuration(200).setListener(new AnimatorListenerAdapter() {
+        mHorizontalPager.animate().scaleX(1).scaleY(1f).alpha(1f).setInterpolator(
+                new AccelerateDecelerateInterpolator()).setDuration(400);
+        mIndicator.animate().scaleX(1).scaleY(1).alpha(1f).setInterpolator(
+                new AccelerateDecelerateInterpolator()).setDuration(400);
+        mDock.animate().scaleX(1).scaleY(1).alpha(1f).setInterpolator(
+                new AccelerateDecelerateInterpolator()).setDuration(400);
+        mFolderWindowContainer.animate().setInterpolator(
+                new AccelerateDecelerateInterpolator()).alpha(0f)
+                .setDuration(400).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
