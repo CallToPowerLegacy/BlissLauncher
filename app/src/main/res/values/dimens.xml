@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="labelSize">14sp</dimen>
-    <dimen name="dotSize">8dp</dimen>
+    <dimen name="dp_8">8dp</dimen>
+    <dimen name="dp_12">12dp</dimen>
+    <dimen name="dp_16">16dp</dimen>
+    <dimen name="dp_36">36dp</dimen>
+    <dimen name="dp_40">40dp</dimen>
 
-    <dimen name="forecast_icon_size">36dp</dimen>
-    <dimen name="forecast_item_padding_side">16dp</dimen>
-    <dimen name="corner_radius">12dp</dimen>
-    <dimen name="widget_margin">8dp</dimen>
+    <dimen name="dotSize">@dimen/dp_8</dimen>
+    <dimen name="forecast_icon_size">@dimen/dp_36</dimen>
+    <dimen name="forecast_item_padding_side">@dimen/dp_16</dimen>
+    <dimen name="corner_radius">@dimen/dp_12</dimen>
+    <dimen name="widget_margin">@dimen/dp_8</dimen>
     <dimen name="min_widget_height">200dp</dimen>
 </resources>

@@ -16,50 +16,12 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/search_widget"
-            android:padding="8dp">
+        <include layout="@layout/layout_search_suggestion"/>
 
-            <foundation.e.blisslauncher.core.customviews.BlissInput
-                android:id="@+id/search_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toStartOf="@+id/clearSuggestionImageView"
-                android:background="@android:color/transparent"
-                android:drawableStart="@drawable/ic_search_white_24dp"
-                android:drawablePadding="8dp"
-                android:hint="@string/search"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:maxLines="1"/>
-
-            <ImageView
-                android:id="@+id/clearSuggestionImageView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_cancel_white_24dp"
-                android:visibility="gone"/>
-        </RelativeLayout>
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/suggestionRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"/>
-
-        <include
-            android:id="@+id/used_apps_layout"
-            layout="@layout/layout_used_apps"/>
         <include
             android:id="@+id/weather_info_layout"
             layout="@layout/layout_weather_info"/>
+
         <FrameLayout
             android:id="@+id/drag_layer"
             android:layout_width="match_parent"
