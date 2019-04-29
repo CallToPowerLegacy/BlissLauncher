@@ -39,7 +39,6 @@ public class AutoCompleteAdapter extends
     @Override
     public AutoCompleteAdapter.AutoCompleteViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
             int viewType) {
-
         View view = mInflater.inflate(R.layout.item_suggestion, parent, false);
         AutoCompleteViewHolder holder = new AutoCompleteViewHolder(view);
         view.setOnClickListener(

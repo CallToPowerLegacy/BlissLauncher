@@ -2,11 +2,7 @@ package foundation.e.blisslauncher;
 
 import android.app.Application;
 import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 
 import foundation.e.blisslauncher.core.DeviceProfile;
 import foundation.e.blisslauncher.core.IconsHandler;
@@ -70,20 +66,7 @@ public class BlissLauncher extends Application {
     }
 
     private void connectAppProvider() {
-        Intent intent = new Intent(this, AppProvider.class);
-        startService(intent);
-
-        bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                AppProvider.LocalBinder localBinder = (AppProvider.LocalBinder) service;
-                mAppProvider = localBinder.getService();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-            }
-        }, Context.BIND_AUTO_CREATE);
+        mAppProvider = AppProvider.getInstance(this);
     }
 
     public AppProvider getAppProvider() {

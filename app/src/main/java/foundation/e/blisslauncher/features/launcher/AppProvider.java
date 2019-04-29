@@ -1,6 +1,5 @@
 package foundation.e.blisslauncher.features.launcher;
 
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
@@ -12,12 +11,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
-import android.os.IBinder;
 import android.os.Process;
 import android.os.UserManager;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.LongSparseArray;
 
@@ -45,7 +41,7 @@ import foundation.e.blisslauncher.core.utils.UserHandle;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
 import foundation.e.blisslauncher.features.shortcuts.ShortcutInfoCompat;
 
-public class AppProvider extends Service implements Provider {
+public class AppProvider {
 
     /**
      * Represents networkItems in workspace.
@@ -87,20 +83,22 @@ public class AppProvider extends Service implements Provider {
         DISABLED_PACKAGE.add(LIBREOFFICE_PACKAGE);
     }
 
-    private IBinder mBinder = new LocalBinder();
     private PackageAddedRemovedHandler mPackageAddedRemovedHandler;
 
     private static final String TAG = "AppProvider";
+    private Context mContext;
+    private static AppProvider sInstance;
 
-    public AppProvider() {
+    private AppProvider(Context context) {
+        this.mContext = context;
+        initialise();
     }
 
-    @Override
-    public void onCreate() {
-        final UserManager manager = (UserManager) this.getSystemService(Context.USER_SERVICE);
+    private void initialise() {
+        final UserManager manager = (UserManager) mContext.getSystemService(Context.USER_SERVICE);
         assert manager != null;
 
-        final LauncherApps launcher = (LauncherApps) this.getSystemService(
+        final LauncherApps launcher = (LauncherApps) mContext.getSystemService(
                 Context.LAUNCHER_APPS_SERVICE);
         assert launcher != null;
 
@@ -112,7 +110,7 @@ public class AppProvider extends Service implements Provider {
                     return;
                 }
 
-                PackageAddedRemovedHandler.handleEvent(AppProvider.this,
+                PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.PACKAGE_REMOVED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
                         false
@@ -126,7 +124,7 @@ public class AppProvider extends Service implements Provider {
                     return;
                 }
 
-                PackageAddedRemovedHandler.handleEvent(AppProvider.this,
+                PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.PACKAGE_ADDED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
                         false
@@ -140,7 +138,7 @@ public class AppProvider extends Service implements Provider {
                     return;
                 }
 
-                PackageAddedRemovedHandler.handleEvent(AppProvider.this,
+                PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.PACKAGE_CHANGED",
                         packageName, new UserHandle(manager.getSerialNumberForUser(user), user),
                         true
@@ -150,7 +148,7 @@ public class AppProvider extends Service implements Provider {
             @Override
             public void onPackagesAvailable(String[] packageNames, android.os.UserHandle user,
                     boolean replacing) {
-                PackageAddedRemovedHandler.handleEvent(AppProvider.this,
+                PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.MEDIA_MOUNTED",
                         null, new UserHandle(manager.getSerialNumberForUser(user), user), false
                 );
@@ -160,7 +158,7 @@ public class AppProvider extends Service implements Provider {
             @Override
             public void onPackagesUnavailable(String[] packageNames, android.os.UserHandle user,
                     boolean replacing) {
-                PackageAddedRemovedHandler.handleEvent(AppProvider.this,
+                PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.MEDIA_UNMOUNTED",
                         null, new UserHandle(manager.getSerialNumberForUser(user), user), false
                 );
@@ -168,19 +166,28 @@ public class AppProvider extends Service implements Provider {
         });
 
         mAppsRepository = AppsRepository.getAppsRepository();
-        super.onCreate();
-        reload();
     }
 
-    @Override
+    public static AppProvider getInstance(Context context){
+        if(sInstance == null){
+            sInstance = new AppProvider(context);
+            sInstance.reload();
+        }
+        return sInstance;
+    }
+
+    public Context getContext() {
+        return mContext;
+    }
+
     public void reload() {
-        initializeAppLoading(new LoadAppsTask(this));
+        initializeAppLoading(new LoadAppsTask());
         if (Utilities.ATLEAST_OREO) {
-            initializeShortcutsLoading(new LoadShortcutTask(this));
+            initializeShortcutsLoading(new LoadShortcutTask());
         } else {
             shortcutsLoaded = true; // will be loaded from database automatically.
         }
-        initializeDatabaseLoading(new LoadDatabaseTask(this));
+        initializeDatabaseLoading(new LoadDatabaseTask());
     }
 
     private void initializeAppLoading(LoadAppsTask loader) {
@@ -246,7 +253,7 @@ public class AppProvider extends Service implements Provider {
             if (databaseItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                 ApplicationItem applicationItem = mApplicationItems.get(databaseItem.id);
                 if (applicationItem == null) {
-                    DatabaseManager.getManager(this).removeLauncherItem(databaseItem.id);
+                    DatabaseManager.getManager(mContext).removeLauncherItem(databaseItem.id);
                     continue;
                 }
                 applicationItem.container = databaseItem.container;
@@ -273,7 +280,7 @@ public class AppProvider extends Service implements Provider {
                 }
 
                 if (shortcutItem == null) {
-                    DatabaseManager.getManager(this).removeLauncherItem(databaseItem.id);
+                    DatabaseManager.getManager(mContext).removeLauncherItem(databaseItem.id);
                     continue;
                 }
 
@@ -305,10 +312,10 @@ public class AppProvider extends Service implements Provider {
                 FolderItem folderItem =
                         (FolderItem) mLauncherItems.get(foldersIndex.get(foldersIndex.keyAt(i)));
                 if(folderItem.items == null){
-                    DatabaseManager.getManager(this).removeLauncherItem(folderItem.id);
+                    DatabaseManager.getManager(mContext).removeLauncherItem(folderItem.id);
                     mLauncherItems.remove(foldersIndex.get(foldersIndex.keyAt(i)));
                 }else {
-                    folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this, folderItem);
+                    folderItem.icon = new GraphicsUtil(mContext).generateFolderIcon(mContext, folderItem);
                 }
             }
         }
@@ -325,7 +332,7 @@ public class AppProvider extends Service implements Provider {
         shortcutItem.icon_blob = databaseItem.icon_blob;
         Bitmap bitmap = BitmapFactory.decodeByteArray(databaseItem.icon_blob, 0,
                 databaseItem.icon_blob.length);
-        shortcutItem.icon = new BitmapDrawable(getResources(), bitmap);
+        shortcutItem.icon = new BitmapDrawable(mContext.getResources(), bitmap);
         shortcutItem.launchIntent = databaseItem.getIntent();
         shortcutItem.launchIntentUri = databaseItem.launchIntentUri;
         shortcutItem.container = databaseItem.container;
@@ -345,10 +352,10 @@ public class AppProvider extends Service implements Provider {
         shortcutItem.id = info.getId();
         shortcutItem.packageName = info.getPackage();
         shortcutItem.title = info.getShortLabel().toString();
-        Drawable icon = DeepShortcutManager.getInstance(this).getShortcutIconDrawable(info,
-                getResources().getDisplayMetrics().densityDpi);
+        Drawable icon = DeepShortcutManager.getInstance(mContext).getShortcutIconDrawable(info,
+                mContext.getResources().getDisplayMetrics().densityDpi);
         shortcutItem.icon = BlissLauncher.getApplication(
-                this).getIconsHandler().convertIcon(icon);
+                mContext).getIconsHandler().convertIcon(icon);
         shortcutItem.launchIntent = info.makeIntent();
         shortcutItem.container = databaseItem.container;
         shortcutItem.screenId = databaseItem.screenId;
@@ -359,7 +366,7 @@ public class AppProvider extends Service implements Provider {
     private void prepareDefaultLauncherItems() {
         mLauncherItems = new ArrayList<>();
         List<LauncherItem> pinnedItems = new ArrayList<>();
-        PackageManager pm = getPackageManager();
+        PackageManager pm = mContext.getPackageManager();
         Intent[] intents = {
                 new Intent(Intent.ACTION_DIAL),
                 new Intent(Intent.ACTION_VIEW, Uri.parse("sms:")),
@@ -368,7 +375,7 @@ public class AppProvider extends Service implements Provider {
         };
         for (int i = 0; i < intents.length; i++) {
             String packageName = AppUtils.getPackageNameForIntent(intents[i], pm);
-            LauncherApps launcherApps = (LauncherApps) getSystemService(
+            LauncherApps launcherApps = (LauncherApps) mContext.getSystemService(
                     Context.LAUNCHER_APPS_SERVICE);
             List<LauncherActivityInfo> list = launcherApps.getActivityList(packageName,
                     Process.myUserHandle());
@@ -392,27 +399,5 @@ public class AppProvider extends Service implements Provider {
         });
 
         mLauncherItems.addAll(pinnedItems);
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-
-    public class LocalBinder extends Binder {
-        public AppProvider getService() {
-            return AppProvider.this;
-        }
     }
 }

@@ -7,8 +7,11 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0-alpha"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        renderscriptTargetApi 18
+        renderscriptSupportModeEnabled true
     }
     buildTypes {
         release {
@@ -18,6 +21,15 @@ android {
         debug {
             applicationIdSuffix '.debug'
             signingConfig signingConfigs.debug
+        }
+
+        applicationVariants.all { variant ->
+            if (variant.buildType.name == "debug") {
+                variant.outputs.all { output ->
+                    outputFileName = "BlissLauncher-${variant.getFlavorName()}-${variant.versionName}.apk"
+                }
+            }
+
         }
     }
 

@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.view.GestureDetectorCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -22,6 +23,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import foundation.e.blisslauncher.R;
+import foundation.e.blisslauncher.features.launcher.DetectSwipeGestureListener;
+import foundation.e.blisslauncher.features.launcher.LauncherActivity;
+import foundation.e.blisslauncher.features.launcher.OnSwipeDownListener;
 
 public class HorizontalPager extends ViewGroup {
     private static final String TAG = "HorizontalPager";
@@ -47,7 +51,8 @@ public class HorizontalPager extends ViewGroup {
     private float mLastMotionY;
 
     private final static int TOUCH_STATE_REST = 0;
-    private final static int TOUCH_STATE_SCROLLING = 1;
+    private final static int TOUCH_STATE_HORIZONTAL_SCROLLING = 1;
+    private final static int TOUCH_STATE_VERTICAL_SCROLLING = 2;
 
     private int mTouchState = TOUCH_STATE_REST;
 
@@ -56,6 +61,7 @@ public class HorizontalPager extends ViewGroup {
 
     private Set<OnScrollListener> mListeners = new HashSet<>();
     private boolean mIsUiCreated;
+    private GestureDetectorCompat gestureDetectorCompat;
 
     public HorizontalPager(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -80,6 +86,16 @@ public class HorizontalPager extends ViewGroup {
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+
+        // Create a common gesture listener object.
+        DetectSwipeGestureListener gestureListener = new DetectSwipeGestureListener();
+
+        // Set activity in the listener.
+        if (getContext() instanceof LauncherActivity) {
+            gestureListener.setListener((OnSwipeDownListener) getContext());
+        }
+
+        gestureDetectorCompat = new GestureDetectorCompat(getContext(), gestureListener);
     }
 
     public void setDock(DockGridLayout dock) {
@@ -279,7 +295,8 @@ public class HorizontalPager extends ViewGroup {
                  * otherwise don't.  mScroller.isFinished should be false when
                  * being flinged.
                  */
-                mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST : TOUCH_STATE_SCROLLING;
+                mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST
+                        : TOUCH_STATE_HORIZONTAL_SCROLLING;
                 break;
 
             case MotionEvent.ACTION_CANCEL:
@@ -308,9 +325,12 @@ public class HorizontalPager extends ViewGroup {
 
         if (xMoved || yMoved) {
 
-            if (xMoved) {
+            if (yMoved && (y - mLastMotionY) > 0 && yDiff > xDiff && currentPage != 0) {
+                mTouchState = TOUCH_STATE_VERTICAL_SCROLLING;
+                ((OnSwipeDownListener) getContext()).onSwipeStart();
+            } else if (xMoved && yDiff < xDiff) {
                 // Scroll if the user moved far enough along the X axis
-                mTouchState = TOUCH_STATE_SCROLLING;
+                mTouchState = TOUCH_STATE_HORIZONTAL_SCROLLING;
                 enableChildrenCache();
             }
             // Either way, cancel any pending longpress
@@ -338,6 +358,11 @@ public class HorizontalPager extends ViewGroup {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        /*if (gestureDetectorCompat.onTouchEvent(ev)) {
+            return true;
+        } else {
+
+        }*/
         if (mVelocityTracker == null) {
             mVelocityTracker = VelocityTracker.obtain();
         }
@@ -346,7 +371,6 @@ public class HorizontalPager extends ViewGroup {
         final int action = ev.getAction();
         final float x = ev.getX();
         final float y = ev.getY();
-        Log.i(TAG, "motion x: " + x);
         if (mIsUiCreated) {
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
@@ -360,11 +384,15 @@ public class HorizontalPager extends ViewGroup {
 
                     // Remember where the motion event started
                     mLastMotionX = x;
+                    mLastMotionY = y;
                     break;
                 case MotionEvent.ACTION_MOVE:
                     if (mTouchState == TOUCH_STATE_REST) {
                         checkStartScroll(x, y);
-                    } else if (mTouchState == TOUCH_STATE_SCROLLING) {
+                    } else if (mTouchState == TOUCH_STATE_VERTICAL_SCROLLING) {
+                        int diffY = (int) (y - mLastMotionY);
+                        ((OnSwipeDownListener) getContext()).onSwipe(diffY);
+                    } else if (mTouchState == TOUCH_STATE_HORIZONTAL_SCROLLING) {
                         // Scroll to follow the motion event
                         int deltaX = (int) (mLastMotionX - x);
                         mLastMotionX = x;
@@ -384,7 +412,10 @@ public class HorizontalPager extends ViewGroup {
                     }
                     break;
                 case MotionEvent.ACTION_UP:
-                    if (mTouchState == TOUCH_STATE_SCROLLING) {
+                    if (mTouchState == TOUCH_STATE_VERTICAL_SCROLLING) {
+                        ((OnSwipeDownListener) getContext()).onSwipeFinish();
+                    }
+                    if (mTouchState == TOUCH_STATE_HORIZONTAL_SCROLLING) {
                         final VelocityTracker velocityTracker = mVelocityTracker;
                         velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                         int velocityX = (int) velocityTracker.getXVelocity();
@@ -409,7 +440,6 @@ public class HorizontalPager extends ViewGroup {
                     break;
                 case MotionEvent.ACTION_CANCEL:
                     mTouchState = TOUCH_STATE_REST;
-
             }
         }
 

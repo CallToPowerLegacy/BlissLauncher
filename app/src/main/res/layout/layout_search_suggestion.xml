@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/search_widget"
+        android:focusableInTouchMode="true"
+        android:padding="8dp">
+
+        <foundation.e.blisslauncher.core.customviews.BlissInput
+            android:id="@+id/search_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/clearSuggestionImageView"
+            android:background="@android:color/transparent"
+            android:drawableStart="@drawable/ic_search_white_24dp"
+            android:drawablePadding="8dp"
+            android:hint="@string/search"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"/>
+
+        <ImageView
+            android:id="@+id/clearSuggestionImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_cancel_white_24dp"
+            android:visibility="gone"/>
+    </RelativeLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/suggestionRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"/>
+
+    <include
+        android:id="@+id/used_apps_layout"
+        layout="@layout/layout_used_apps"/>
+
+</LinearLayout>

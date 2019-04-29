@@ -56,26 +56,26 @@ public class GraphicsUtil {
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        int xOrigin = bitmap.getWidth() / 15;
-        int yOrigin = bitmap.getHeight() / 15;
+        int xOrigin = bitmap.getWidth() / 10;
+        int yOrigin = bitmap.getHeight() / 10;
         int x = xOrigin;
         int y = yOrigin;
-        int xIncrement = bitmap.getWidth() / 15;
-        int yIncrement = bitmap.getHeight() / 15;
+        int xIncrement = bitmap.getWidth() / 10;
+        int yIncrement = bitmap.getHeight() / 10;
         int count = 0;
         int total = 0;
         for (Drawable d : sources) {
-            d.setBounds(x, y, (int) (x + width / 2.5f), (int) (y + height / 2.5f));
+            d.setBounds(x, y, (int) (x + width / 5f), (int) (y + height / 5f));
             d.draw(canvas);
-            x += (int) (width / 2.5f + xIncrement);
+            x += (int) (width / 5f + xIncrement);
             count++;
             total++;
-            if (count == 2) {
+            if (count == 3) {
                 count = 0;
-                y += (int) (height / 2.5f + yIncrement);
+                y += (int) (height / 5f + yIncrement);
                 x = xOrigin;
             }
-            if (total > 3) {
+            if (total > 8) {
                 break;
             }
         }
