@@ -1,13 +1,19 @@
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
+
+// Manifest version information!
+def versionMajor = 1
+def versionMinor = 0
+def versionPatch = 1
+
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "foundation.e.blisslauncher"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0-alpha"
+        versionCode versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         renderscriptTargetApi 18
@@ -99,7 +105,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
 
     // Okhttp
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.11.0'
 
     // Rx Relay
     implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
