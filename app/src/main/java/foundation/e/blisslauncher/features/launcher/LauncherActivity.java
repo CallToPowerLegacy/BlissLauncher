@@ -79,7 +79,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -117,7 +116,6 @@ import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
 import foundation.e.blisslauncher.core.events.ShortcutAddEvent;
-import foundation.e.blisslauncher.core.network.RetrofitService;
 import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
@@ -126,8 +124,9 @@ import foundation.e.blisslauncher.features.notification.NotificationRepository;
 import foundation.e.blisslauncher.features.notification.NotificationService;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
 import foundation.e.blisslauncher.features.suggestions.AutoCompleteAdapter;
-import foundation.e.blisslauncher.features.suggestions.AutoCompleteService;
-import foundation.e.blisslauncher.features.suggestions.AutoCompleteServiceResult;
+import foundation.e.blisslauncher.features.suggestions.SearchSuggestionUtil;
+import foundation.e.blisslauncher.features.suggestions.SuggestionProvider;
+import foundation.e.blisslauncher.features.suggestions.SuggestionsResult;
 import foundation.e.blisslauncher.features.usagestats.AppUsageStats;
 import foundation.e.blisslauncher.features.weather.DeviceStatusService;
 import foundation.e.blisslauncher.features.weather.ForecastBuilder;
@@ -1243,7 +1242,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         return searchForQuery(charSequence);
                     } else {
                         return Observable.just(
-                                new AutoCompleteServiceResult(charSequence));
+                                new SuggestionsResult(charSequence));
                     }
                 })
                 .subscribeOn(Schedulers.io())
@@ -1406,19 +1405,19 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
-    private ObservableSource<AutoCompleteServiceResult> searchForQuery(
+    private ObservableSource<SuggestionsResult> searchForQuery(
             CharSequence charSequence) {
-        Observable<AutoCompleteServiceResult> launcherItems = searchForLauncherItems(
+        Observable<SuggestionsResult> launcherItems = searchForLauncherItems(
                 charSequence.toString()).subscribeOn(Schedulers.io());
-        Observable<AutoCompleteServiceResult> networkItems = searchForNetworkItems(
+        Observable<SuggestionsResult> networkItems = searchForNetworkItems(
                 charSequence).subscribeOn(Schedulers.io());
         return launcherItems.mergeWith(networkItems);
     }
 
-    private Observable<AutoCompleteServiceResult> searchForLauncherItems(
+    private Observable<SuggestionsResult> searchForLauncherItems(
             CharSequence charSequence) {
         String query = charSequence.toString().toLowerCase();
-        AutoCompleteServiceResult autoCompleteServiceResult = new AutoCompleteServiceResult(
+        SuggestionsResult suggestionsResult = new SuggestionsResult(
                 query);
         List<LauncherItem> launcherItems = new ArrayList<>();
         pages.parallelStream().forEach(gridLayout -> {
@@ -1458,41 +1457,21 @@ public class LauncherActivity extends AppCompatActivity implements
         ));
 
         if (launcherItems.size() > 4) {
-            autoCompleteServiceResult.setLauncherItems(launcherItems.subList(0, 4));
+            suggestionsResult.setLauncherItems(launcherItems.subList(0, 4));
         } else {
-            autoCompleteServiceResult.setLauncherItems(launcherItems);
+            suggestionsResult.setLauncherItems(launcherItems);
         }
-        return Observable.just(autoCompleteServiceResult)
+        return Observable.just(suggestionsResult)
                 .onErrorReturn(throwable -> {
-                    autoCompleteServiceResult.setLauncherItems(new ArrayList<>());
-                    return autoCompleteServiceResult;
+                    suggestionsResult.setLauncherItems(new ArrayList<>());
+                    return suggestionsResult;
                 });
     }
 
-    private Observable<AutoCompleteServiceResult> searchForNetworkItems(CharSequence charSequence) {
-        AutoCompleteService autoCompleteService = RetrofitService.getInstance(
-                "https://duckduckgo.com").create(AutoCompleteService.class);
+    private Observable<SuggestionsResult> searchForNetworkItems(CharSequence charSequence) {
         String query = charSequence.toString().toLowerCase(Locale.getDefault()).trim();
-
-        if (autoCompleteService != null) {
-            return autoCompleteService.query(query)
-                    .retryWhen(errors -> errors.flatMap(error -> {
-                        // For IOExceptions, we  retry
-                        if (error instanceof IOException) {
-                            return Observable.just(null);
-                        }
-                        // For anything else, don't retry
-                        return Observable.error(error);
-                    }))
-                    .onErrorReturn(throwable -> new ArrayList<>())
-                    .map(autoCompleteServiceRawResults -> {
-                        AutoCompleteServiceResult result = new AutoCompleteServiceResult(query);
-                        result.setNetworkItems(autoCompleteServiceRawResults);
-                        return result;
-                    });
-        } else {
-            return Observable.just(new AutoCompleteServiceResult(query));
-        }
+        SuggestionProvider suggestionProvider = new SearchSuggestionUtil().getSuggestionProvider(this);
+        return suggestionProvider.query(query).toObservable();
     }
 
     @Override
@@ -1504,8 +1483,8 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void runSearch(String query) {
-        Uri uri = Uri.parse("https://spot.ecloud.global/?q=" + query);
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        Intent intent = new Intent(Intent.ACTION_VIEW,
+                new SearchSuggestionUtil().getUriForQuery(this, query));
         startActivity(intent);
     }
 
@@ -2847,7 +2826,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                                 LauncherActivity.this.runOnUiThread(
                                                         () -> clearSuggestions.setVisibility(GONE));
                                                 return Observable.just(
-                                                        new AutoCompleteServiceResult(charSequence));
+                                                        new SuggestionsResult(charSequence));
                                             }
                                         })
                                         .subscribeOn(Schedulers.io())

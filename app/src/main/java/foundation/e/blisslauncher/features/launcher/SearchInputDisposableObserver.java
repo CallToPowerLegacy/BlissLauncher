@@ -5,16 +5,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import foundation.e.blisslauncher.R;
 import foundation.e.blisslauncher.core.customviews.BlissFrameLayout;
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
 import foundation.e.blisslauncher.features.suggestions.AutoCompleteAdapter;
-import foundation.e.blisslauncher.features.suggestions.AutoCompleteServiceResult;
+import foundation.e.blisslauncher.features.suggestions.SuggestionsResult;
 import io.reactivex.observers.DisposableObserver;
 
-public class SearchInputDisposableObserver extends DisposableObserver<AutoCompleteServiceResult> {
+public class SearchInputDisposableObserver extends DisposableObserver<SuggestionsResult> {
 
     private AutoCompleteAdapter networkSuggestionAdapter;
     private LauncherActivity launcherActivity;
@@ -27,25 +26,17 @@ public class SearchInputDisposableObserver extends DisposableObserver<AutoComple
     }
 
     @Override
-    public void onNext(AutoCompleteServiceResult autoCompleteServiceResults) {
-        if (autoCompleteServiceResults.type
-                == AutoCompleteServiceResult.TYPE_NETWORK_ITEM) {
-            List<String> suggestions = new ArrayList<>();
-            for (int i = 0;
-                    i < (autoCompleteServiceResults.networkItems.size() > 5 ? 5
-                            : autoCompleteServiceResults.networkItems.size());
-                    i++) {
-                suggestions.add(
-                        autoCompleteServiceResults.networkItems.get(i).getPhrase());
-            }
-            networkSuggestionAdapter.updateSuggestions(suggestions,
-                    autoCompleteServiceResults.queryText);
-        } else if (autoCompleteServiceResults.type
-                == AutoCompleteServiceResult.TYPE_LAUNCHER_ITEM) {
+    public void onNext(SuggestionsResult suggestionsResults) {
+        if (suggestionsResults.type
+                == SuggestionsResult.TYPE_NETWORK_ITEM) {
+            networkSuggestionAdapter.updateSuggestions(suggestionsResults.getNetworkItems(),
+                    suggestionsResults.queryText);
+        } else if (suggestionsResults.type
+                == SuggestionsResult.TYPE_LAUNCHER_ITEM) {
             ((ViewGroup)appSuggestionsViewGroup.findViewById(R.id.suggestedAppGrid)).removeAllViews();
             appSuggestionsViewGroup.findViewById(R.id.openUsageAccessSettings).setVisibility(View.GONE);
             appSuggestionsViewGroup.findViewById(R.id.suggestedAppGrid).setVisibility(View.VISIBLE);
-            for (LauncherItem launcherItem : autoCompleteServiceResults
+            for (LauncherItem launcherItem : suggestionsResults
                     .getLauncherItems()) {
                 BlissFrameLayout blissFrameLayout = launcherActivity.prepareSuggestedApp(
                         launcherItem);
@@ -54,7 +45,7 @@ public class SearchInputDisposableObserver extends DisposableObserver<AutoComple
         } else {
             launcherActivity.refreshSuggestedApps(appSuggestionsViewGroup,true);
             networkSuggestionAdapter.updateSuggestions(new ArrayList<>(),
-                    autoCompleteServiceResults.queryText);
+                    suggestionsResults.queryText);
         }
     }
 

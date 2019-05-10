@@ -4,27 +4,27 @@ import java.util.List;
 
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
 
-public class AutoCompleteServiceResult {
+public class SuggestionsResult {
 
     public static final int TYPE_LAUNCHER_ITEM = 567;
     public static final int TYPE_NETWORK_ITEM = 568;
 
-    public List<AutoCompleteServiceRawResult> networkItems;
+    private List<String> networkItems;
     private List<LauncherItem> launcherItems;
     public String queryText;
     public int type = -1;
 
 
-    public AutoCompleteServiceResult(String queryText) {
+    public SuggestionsResult(String queryText) {
         this.queryText = queryText;
     }
 
-    public List<AutoCompleteServiceRawResult> getNetworkItems() {
+    public List<String> getNetworkItems() {
         return networkItems;
     }
 
     public void setNetworkItems(
-            List<AutoCompleteServiceRawResult> networkItems) {
+            List<String> networkItems) {
         this.networkItems = networkItems;
         this.type = TYPE_NETWORK_ITEM;
     }
