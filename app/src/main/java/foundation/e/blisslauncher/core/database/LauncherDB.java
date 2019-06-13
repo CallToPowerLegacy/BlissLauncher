@@ -1,22 +1,35 @@
 package foundation.e.blisslauncher.core.database;
 
+import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
+import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
 
 import foundation.e.blisslauncher.core.database.converters.CharSequenceConverter;
 import foundation.e.blisslauncher.core.database.daos.LauncherDao;
+import foundation.e.blisslauncher.core.database.daos.WidgetDao;
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
+import foundation.e.blisslauncher.core.database.model.WidgetItem;
 
-@Database(entities = {LauncherItem.class}, version = 3, exportSchema = false)
+@Database(entities = {LauncherItem.class, WidgetItem.class}, version = 4, exportSchema = false)
 @TypeConverters({CharSequenceConverter.class})
 public abstract class LauncherDB extends RoomDatabase {
 
     public abstract LauncherDao launcherDao();
 
+    public abstract WidgetDao widgetDao();
+
     private static volatile LauncherDB INSTANCE;
+
+    private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `widget_items` (`id` INTEGER NOT NULL, `height` INTEGER NOT NULL, PRIMARY KEY(`id`))");
+        }
+    };
 
     public static LauncherDB getDatabase(Context context){
         if (INSTANCE == null) {
@@ -24,6 +37,7 @@ public abstract class LauncherDB extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             LauncherDB.class, "launcher_db")
+                            .addMigrations(MIGRATION_3_4)
                             .build();
                 }
             }

@@ -13,7 +13,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.usage.UsageStats;
@@ -51,6 +50,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -70,6 +70,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -116,6 +117,7 @@ import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
 import foundation.e.blisslauncher.core.events.ShortcutAddEvent;
+import foundation.e.blisslauncher.core.executors.AppExecutors;
 import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
@@ -218,13 +220,15 @@ public class LauncherActivity extends AppCompatActivity implements
     private LinearLayout widgetContainer;
 
     ArgbEvaluator argbEvaluator = new ArgbEvaluator();
-    private ScrollView widgetsPage;
+    private FrameLayout widgetsPage;
     private SearchInputDisposableObserver searchDisposableObserver;
     private AnimatorSet currentAnimator;
     private Rect startBounds;
     private Rect finalBounds;
     private float startScaleFinal;
     private boolean showSwipeSearch;
+    private RoundedWidgetView activeRoundedWidgetView;
+    private boolean widgetResizeContainerVisible;
 
 
     @SuppressLint("InflateParams")
@@ -401,40 +405,47 @@ public class LauncherActivity extends AppCompatActivity implements
             refreshSuggestedApps(widgetsPage, forceRefreshSuggestedApps);
         }
 
-        WidgetManager widgetManager = WidgetManager.getInstance();
-        Integer id = widgetManager.dequeRemoveId();
-        while (id != null) {
-            for (int i = 0; i < widgetContainer.getChildCount(); i++) {
-                if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
-                    RoundedWidgetView appWidgetHostView =
-                            (RoundedWidgetView) widgetContainer.getChildAt(i);
-                    if (appWidgetHostView.getAppWidgetId() == id) {
-                        widgetContainer.removeViewAt(i);
-                        break;
+        if (widgetContainer != null) {
+            WidgetManager widgetManager = WidgetManager.getInstance();
+            Integer id = widgetManager.dequeRemoveId();
+            while (id != null) {
+                for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+                    if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                        RoundedWidgetView appWidgetHostView =
+                                (RoundedWidgetView) widgetContainer.getChildAt(i);
+                        if (appWidgetHostView.getAppWidgetId() == id) {
+                            widgetContainer.removeViewAt(i);
+                            DatabaseManager.getManager(this).removeWidget(id);
+                            break;
+                        }
                     }
                 }
+                id = widgetManager.dequeRemoveId();
             }
-            id = widgetManager.dequeRemoveId();
+
+            RoundedWidgetView widgetView = widgetManager.dequeAddWidgetView();
+            while (widgetView != null) {
+                widgetView = WidgetViewBuilder.create(this, widgetView);
+                addWidgetToContainer(widgetView);
+                widgetView = widgetManager.dequeAddWidgetView();
+            }
         }
 
-        RoundedWidgetView widgetView = widgetManager.dequeAddWidgetView();
-        while (widgetView != null) {
-            addWidgetToContainer(widgetContainer, widgetView);
-            widgetView = widgetManager.dequeAddWidgetView();
-        }
+
     }
 
-    private void addWidgetToContainer(LinearLayout widgetHolderLinearLayout,
+    private void addWidgetToContainer(
             RoundedWidgetView widgetView) {
-        View view = WidgetViewBuilder.create(this, widgetView);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        int margin = getResources().getDimensionPixelSize(R.dimen.widget_margin);
-        layoutParams.setMargins(0, margin, 0, margin);
-        view.setLayoutParams(layoutParams);
-        view.setPadding(0, 0, 0, 0);
-        widgetHolderLinearLayout.addView(view);
+        widgetView.setPadding(0, 0, 0, 0);
+        widgetContainer.addView(widgetView);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (widgetsPage != null) {
+            hideWidgetResizeContainer();
+        }
     }
 
     @Override
@@ -1170,7 +1181,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void createWidgetsPage() {
-        widgetsPage = (ScrollView) getLayoutInflater().inflate(R.layout.widgets_page,
+        widgetsPage = (FrameLayout) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
         widgetContainer = widgetsPage.findViewById(R.id.widget_container);
         widgetsPage.setPadding(0,
@@ -1178,6 +1189,14 @@ public class LauncherActivity extends AppCompatActivity implements
                 0, 0);
         mHorizontalPager.addView(widgetsPage, 0);
         widgetsPage.setOnDragListener(null);
+        ScrollView scrollView = widgetsPage.findViewById(R.id.widgets_scroll_container);
+        scrollView.setOnTouchListener((v, event) -> {
+            if (widgetsPage.findViewById(R.id.widget_resizer_container).getVisibility()
+                    == VISIBLE) {
+                hideWidgetResizeContainer();
+            }
+            return false;
+        });
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
 
@@ -1329,7 +1348,20 @@ public class LauncherActivity extends AppCompatActivity implements
                         getApplicationContext(), id,
                         appWidgetInfo);
                 hostView.setAppWidget(id, appWidgetInfo);
-                addWidgetToContainer(widgetContainer, hostView);
+                getCompositeDisposable().add(DatabaseManager.getManager(this).getHeightOfWidget(id)
+                        .subscribeOn(Schedulers.from(AppExecutors.getInstance().diskIO()))
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(height -> {
+                            RoundedWidgetView widgetView = WidgetViewBuilder.create(this, hostView);
+                            if (height != 0) {
+                                int minHeight = hostView.getAppWidgetInfo().minResizeHeight;
+                                int maxHeight = mDeviceProfile.availableHeightPx * 3 / 4;
+                                int normalisedDifference = (maxHeight - minHeight) / 100;
+                                int newHeight = minHeight + (normalisedDifference * height);
+                                widgetView.getLayoutParams().height = newHeight;
+                            }
+                            addWidgetToContainer(widgetView);
+                        }, Throwable::printStackTrace));
             }
         }
     }
@@ -1470,7 +1502,8 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private Observable<SuggestionsResult> searchForNetworkItems(CharSequence charSequence) {
         String query = charSequence.toString().toLowerCase(Locale.getDefault()).trim();
-        SuggestionProvider suggestionProvider = new SearchSuggestionUtil().getSuggestionProvider(this);
+        SuggestionProvider suggestionProvider = new SearchSuggestionUtil().getSuggestionProvider(
+                this);
         return suggestionProvider.query(query).toObservable();
     }
 
@@ -1635,21 +1668,18 @@ public class LauncherActivity extends AppCompatActivity implements
         Intent intent = launcherItem.getIntent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        Bundle bundle = ActivityOptions.makeCustomAnimation(
-                context, R.anim.enter, R.anim.leave).toBundle();
         if (v != null) {
             intent.setSourceBounds(getViewBounds(v));
         }
 
         if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
-            startShortcutIntentSafely(context, intent, bundle, launcherItem);
+            startShortcutIntentSafely(context, intent, launcherItem);
         } else {
-            context.startActivity(intent, bundle);
+            context.startActivity(intent);
         }
     }
 
-    private void startShortcutIntentSafely(Context context, Intent intent,
-            Bundle optsBundle, LauncherItem appItem) {
+    private void startShortcutIntentSafely(Context context, Intent intent, LauncherItem appItem) {
         try {
             StrictMode.VmPolicy oldPolicy = StrictMode.getVmPolicy();
             try {
@@ -1664,15 +1694,15 @@ public class LauncherActivity extends AppCompatActivity implements
                         String id = appItem.id;
                         String packageName = intent.getPackage();
                         DeepShortcutManager.getInstance(context).startShortcut(
-                                packageName, id, intent.getSourceBounds(), optsBundle,
+                                packageName, id, intent.getSourceBounds(), null,
                                 Process.myUserHandle());
                     } else {
-                        context.startActivity(intent, optsBundle);
+                        context.startActivity(intent);
                     }
 
                 } else {
                     // Could be launching some bookkeeping activity
-                    context.startActivity(intent, optsBundle);
+                    context.startActivity(intent);
                 }
             } finally {
                 StrictMode.setVmPolicy(oldPolicy);
@@ -2593,7 +2623,11 @@ public class LauncherActivity extends AppCompatActivity implements
      */
     @Override
     public void onBackPressed() {
-        returnToHomeScreen();
+        if (activeRoundedWidgetView != null) {
+            hideWidgetResizeContainer();
+        } else {
+            returnToHomeScreen();
+        }
     }
 
     private void displayFolder(FolderItem app, BlissFrameLayout v) {
@@ -2753,29 +2787,41 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        final boolean alreadyOnHome =
+
+        final boolean alreadyOnHome = hasWindowFocus() &&
                 ((intent.getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
                         != Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-        if (alreadyOnHome) {
+
+        boolean shouldMoveToDefaultScreen =
+                alreadyOnHome && swipeSearchContainer.getVisibility() != VISIBLE && !isWobbling
+                        && mFolderWindowContainer.getVisibility() != View.VISIBLE
+                        && activeRoundedWidgetView == null;
+
+
+        if (shouldMoveToDefaultScreen) {
+            mHorizontalPager.setCurrentPage(1);
+        } else if (alreadyOnHome) {
             returnToHomeScreen();
         }
     }
 
     private void returnToHomeScreen() {
+        if (activeRoundedWidgetView != null) {
+            hideWidgetResizeContainer();
+        }
+
         if (mSearchInput != null) {
             mSearchInput.setText("");
         }
 
         if (swipeSearchContainer.getVisibility() == VISIBLE) {
             hideSwipeSearchContainer();
-            return;
         }
+
         if (isWobbling) {
             handleWobbling(false);
         } else if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             hideFolderWindowContainer();
-        } else {
-            mHorizontalPager.setCurrentPage(1);
         }
     }
 
@@ -2901,7 +2947,6 @@ public class LauncherActivity extends AppCompatActivity implements
         set.setDuration(200);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
-
                             @Override
                             public void onAnimationStart(Animator animation) {
                                 super.onAnimationStart(animation);
@@ -2972,6 +3017,146 @@ public class LauncherActivity extends AppCompatActivity implements
             showSwipeSearchContainer();
         } else {
             hideSwipeSearchContainer();
+        }
+    }
+
+    public void showWidgetResizeContainer(RoundedWidgetView roundedWidgetView) {
+        RelativeLayout widgetResizeContainer = widgetsPage.findViewById(
+                R.id.widget_resizer_container);
+        if (widgetResizeContainer.getVisibility() != VISIBLE) {
+            activeRoundedWidgetView = roundedWidgetView;
+
+            SeekBar seekBar = widgetResizeContainer.findViewById(R.id.widget_resizer_seekbar);
+            if (currentAnimator != null) {
+                currentAnimator.cancel();
+            }
+
+            seekBar.setOnTouchListener((v, event) -> {
+                seekBar.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            });
+
+            AnimatorSet set = new AnimatorSet();
+            set.play(ObjectAnimator.ofFloat(widgetResizeContainer, View.Y,
+                    mDeviceProfile.availableHeightPx,
+                    mDeviceProfile.availableHeightPx - Utilities.pxFromDp(24, this)));
+            set.setDuration(200);
+            set.setInterpolator(new LinearInterpolator());
+            set.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationStart(Animator animation) {
+                                    super.onAnimationStart(animation);
+                                    widgetResizeContainer.setVisibility(VISIBLE);
+                                }
+
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
+                                    super.onAnimationCancel(animation);
+                                    currentAnimator = null;
+                                    widgetResizeContainer.setVisibility(GONE);
+                                    roundedWidgetView.removeBorder();
+                                }
+
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    super.onAnimationEnd(animation);
+                                    currentAnimator = null;
+                                    prepareWidgetResizeSeekBar(seekBar);
+                                    roundedWidgetView.addBorder();
+                                }
+                            }
+            );
+            set.start();
+            currentAnimator = set;
+        }
+
+    }
+
+    private void prepareWidgetResizeSeekBar(SeekBar seekBar) {
+        int minHeight = activeRoundedWidgetView.getAppWidgetInfo().minResizeHeight;
+        int maxHeight = mDeviceProfile.availableHeightPx * 3 / 4;
+        int normalisedDifference = (maxHeight - minHeight) / 100;
+        int defaultHeight = activeRoundedWidgetView.getHeight();
+        int currentProgress = (defaultHeight - minHeight) * 100 / (maxHeight - minHeight);
+
+        seekBar.setMin(1);
+        seekBar.setMax(100);
+        seekBar.setProgress(currentProgress);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d(TAG,
+                        "onProgressChanged() called with: seekBar = [" + seekBar + "], progress = ["
+                                + progress + "], fromUser = [" + fromUser + "]");
+                int newHeight = minHeight + (normalisedDifference * progress);
+                LinearLayout.LayoutParams layoutParams =
+                        (LinearLayout.LayoutParams) activeRoundedWidgetView.getLayoutParams();
+                layoutParams.height = newHeight;
+                activeRoundedWidgetView.setLayoutParams(layoutParams);
+
+                Bundle newOps = new Bundle();
+                newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,
+                        mDeviceProfile.getMaxWidgetWidth());
+                newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH,
+                        mDeviceProfile.getMaxWidgetWidth());
+                newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, newHeight);
+                newOps.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, newHeight);
+                activeRoundedWidgetView.updateAppWidgetOptions(newOps);
+                activeRoundedWidgetView.requestLayout();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                DatabaseManager.getManager(LauncherActivity.this).saveWidget(
+                        activeRoundedWidgetView.getAppWidgetId(), seekBar.getProgress());
+            }
+        });
+
+    }
+
+    public void hideWidgetResizeContainer() {
+        RelativeLayout widgetResizeContainer = widgetsPage.findViewById(
+                R.id.widget_resizer_container);
+        if (widgetResizeContainer.getVisibility() == VISIBLE) {
+            if (currentAnimator != null) {
+                currentAnimator.cancel();
+            }
+            AnimatorSet set = new AnimatorSet();
+            set.play(ObjectAnimator.ofFloat(widgetResizeContainer, View.Y,
+                    mDeviceProfile.availableHeightPx));
+            set.setDuration(200);
+            set.setInterpolator(new LinearInterpolator());
+            set.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationStart(Animator animation) {
+                                    super.onAnimationStart(animation);
+                                    ((SeekBar) widgetsPage.findViewById(
+                                            R.id.widget_resizer_seekbar)).setOnSeekBarChangeListener(null);
+                                }
+
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
+                                    super.onAnimationCancel(animation);
+                                    currentAnimator = null;
+                                    widgetResizeContainer.setVisibility(VISIBLE);
+                                }
+
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    super.onAnimationEnd(animation);
+                                    currentAnimator = null;
+                                    widgetResizeContainer.setVisibility(GONE);
+                                    activeRoundedWidgetView.removeBorder();
+                                }
+                            }
+            );
+            set.start();
+            currentAnimator = set;
         }
     }
 

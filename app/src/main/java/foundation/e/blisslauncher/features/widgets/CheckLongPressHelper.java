@@ -16,6 +16,7 @@
 
 package foundation.e.blisslauncher.features.widgets;
 
+import android.util.Log;
 import android.view.View;
 
 import foundation.e.blisslauncher.BlissLauncher;
@@ -24,6 +25,8 @@ public class CheckLongPressHelper {
     private View mView;
     private boolean mHasPerformedLongPress;
     private CheckForLongPress mPendingCheckForLongPress;
+
+    private static final String TAG = "CheckLongPressHelper";
 
     class CheckForLongPress implements Runnable {
         public void run() {
@@ -42,6 +45,7 @@ public class CheckLongPressHelper {
     }
 
     public void postCheckForLongPress() {
+        Log.d(TAG, "postCheckForLongPress() called");
         mHasPerformedLongPress = false;
 
         if (mPendingCheckForLongPress == null) {
@@ -51,6 +55,7 @@ public class CheckLongPressHelper {
     }
 
     public void cancelLongPress() {
+        Log.d(TAG, "cancelLongPress() called");
         mHasPerformedLongPress = false;
         if (mPendingCheckForLongPress != null) {
             mView.removeCallbacks(mPendingCheckForLongPress);

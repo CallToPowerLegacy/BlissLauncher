@@ -46,7 +46,6 @@ public class LauncherItem {
      * {@link Constants#ITEM_TYPE_SHORTCUT}
      * {@link Constants#ITEM_TYPE_FOLDER}
      */
-    @NonNull
     @ColumnInfo(name = "item_type")
     public int itemType;
 

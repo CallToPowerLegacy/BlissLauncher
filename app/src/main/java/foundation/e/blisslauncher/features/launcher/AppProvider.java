@@ -168,8 +168,8 @@ public class AppProvider {
         mAppsRepository = AppsRepository.getAppsRepository();
     }
 
-    public static AppProvider getInstance(Context context){
-        if(sInstance == null){
+    public static AppProvider getInstance(Context context) {
+        if (sInstance == null) {
             sInstance = new AppProvider(context);
             sInstance.reload();
         }
@@ -265,7 +265,8 @@ public class AppProvider {
                     mLauncherItems.add(applicationItem);
                 } else {
                     FolderItem folderItem =
-                            (FolderItem) mLauncherItems.get(foldersIndex.get(applicationItem.container));
+                            (FolderItem) mLauncherItems.get(
+                                    foldersIndex.get(applicationItem.container));
                     if (folderItem.items == null) {
                         folderItem.items = new ArrayList<>();
                     }
@@ -289,7 +290,8 @@ public class AppProvider {
                     mLauncherItems.add(shortcutItem);
                 } else {
                     FolderItem folderItem =
-                            (FolderItem) mLauncherItems.get(foldersIndex.get(shortcutItem.container));
+                            (FolderItem) mLauncherItems.get(
+                                    foldersIndex.get(shortcutItem.container));
                     if (folderItem.items == null) {
                         folderItem.items = new ArrayList<>();
                     }
@@ -311,11 +313,12 @@ public class AppProvider {
             for (int i = 0; i < foldersIndex.size(); i++) {
                 FolderItem folderItem =
                         (FolderItem) mLauncherItems.get(foldersIndex.get(foldersIndex.keyAt(i)));
-                if(folderItem.items == null){
+                if (folderItem.items == null) {
                     DatabaseManager.getManager(mContext).removeLauncherItem(folderItem.id);
                     mLauncherItems.remove(foldersIndex.get(foldersIndex.keyAt(i)));
-                }else {
-                    folderItem.icon = new GraphicsUtil(mContext).generateFolderIcon(mContext, folderItem);
+                } else {
+                    folderItem.icon = new GraphicsUtil(mContext).generateFolderIcon(mContext,
+                            folderItem);
                 }
             }
         }
@@ -344,7 +347,8 @@ public class AppProvider {
     private ShortcutItem prepareShortcutForOreo(LauncherItem databaseItem) {
         ShortcutInfoCompat info = mShortcutInfoCompats.get(databaseItem.id);
         if (info == null) {
-            Log.d(TAG, "prepareShortcutForOreo() called with: databaseItem = [" + databaseItem + "]");
+            Log.d(TAG,
+                    "prepareShortcutForOreo() called with: databaseItem = [" + databaseItem + "]");
             return null;
         }
 
@@ -379,11 +383,16 @@ public class AppProvider {
                     Context.LAUNCHER_APPS_SERVICE);
             List<LauncherActivityInfo> list = launcherApps.getActivityList(packageName,
                     Process.myUserHandle());
-            ApplicationItem applicationItem = mApplicationItems.get(list.get(
-                    0).getComponentName().flattenToString());
-            applicationItem.container = Constants.CONTAINER_HOTSEAT;
-            applicationItem.cell = i;
-            pinnedItems.add(applicationItem);
+            for (LauncherActivityInfo launcherActivityInfo : list) {
+                ApplicationItem applicationItem = mApplicationItems.get(
+                        launcherActivityInfo.getComponentName().flattenToString());
+                if (applicationItem != null) {
+                    applicationItem.container = Constants.CONTAINER_HOTSEAT;
+                    applicationItem.cell = i;
+                    pinnedItems.add(applicationItem);
+                    break;
+                }
+            }
         }
 
         for (Map.Entry<String, ApplicationItem> stringApplicationItemEntry : mApplicationItems
