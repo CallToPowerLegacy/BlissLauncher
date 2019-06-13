@@ -5,11 +5,9 @@ import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
-import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.R;
 
 public class AppWidgetResizeFrame extends FrameLayout {
@@ -58,6 +56,8 @@ public class AppWidgetResizeFrame extends FrameLayout {
 
     private Context mContext;
 
+    private static final String TAG = "AppWidgetResizeFrame";
+
 
     public AppWidgetResizeFrame(@NonNull Context context, RoundedWidgetView widgetView) {
         super(context);
@@ -72,101 +72,6 @@ public class AppWidgetResizeFrame extends FrameLayout {
 
         setBackgroundResource(R.drawable.widget_resize_frame);
         setPadding(0, 0, 0, 0);
-
-        LayoutParams lp;
-        mTopHandle = new ImageView(context);
-        mTopHandle.setImageResource(R.drawable.widget_resize_handle_top);
-        lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER_HORIZONTAL | Gravity.TOP);
-        addView(mTopHandle, lp);
-
-        mBottomHandle = new ImageView(context);
-        mBottomHandle.setImageResource(R.drawable.widget_resize_handle_bottom);
-        lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM);
-        addView(mBottomHandle, lp);
-
-        Rect p = AppWidgetHostView.getDefaultPaddingForWidget(context,
-                widgetView.getAppWidgetInfo().provider, null);
-        mWidgetPaddingTop = p.top;
-        mWidgetPaddingBottom = p.bottom;
-
-        if (mResizeMode == AppWidgetProviderInfo.RESIZE_HORIZONTAL) {
-            mTopHandle.setVisibility(GONE);
-            mBottomHandle.setVisibility(GONE);
-        }
-
-        final float density = context.getResources().getDisplayMetrics().density;
-        mBackgroundPadding = (int) Math.ceil(density * BACKGROUND_PADDING);
-        mTouchTargetWidth = 2 * mBackgroundPadding;
-    }
-
-    public boolean beginResizeIfPointInRegion(int x, int y) {
-        boolean horizontalActive = (mResizeMode & AppWidgetProviderInfo.RESIZE_HORIZONTAL) != 0;
-        boolean verticalActive = (mResizeMode & AppWidgetProviderInfo.RESIZE_VERTICAL) != 0;
-
-        mTopBorderActive = (y < mTouchTargetWidth + mTopTouchRegionAdjustment) && verticalActive;
-        mBottomBorderActive = (y > getHeight() - mTouchTargetWidth + mBottomTouchRegionAdjustment)
-                && verticalActive;
-
-        boolean anyBordersActive = mTopBorderActive || mBottomBorderActive;
-
-        mBaselineWidth = getMeasuredWidth();
-        mBaselineHeight = getMeasuredHeight();
-        mBaselineX = getLeft();
-        mBaselineY = getTop();
-
-        if (anyBordersActive) {
-            mTopHandle.setAlpha(mTopBorderActive ? 1.0f : DIMMED_HANDLE_ALPHA);
-            mBottomHandle.setAlpha(mBottomBorderActive ? 1.0f : DIMMED_HANDLE_ALPHA);
-        }
-        return anyBordersActive;
-    }
-
-    /**
-     * Here we bound the deltas such that the frame cannot be stretched beyond the extents
-     * of the CellLayout, and such that the frame's borders can't cross.
-     */
-    public void updateDeltas(int deltaX, int deltaY) {
-        if (mTopBorderActive) {
-            mDeltaY = Math.max(-mBaselineY, deltaY);
-            mDeltaY = Math.min(mBaselineHeight - 2 * mTouchTargetWidth, mDeltaY);
-        } else if (mBottomBorderActive) {
-            mDeltaY = Math.min(BlissLauncher.getApplication(
-                    mContext).getDeviceProfile().availableHeightPx - (mBaselineY + mBaselineHeight),
-                    deltaY);
-            mDeltaY = Math.max(-mBaselineHeight + 2 * mTouchTargetWidth, mDeltaY);
-        }
-    }
-
-    public void visualizeResizeForDelta(int deltaX, int deltaY) {
-        visualizeResizeForDelta(deltaX, deltaY, false);
-    }
-
-    /**
-     * Based on the deltas, we resize the frame, and, if needed, we resize the widget.
-     */
-    private void visualizeResizeForDelta(int deltaX, int deltaY, boolean onDismiss) {
-        updateDeltas(deltaX, deltaY);
-       /* DragLayer.LayoutParams lp = (DragLayer.LayoutParams) getLayoutParams();
-
-        if (mTopBorderActive) {
-            lp.y = mBaselineY + mDeltaY;
-            lp.height = mBaselineHeight - mDeltaY;
-        } else if (mBottomBorderActive) {
-            lp.height = mBaselineHeight + mDeltaY;
-        }
-
-        resizeWidgetIfNeeded(onDismiss);*/
-        requestLayout();
-    }
-
-    /**
-     * This is the final step of the resize. Here we save the new widget size and position
-     * to LauncherModel and animate the resize frame.
-     */
-    public void commitResize() {
-        //resizeWidgetIfNeeded(true);
-        requestLayout();
+        //setLayoutParams(mRoundedWidgetView.getLayoutParams());
     }
 }

@@ -19,8 +19,6 @@ public class BlissLauncher extends Application {
     private static WidgetHost sAppWidgetHost;
     private static AppWidgetManager sAppWidgetManager;
 
-    private static int sLongPressTimeout = 300;
-
     private static final String TAG = "BlissLauncher";
 
     @Override
@@ -92,6 +90,6 @@ public class BlissLauncher extends Application {
     }
 
     public static long getLongPressTimeout() {
-        return sLongPressTimeout;
+        return 500;
     }
 }

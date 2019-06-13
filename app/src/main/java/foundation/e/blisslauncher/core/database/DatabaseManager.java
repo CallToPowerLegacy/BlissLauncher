@@ -8,8 +8,10 @@ import java.util.List;
 import foundation.e.blisslauncher.core.customviews.BlissFrameLayout;
 import foundation.e.blisslauncher.core.database.model.FolderItem;
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
+import foundation.e.blisslauncher.core.database.model.WidgetItem;
 import foundation.e.blisslauncher.core.executors.AppExecutors;
 import foundation.e.blisslauncher.core.utils.Constants;
+import io.reactivex.Single;
 
 public class DatabaseManager {
 
@@ -106,5 +108,19 @@ public class DatabaseManager {
         LauncherDB.getDatabase(mContext).launcherDao().delete(new_component_name);
         LauncherDB.getDatabase(mContext).launcherDao().updateComponent(old_component_name,
                 new_component_name);
+    }
+
+    public Single<Integer> getHeightOfWidget(int id){
+        return Single.defer(() -> Single.just(LauncherDB.getDatabase(mContext).widgetDao().getHeight(id)));
+    }
+
+    public void saveWidget(int id, int height){
+        WidgetItem widgetItem = new WidgetItem(id, height);
+        mAppExecutors.diskIO().execute(
+                () -> LauncherDB.getDatabase(mContext).widgetDao().insert(widgetItem));
+    }
+
+    public void removeWidget(int id){
+        mAppExecutors.diskIO().execute(() -> LauncherDB.getDatabase(mContext).widgetDao().delete(id));
     }
 }

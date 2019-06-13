@@ -44,6 +44,7 @@
             android:name=".features.launcher.LauncherActivity"
             android:clearTaskOnLaunch="true"
             android:launchMode="singleTask"
+            android:resumeWhilePausing="true"
             android:screenOrientation="nosensor"
             android:stateNotNeeded="true"
             android:theme="@style/HomeScreenTheme"
