@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:id="@+id/workspace"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:fitsSystemWindows="false"
-                tools:context="features.launcher.LauncherActivity">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/workspace"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
+    tools:context="features.launcher.LauncherActivity">
 
-    <View android:id="@+id/background_layer"
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:alpha="0"
-          android:background="@color/dark_grey_44"/>
+    <View
+        android:id="@+id/background_layer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@color/dark_grey_44" />
 
     <foundation.e.blisslauncher.core.customviews.HorizontalPager
         android:id="@+id/pages_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/page_indicator"
-        android:layout_alignParentTop="true"/>
+        android:layout_alignParentTop="true" />
 
     <foundation.e.blisslauncher.core.customviews.PageIndicatorLinearLayout
         android:id="@+id/page_indicator"
@@ -28,7 +29,7 @@
         android:divider="@drawable/gap"
         android:gravity="center"
         android:orientation="horizontal"
-        android:showDividers="middle"/>
+        android:showDividers="middle" />
 
     <foundation.e.blisslauncher.core.customviews.DockGridLayout
         android:id="@+id/dock"
@@ -39,7 +40,7 @@
         android:animateLayoutChanges="false"
         android:background="@color/dockColor"
         android:columnCount="@integer/col_count"
-        android:rowCount="1"/>
+        android:rowCount="1" />
 
     <RelativeLayout
         android:id="@+id/folder_window_container"
@@ -62,7 +63,7 @@
             android:text="@string/untitled"
             android:textAlignment="center"
             android:textColor="@android:color/white"
-            android:textSize="18sp"/>
+            android:textSize="18sp" />
 
         <LinearLayout
             android:id="@+id/folder_apps_background"
@@ -75,27 +76,29 @@
             <android.support.v4.view.ViewPager
                 android:id="@+id/folder_apps"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <me.relex.circleindicator.CircleIndicator
                 android:id="@+id/indicator"
                 android:layout_width="match_parent"
                 android:layout_height="24dp"
-                android:paddingBottom="4dp"/>
+                android:paddingBottom="4dp" />
 
         </LinearLayout>
 
     </RelativeLayout>
 
-    <FrameLayout android:id="@+id/swipe_search_container"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:paddingLeft="8dp"
-                 android:paddingTop="40dp"
-                 android:paddingRight="8dp"
-                 android:paddingBottom="8dp"
-                 android:visibility="gone">
-        <include layout="@layout/layout_search_suggestion"/>
+    <FrameLayout
+        android:id="@+id/swipe_search_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="8dp"
+        android:paddingTop="40dp"
+        android:paddingRight="8dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
+
+        <include layout="@layout/layout_search_suggestion" />
     </FrameLayout>
 
     <ProgressBar
@@ -103,6 +106,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </RelativeLayout>

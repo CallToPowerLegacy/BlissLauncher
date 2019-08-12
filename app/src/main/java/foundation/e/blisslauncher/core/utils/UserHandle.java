@@ -18,6 +18,7 @@ package foundation.e.blisslauncher.core.utils;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Process;
+import android.util.Log;
 
 /**
  * Wrapper class for `android.os.UserHandle` that works with all Android versions
@@ -53,11 +54,9 @@ public class UserHandle {
         }
     }
 
-
     public boolean isCurrentUser() {
         return (this.handle == null);
     }
-
 
     public String addUserSuffixToString(String base, char separator) {
         if (this.handle == null) {
@@ -81,5 +80,9 @@ public class UserHandle {
         }
 
         return (serial == this.serial);
+    }
+
+    public boolean isSameUser(UserHandle userHandle){
+        return userHandle.serial == this.serial;
     }
 }

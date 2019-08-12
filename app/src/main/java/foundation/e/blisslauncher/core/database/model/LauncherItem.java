@@ -9,12 +9,12 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Process;
-import android.os.UserHandle;
 import android.support.annotation.NonNull;
 
 import java.net.URISyntaxException;
 
 import foundation.e.blisslauncher.core.utils.Constants;
+import foundation.e.blisslauncher.core.utils.UserHandle;
 
 
 @Entity(tableName = "launcher_items", indices = {@Index(value = {"item_id"},
@@ -111,11 +111,10 @@ public class LauncherItem {
     public String packageName;
 
     public LauncherItem() {
-        user = Process.myUserHandle();
     }
 
     public Intent getIntent() {
-        if(launchIntent != null){
+        if (launchIntent != null) {
             return launchIntent;
         }
         if (launchIntentUri != null) {
@@ -141,8 +140,8 @@ public class LauncherItem {
 
     @Override
     public String toString() {
-        return "item_type: " + itemType + ", container: " + container + ", screen: " + screenId
-                + ", cell: " + cell;
+        return "[id: " + id + "item_type: " + itemType + ", container: " + container + ", screen: " + screenId
+                + ", cell: " + cell + "]";
     }
 
     @Override

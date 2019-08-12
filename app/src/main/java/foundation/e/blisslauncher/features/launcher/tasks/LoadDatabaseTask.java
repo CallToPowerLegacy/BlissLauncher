@@ -1,4 +1,4 @@
-package foundation.e.blisslauncher.features.launcher;
+package foundation.e.blisslauncher.features.launcher.tasks;
 
 import android.os.AsyncTask;
 
@@ -7,12 +7,13 @@ import java.util.List;
 import foundation.e.blisslauncher.core.database.LauncherDB;
 import foundation.e.blisslauncher.core.database.model.LauncherItem;
 import foundation.e.blisslauncher.core.migrate.Migration;
+import foundation.e.blisslauncher.features.launcher.AppProvider;
 
 public class LoadDatabaseTask extends AsyncTask<Void, Void, List<LauncherItem>> {
 
     private AppProvider mAppProvider;
 
-    LoadDatabaseTask() {
+    public LoadDatabaseTask() {
         super();
     }
 

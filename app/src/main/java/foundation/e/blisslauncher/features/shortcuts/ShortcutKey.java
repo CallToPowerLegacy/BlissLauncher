@@ -28,7 +28,7 @@ public class ShortcutKey extends ComponentKey {
     }
 
     public static ShortcutKey fromItem(ShortcutItem shortcutItem){
-        return new ShortcutKey(shortcutItem.packageName, shortcutItem.user, shortcutItem.id);
+        return new ShortcutKey(shortcutItem.packageName, shortcutItem.user.getRealHandle(), shortcutItem.id);
     }
 
     public static ShortcutKey fromIntent(Intent intent, UserHandle user) {

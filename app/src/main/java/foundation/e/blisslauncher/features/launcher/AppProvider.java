@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Process;
 import android.os.UserManager;
 import android.provider.MediaStore;
@@ -38,15 +37,21 @@ import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
 import foundation.e.blisslauncher.core.utils.UserHandle;
+import foundation.e.blisslauncher.features.launcher.tasks.LoadAppsTask;
+import foundation.e.blisslauncher.features.launcher.tasks.LoadDatabaseTask;
+import foundation.e.blisslauncher.features.launcher.tasks.LoadShortcutTask;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
 import foundation.e.blisslauncher.features.shortcuts.ShortcutInfoCompat;
 
+
+// TODO: Find better solution instead of excessively using volatile and synchronized.
+//  - and use RxJava instead of bad async tasks.
 public class AppProvider {
 
     /**
-     * Represents networkItems in workspace.
+     * Represents all applications that is to be shown in Launcher
      */
-    private List<LauncherItem> mLauncherItems;
+    List<LauncherItem> mLauncherItems;
 
     /**
      * Represents networkItems stored in database.
@@ -74,23 +79,24 @@ public class AppProvider {
     private static final String OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
     private static final String LIBREOFFICE_PACKAGE = "org.documentfoundation.libreoffice";
 
-    public static HashSet<String> DISABLED_PACKAGE = new HashSet<>();
+    public static HashSet<String> DISABLED_PACKAGES = new HashSet<>();
 
     static {
-        DISABLED_PACKAGE.add(MICROG_PACKAGE);
-        DISABLED_PACKAGE.add(MUPDF_PACKAGE);
-        DISABLED_PACKAGE.add(OPENKEYCHAIN_PACKAGE);
-        DISABLED_PACKAGE.add(LIBREOFFICE_PACKAGE);
+        DISABLED_PACKAGES.add(MICROG_PACKAGE);
+        DISABLED_PACKAGES.add(MUPDF_PACKAGE);
+        DISABLED_PACKAGES.add(OPENKEYCHAIN_PACKAGE);
+        DISABLED_PACKAGES.add(LIBREOFFICE_PACKAGE);
     }
-
-    private PackageAddedRemovedHandler mPackageAddedRemovedHandler;
 
     private static final String TAG = "AppProvider";
     private Context mContext;
     private static AppProvider sInstance;
+    private boolean isLoading;
+    private boolean mStopped;
 
     private AppProvider(Context context) {
         this.mContext = context;
+        isLoading = false;
         initialise();
     }
 
@@ -147,7 +153,8 @@ public class AppProvider {
 
             @Override
             public void onPackagesAvailable(String[] packageNames, android.os.UserHandle user,
-                    boolean replacing) {
+                                            boolean replacing) {
+                Log.d(TAG, "onPackagesAvailable() called with: packageNames = [" + packageNames + "], user = [" + user + "], replacing = [" + replacing + "]");
                 PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.MEDIA_MOUNTED",
                         null, new UserHandle(manager.getSerialNumberForUser(user), user), false
@@ -157,11 +164,23 @@ public class AppProvider {
 
             @Override
             public void onPackagesUnavailable(String[] packageNames, android.os.UserHandle user,
-                    boolean replacing) {
+                                              boolean replacing) {
+                Log.d(TAG, "onPackagesUnavailable() called with: packageNames = [" + packageNames + "], user = [" + user + "], replacing = [" + replacing + "]");
                 PackageAddedRemovedHandler.handleEvent(mContext,
                         "android.intent.action.MEDIA_UNMOUNTED",
                         null, new UserHandle(manager.getSerialNumberForUser(user), user), false
                 );
+            }
+
+            @Override
+            public void onPackagesSuspended(String[] packageNames, android.os.UserHandle user) {
+                Log.d(TAG, "onPackagesSuspended() called with: packageNames = [" + packageNames + "], user = [" + user + "]");
+            }
+
+            @Override
+            public void onPackagesUnsuspended(String[] packageNames, android.os.UserHandle user) {
+                super.onPackagesUnsuspended(packageNames, user);
+                Log.d(TAG, "onPackagesUnsuspended() called with: packageNames = [" + packageNames + "], user = [" + user + "]");
             }
         });
 
@@ -170,8 +189,12 @@ public class AppProvider {
 
     public static AppProvider getInstance(Context context) {
         if (sInstance == null) {
-            sInstance = new AppProvider(context);
-            sInstance.reload();
+            synchronized (AppProvider.class) {
+                if (sInstance == null) {
+                    sInstance = new AppProvider(context);
+                    //sInstance.reload(false);
+                }
+            }
         }
         return sInstance;
     }
@@ -180,7 +203,8 @@ public class AppProvider {
         return mContext;
     }
 
-    public void reload() {
+    public synchronized void reload() {
+        Log.d(TAG, "reload() called");
         initializeAppLoading(new LoadAppsTask());
         if (Utilities.ATLEAST_OREO) {
             initializeShortcutsLoading(new LoadShortcutTask());
@@ -190,37 +214,43 @@ public class AppProvider {
         initializeDatabaseLoading(new LoadDatabaseTask());
     }
 
-    private void initializeAppLoading(LoadAppsTask loader) {
+    private synchronized void initializeAppLoading(LoadAppsTask loader) {
+        Log.d(TAG, "initializeAppLoading() called with: loader = [" + loader + "]");
         appsLoaded = false;
         loader.setAppProvider(this);
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        loader.executeOnExecutor(AppExecutors.getInstance().appIO());
     }
 
-    private void initializeShortcutsLoading(LoadShortcutTask loader) {
+    private synchronized void initializeShortcutsLoading(LoadShortcutTask loader) {
+        Log.d(TAG, "initializeShortcutsLoading() called with: loader = [" + loader + "]");
         shortcutsLoaded = false;
         loader.setAppProvider(this);
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        loader.executeOnExecutor(AppExecutors.getInstance().shortcutIO());
     }
 
-    private void initializeDatabaseLoading(LoadDatabaseTask loader) {
+    private synchronized void initializeDatabaseLoading(LoadDatabaseTask loader) {
+        Log.d(TAG, "initializeDatabaseLoading() called with: loader = [" + loader + "]");
         databaseLoaded = false;
         loader.setAppProvider(this);
         loader.executeOnExecutor(AppExecutors.getInstance().diskIO());
     }
 
-    public void loadAppsOver(Map<String, ApplicationItem> appItemsPair) {
+    public synchronized void loadAppsOver(Map<String, ApplicationItem> appItemsPair) {
+        Log.d(TAG, "loadAppsOver() called " + mStopped);
         mApplicationItems = appItemsPair;
         appsLoaded = true;
         handleAllProviderLoaded();
     }
 
-    public void loadShortcutsOver(Map<String, ShortcutInfoCompat> shortcuts) {
+    public synchronized void loadShortcutsOver(Map<String, ShortcutInfoCompat> shortcuts) {
+        Log.d(TAG, "loadShortcutsOver() called with: shortcuts = [" + shortcuts + "]" + mStopped);
         mShortcutInfoCompats = shortcuts;
         shortcutsLoaded = true;
         handleAllProviderLoaded();
     }
 
-    public void loadDatabaseOver(List<LauncherItem> databaseItems) {
+    public synchronized void loadDatabaseOver(List<LauncherItem> databaseItems) {
+        Log.d(TAG, "loadDatabaseOver() called with: databaseItems = [" + Thread.currentThread().getName() + "]" + mStopped);
         this.mDatabaseItems = databaseItems;
         databaseLoaded = true;
         handleAllProviderLoaded();
@@ -229,26 +259,26 @@ public class AppProvider {
     private synchronized void handleAllProviderLoaded() {
         if (appsLoaded && shortcutsLoaded && databaseLoaded) {
             if (mDatabaseItems == null || mDatabaseItems.size() <= 0) {
-                prepareDefaultLauncherItems();
+                mLauncherItems = prepareDefaultLauncherItems();
             } else {
-                prepareLauncherItems();
+                mLauncherItems = prepareLauncherItems();
             }
             mAppsRepository.updateAppsRelay(mLauncherItems);
         }
     }
 
-    private void prepareLauncherItems() {
-
-        // Stores networkItems that user put in any folder.
-        LongSparseArray<List<LauncherItem>> folderItems = new LongSparseArray<>();
+    private List<LauncherItem> prepareLauncherItems() {
+        Log.d(TAG, "prepareLauncherItems() called");
 
         /**
          * Indices of folder in {@link #mLauncherItems}.
          */
         LongSparseArray<Integer> foldersIndex = new LongSparseArray<>();
-
-        mLauncherItems = new ArrayList<>();
+        List<LauncherItem> mLauncherItems = new ArrayList<>();
         Collection<ApplicationItem> applicationItems = mApplicationItems.values();
+
+        Log.i(TAG, "Total number of apps: " + applicationItems.size());
+        Log.i(TAG, "Total number of items in database: " + mDatabaseItems.size());
         for (LauncherItem databaseItem : mDatabaseItems) {
             if (databaseItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                 ApplicationItem applicationItem = mApplicationItems.get(databaseItem.id);
@@ -256,6 +286,7 @@ public class AppProvider {
                     DatabaseManager.getManager(mContext).removeLauncherItem(databaseItem.id);
                     continue;
                 }
+
                 applicationItem.container = databaseItem.container;
                 applicationItem.screenId = databaseItem.screenId;
                 applicationItem.cell = databaseItem.cell;
@@ -264,13 +295,11 @@ public class AppProvider {
                         || applicationItem.container == Constants.CONTAINER_HOTSEAT) {
                     mLauncherItems.add(applicationItem);
                 } else {
-                    FolderItem folderItem =
-                            (FolderItem) mLauncherItems.get(
-                                    foldersIndex.get(applicationItem.container));
-                    if (folderItem.items == null) {
-                        folderItem.items = new ArrayList<>();
+                    Integer index = foldersIndex.get(applicationItem.container);
+                    if (index != null) {
+                        FolderItem folderItem = (FolderItem) mLauncherItems.get(index);
+                        folderItem.items.add(applicationItem);
                     }
-                    folderItem.items.add(applicationItem);
                 }
             } else if (databaseItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
                 ShortcutItem shortcutItem;
@@ -303,6 +332,7 @@ public class AppProvider {
                 folderItem.title = databaseItem.title;
                 folderItem.container = databaseItem.container;
                 folderItem.cell = databaseItem.cell;
+                folderItem.items = new ArrayList<>();
                 folderItem.screenId = databaseItem.screenId;
                 foldersIndex.put(Long.parseLong(folderItem.id), mLauncherItems.size());
                 mLauncherItems.add(folderItem);
@@ -313,9 +343,9 @@ public class AppProvider {
             for (int i = 0; i < foldersIndex.size(); i++) {
                 FolderItem folderItem =
                         (FolderItem) mLauncherItems.get(foldersIndex.get(foldersIndex.keyAt(i)));
-                if (folderItem.items == null) {
+                if (folderItem.items == null || folderItem.items.size() == 0) {
                     DatabaseManager.getManager(mContext).removeLauncherItem(folderItem.id);
-                    mLauncherItems.remove(foldersIndex.get(foldersIndex.keyAt(i)));
+                    mLauncherItems.remove((int) foldersIndex.get(foldersIndex.keyAt(i)));
                 } else {
                     folderItem.icon = new GraphicsUtil(mContext).generateFolderIcon(mContext,
                             folderItem);
@@ -324,7 +354,13 @@ public class AppProvider {
         }
 
         applicationItems.removeAll(mDatabaseItems);
-        mLauncherItems.addAll(applicationItems);
+        List<ApplicationItem> mutableList = new ArrayList<>(applicationItems);
+        Collections.sort(mutableList, (app1, app2) -> {
+            Collator collator = Collator.getInstance();
+            return collator.compare(app1.title.toString(), app2.title.toString());
+        });
+        mLauncherItems.addAll(mutableList);
+        return mLauncherItems;
     }
 
     private ShortcutItem prepareShortcutForNougat(LauncherItem databaseItem) {
@@ -367,8 +403,9 @@ public class AppProvider {
         return shortcutItem;
     }
 
-    private void prepareDefaultLauncherItems() {
-        mLauncherItems = new ArrayList<>();
+    private List<LauncherItem> prepareDefaultLauncherItems() {
+        Log.d(TAG, "prepareDefaultLauncherItems() called " + mApplicationItems.size());
+        List<LauncherItem> mLauncherItems = new ArrayList<>();
         List<LauncherItem> pinnedItems = new ArrayList<>();
         PackageManager pm = mContext.getPackageManager();
         Intent[] intents = {
@@ -408,5 +445,15 @@ public class AppProvider {
         });
 
         mLauncherItems.addAll(pinnedItems);
+        Log.i(TAG, "prepareDefaultLauncherItems: "+mLauncherItems.size());
+        return mLauncherItems;
+    }
+
+    public void clear() {
+        sInstance.mContext = null;
+    }
+
+    public synchronized boolean isRunning() {
+        return !mStopped;
     }
 }

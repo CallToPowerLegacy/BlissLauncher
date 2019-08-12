@@ -5,10 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
-import android.os.UserHandle;
 
 import foundation.e.blisslauncher.core.UserManagerCompat;
 import foundation.e.blisslauncher.core.utils.Constants;
+import foundation.e.blisslauncher.core.utils.UserHandle;
 
 public class ApplicationItem extends LauncherItem {
 
@@ -39,16 +39,12 @@ public class ApplicationItem extends LauncherItem {
     /**
      * Must not hold the Context.
      */
-    public ApplicationItem(Context context, LauncherActivityInfo info, UserHandle user) {
-        this(info, user, UserManagerCompat.getInstance(context).isQuietModeEnabled(user));
-    }
-
-    public ApplicationItem(LauncherActivityInfo info, UserHandle user, boolean quietModeEnabled) {
+    public ApplicationItem(LauncherActivityInfo info, UserHandle user) {
         itemType = Constants.ITEM_TYPE_APPLICATION;
         this.componentName = info.getComponentName();
-        this.id = this.componentName.flattenToString();
-        this.container = NO_ID;
         this.user = user;
+        this.id = user.addUserSuffixToString(this.componentName.flattenToString(), '/');
+        this.container = NO_ID;
 
         launchIntent = makeLaunchIntent(info);
 

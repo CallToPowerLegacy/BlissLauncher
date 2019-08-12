@@ -24,6 +24,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -76,10 +77,6 @@ import android.widget.Toast;
 
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -97,6 +94,8 @@ import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
 import foundation.e.blisslauncher.core.Preferences;
 import foundation.e.blisslauncher.core.Utilities;
+import foundation.e.blisslauncher.core.broadcast.ManagedProfileBroadcastReceiver;
+import foundation.e.blisslauncher.core.broadcast.TimeChangeBroadcastReceiver;
 import foundation.e.blisslauncher.core.customviews.BlissDragShadowBuilder;
 import foundation.e.blisslauncher.core.customviews.BlissFrameLayout;
 import foundation.e.blisslauncher.core.customviews.BlissInput;
@@ -116,12 +115,14 @@ import foundation.e.blisslauncher.core.database.model.ShortcutItem;
 import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
+import foundation.e.blisslauncher.core.events.EventRelay;
 import foundation.e.blisslauncher.core.events.ShortcutAddEvent;
 import foundation.e.blisslauncher.core.executors.AppExecutors;
 import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
 import foundation.e.blisslauncher.core.utils.ListUtil;
+import foundation.e.blisslauncher.core.utils.UserHandle;
 import foundation.e.blisslauncher.features.notification.NotificationRepository;
 import foundation.e.blisslauncher.features.notification.NotificationService;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
@@ -182,7 +183,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private CompositeDisposable mCompositeDisposable;
     private CountDownTimer mWobblingCountDownTimer;
     private List<BlissFrameLayout> mCalendarIcons = new ArrayList<>();
-    private BroadcastReceiver timeChangedReceiver;
+    private TimeChangeBroadcastReceiver timeChangedReceiver;
     private boolean isUiDone = false;
     private Set<String> mAppsWithNotifications = new HashSet<>();
 
@@ -230,13 +231,19 @@ public class LauncherActivity extends AppCompatActivity implements
     private RoundedWidgetView activeRoundedWidgetView;
     private boolean widgetResizeContainerVisible;
 
+    // EventRelay to handle pass events related to app addition, deletion or changed.
+    private EventRelay events;
+    private ManagedProfileBroadcastReceiver managedProfileReceiver;
+    private boolean forceReload;
+
+    private AppProvider appProvider;
 
     @SuppressLint("InflateParams")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        BlissLauncher.getApplication(this).initAppProvider();
+        appProvider = BlissLauncher.getApplication(this).getAppProvider();
 
         prepareBroadcastReceivers();
 
@@ -257,7 +264,6 @@ public class LauncherActivity extends AppCompatActivity implements
             String setting = "enabled_notification_listeners";
             String permissionString = Settings.Secure.getString(cr, setting);
             if (permissionString == null || !permissionString.contains(getPackageName())) {
-                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 if (BuildConfig.DEBUG) {
                     startActivity(
                             new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
@@ -282,6 +288,7 @@ public class LauncherActivity extends AppCompatActivity implements
         startService(notificationServiceIntent);
 
         createOrUpdateIconGrid();
+        BlissLauncher.getApplication(this).getAppProvider().reload();
     }
 
     private void setupViews() {
@@ -319,19 +326,13 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void createOrUpdateIconGrid() {
         getCompositeDisposable().add(
-                AppsRepository.getAppsRepository().getAppsRelay().subscribeOn(Schedulers.io())
+                AppsRepository.getAppsRepository().getAppsRelay()
+                        .distinct()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeWith(new DisposableObserver<List<LauncherItem>>() {
                             @Override
                             public void onNext(List<LauncherItem> launcherItems) {
-                                if (launcherItems.size() <= 0) {
-                                    BlissLauncher.getApplication(
-                                            LauncherActivity.this).getAppProvider().reload();
-                                } else {
-                                    if (!allAppsDisplayed) {
-                                        showApps(launcherItems);
-                                    }
-                                }
+                                showApps(launcherItems, forceReload);
                             }
 
                             @Override
@@ -348,18 +349,8 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void prepareBroadcastReceivers() {
-        IntentFilter timeIntentFilter = new IntentFilter(Intent.ACTION_TIME_CHANGED);
-        timeIntentFilter.addAction(Intent.ACTION_DATE_CHANGED);
-        timeChangedReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (isUiDone) {
-                    updateAllCalendarIcons(Calendar.getInstance());
-                }
-            }
-        };
-        registerReceiver(timeChangedReceiver, timeIntentFilter);
-        EventBus.getDefault().register(this);
+        timeChangedReceiver = TimeChangeBroadcastReceiver.register(this);
+        managedProfileReceiver = ManagedProfileBroadcastReceiver.register(this);
     }
 
     protected void attachBaseContext(Context context) {
@@ -373,7 +364,7 @@ public class LauncherActivity extends AppCompatActivity implements
         return mCompositeDisposable;
     }
 
-    private void updateAllCalendarIcons(Calendar calendar) {
+    public void updateAllCalendarIcons(Calendar calendar) {
         for (BlissFrameLayout blissIcon : mCalendarIcons) {
             CalendarIcon calendarIcon = new CalendarIcon(
                     blissIcon.findViewById(R.id.calendar_month_textview),
@@ -430,8 +421,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 widgetView = widgetManager.dequeAddWidgetView();
             }
         }
-
-
     }
 
     private void addWidgetToContainer(
@@ -456,32 +445,32 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
-        unregisterReceiver(timeChangedReceiver);
+        TimeChangeBroadcastReceiver.unregister(this, timeChangedReceiver);
+        ManagedProfileBroadcastReceiver.unregister(this, managedProfileReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
         getCompositeDisposable().dispose();
+        events.unsubscribe();
+        BlissLauncher.getApplication(this).getAppProvider().clear();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAppAddEvent(AppAddEvent appAddEvent) {
-        ApplicationItem applicationItem = AppUtils.createAppItem(this, appAddEvent.packageName);
+        ApplicationItem applicationItem = AppUtils.createAppItem(this, appAddEvent.getPackageName(),
+                appAddEvent.getUserHandle());
         addLauncherItem(applicationItem);
+        DatabaseManager.getManager(this).saveLayouts(pages, mDock);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAppRemoveEvent(AppRemoveEvent appRemoveEvent) {
         forceRefreshSuggestedApps = true;
-        removePackageFromLauncher(appRemoveEvent.packageName);
+        removePackageFromLauncher(appRemoveEvent.getPackageName(), appRemoveEvent.getUserHandle());
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAppChangeEvent(AppChangeEvent appChangeEvent) {
-        updateApp(appChangeEvent.packageName);
+        updateApp(appChangeEvent.getPackageName(), appChangeEvent.getUserHandle());
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShortcutAddEvent(ShortcutAddEvent shortcutAddEvent) {
         updateOrAddShortcut(shortcutAddEvent.getShortcutItem());
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
@@ -624,7 +613,7 @@ public class LauncherActivity extends AppCompatActivity implements
         addLauncherItem(shortcutItem);
     }
 
-    private void removePackageFromLauncher(String packageName) {
+    private void removePackageFromLauncher(String packageName, UserHandle userHandle) {
         handleWobbling(false);
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             for (int i = 0; i < mFolderAppsViewPager.getChildCount(); i++) {
@@ -633,7 +622,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     LauncherItem launcherItem = getAppDetails(grid.getChildAt(j));
                     if (launcherItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                         ApplicationItem app = (ApplicationItem) launcherItem;
-                        if (app.packageName.equals(packageName)) {
+                        if (app.packageName.equals(packageName) && app.user.isSameUser(userHandle)) {
                             activeFolder.items.remove(app);
                         }
                     } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -654,7 +643,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 for (LauncherItem item : folderItem.items) {
                     if (item.itemType == Constants.ITEM_TYPE_APPLICATION) {
                         ApplicationItem applicationItem = (ApplicationItem) item;
-                        if (applicationItem.packageName.equalsIgnoreCase(packageName)) {
+                        if (applicationItem.packageName.equalsIgnoreCase(packageName) && applicationItem.user.isSameUser(userHandle)) {
                             folderItem.items.remove(applicationItem);
                         }
                     } else if (item.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -667,7 +656,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 updateFolderInGrid(mDock, folderItem, j);
             } else if (appItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                 ApplicationItem applicationItem = (ApplicationItem) appItem;
-                if (applicationItem.packageName.equalsIgnoreCase(packageName)) {
+                if (applicationItem.packageName.equalsIgnoreCase(packageName) && applicationItem.user.isSameUser(userHandle)) {
                     mDock.removeViewAt(j);
                 }
             } else if (appItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -687,7 +676,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     for (LauncherItem item : folderItem.items) {
                         if (item.itemType == Constants.ITEM_TYPE_APPLICATION) {
                             ApplicationItem applicationItem = (ApplicationItem) item;
-                            if (applicationItem.packageName.equalsIgnoreCase(packageName)) {
+                            if (applicationItem.packageName.equalsIgnoreCase(packageName) && applicationItem.user.isSameUser(userHandle)) {
                                 folderItem.items.remove(applicationItem);
                             }
                         } else if (item.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -700,7 +689,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     updateFolderInGrid(grid, folderItem, j);
                 } else if (launcherItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                     ApplicationItem applicationItem = (ApplicationItem) launcherItem;
-                    if (applicationItem.packageName.equalsIgnoreCase(packageName)) {
+                    if (applicationItem.packageName.equalsIgnoreCase(packageName) && applicationItem.user.isSameUser(userHandle)) {
                         grid.removeViewAt(j);
                     }
                 } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -749,7 +738,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void updateFolderInGrid(GridLayout grid, FolderItem folderItem,
-            int folderIndex) {
+                                    int folderIndex) {
         if (folderItem.items.size() == 0) {
             grid.removeViewAt(folderIndex);
         } else {
@@ -765,11 +754,11 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
-    private void updateApp(String packageName) {
+    private void updateApp(String packageName, UserHandle userHandle) {
         handleWobbling(false);
-        ApplicationItem updatedAppItem = AppUtils.createAppItem(this, packageName);
+        ApplicationItem updatedAppItem = AppUtils.createAppItem(this, packageName, userHandle);
         if (updatedAppItem == null) {
-            removePackageFromLauncher(packageName);
+            removePackageFromLauncher(packageName, userHandle);
             return;
         }
 
@@ -783,7 +772,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             getAppDetails(viewGroup);
                     if (existingItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                         ApplicationItem existingAppItem = (ApplicationItem) existingItem;
-                        if (existingAppItem.packageName.equalsIgnoreCase(packageName)) {
+                        if (existingAppItem.packageName.equalsIgnoreCase(packageName) && existingAppItem.user.isSameUser(userHandle)) {
                             BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
                             GridLayout.LayoutParams iconLayoutParams =
                                     new GridLayout.LayoutParams();
@@ -809,7 +798,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (folderItem.items.get(k).itemType == Constants.ITEM_TYPE_APPLICATION) {
                         ApplicationItem applicationItem = (ApplicationItem) folderItem.items.get(k);
                         if (applicationItem.packageName.equalsIgnoreCase(
-                                packageName)) {
+                                packageName) && applicationItem.user.isSameUser(userHandle)) {
                             folderItem.items.set(k, updatedAppItem);
                             folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this,
                                     folderItem);
@@ -825,7 +814,8 @@ public class LauncherActivity extends AppCompatActivity implements
             } else {
                 if (existingAppItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                     ApplicationItem applicationItem = (ApplicationItem) existingAppItem;
-                    if (applicationItem.packageName.equalsIgnoreCase(packageName)) {
+                    if (applicationItem.packageName.equalsIgnoreCase(packageName)
+                            && applicationItem.user.isSameUser(userHandle)) {
                         BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
                         mDock.removeViewAt(i);
                         addAppToDock(blissFrameLayout, i);
@@ -848,7 +838,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             ApplicationItem applicationItem =
                                     (ApplicationItem) folderItem.items.get(k);
                             if (applicationItem.packageName.equalsIgnoreCase(
-                                    packageName)) {
+                                    packageName) && applicationItem.user.isSameUser(userHandle)) {
                                 folderItem.items.set(k, updatedAppItem);
                                 folderItem.icon = new GraphicsUtil(this).generateFolderIcon(this,
                                         folderItem);
@@ -859,12 +849,12 @@ public class LauncherActivity extends AppCompatActivity implements
                                 return;
                             }
                         }
-
                     }
                 } else {
                     if (existingAppItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                         ApplicationItem applicationItem = (ApplicationItem) existingAppItem;
-                        if (applicationItem.packageName.equalsIgnoreCase(packageName)) {
+                        if (applicationItem.packageName.equalsIgnoreCase(packageName)
+                                && applicationItem.user.isSameUser(userHandle)) {
                             BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
                             gridLayout.removeViewAt(j);
                             addAppToGrid(gridLayout, blissFrameLayout, j);
@@ -878,9 +868,12 @@ public class LauncherActivity extends AppCompatActivity implements
         addLauncherItem(updatedAppItem);
     }
 
-    public void showApps(List<LauncherItem> launcherItems) {
+    public void showApps(List<LauncherItem> launcherItems, boolean force) {
         mProgressBar.setVisibility(GONE);
+        if(isWobbling)
+            handleWobbling(false);
         createUI(launcherItems);
+        subscribeToEvents();
         isUiDone = true;
         createPageChangeListener();
         createFolderTitleListener();
@@ -889,6 +882,14 @@ public class LauncherActivity extends AppCompatActivity implements
         createIndicator();
         createOrUpdateBadgeCount();
         allAppsDisplayed = true;
+        if (force) {
+            forceReload = false;
+        }
+    }
+
+    private void subscribeToEvents() {
+        events = EventRelay.getInstance();
+        events.subscribe(new EventsObserverImpl(this));
     }
 
     private void createOrUpdateBadgeCount() {
@@ -952,7 +953,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void updateBadgeToApp(BlissFrameLayout viewGroup, LauncherItem appItem,
-            Set<String> appsWithNotifications, boolean withText) {
+                                  Set<String> appsWithNotifications, boolean withText) {
         if (appItem != null) {
             if (appItem.itemType == Constants.ITEM_TYPE_FOLDER) {
                 viewGroup.applyBadge(checkHasApp((FolderItem) appItem, appsWithNotifications),
@@ -1097,16 +1098,14 @@ public class LauncherActivity extends AppCompatActivity implements
             // Check if usage stats have been changed or not to avoid unnecessary flickering
             if (forceRefresh || mUsageStats == null || mUsageStats.size() != usageStats.size()
                     || !ListUtil.areEqualLists(mUsageStats, usageStats)) {
-                if (forceRefresh) forceRefresh = false;
                 mUsageStats = usageStats;
-                if (suggestedAppsGridLayout != null
-                        && suggestedAppsGridLayout.getChildCount() > 0) {
+                if (suggestedAppsGridLayout.getChildCount() > 0) {
                     suggestedAppsGridLayout.removeAllViews();
                 }
                 int i = 0;
                 while (suggestedAppsGridLayout.getChildCount() < 4 && i < mUsageStats.size()) {
                     ApplicationItem appItem = AppUtils.createAppItem(this,
-                            mUsageStats.get(i).getPackageName());
+                            mUsageStats.get(i).getPackageName(), new UserHandle());
                     if (appItem != null) {
                         BlissFrameLayout view = prepareSuggestedApp(appItem);
                         addAppToGrid(suggestedAppsGridLayout, view);
@@ -1136,6 +1135,9 @@ public class LauncherActivity extends AppCompatActivity implements
         GridLayout workspaceScreen = preparePage();
         pages.add(workspaceScreen);
 
+        mHorizontalPager.removeAllViews();
+        mDock.removeAllViews();
+
         for (int i = 0; i < launcherItems.size(); i++) {
             LauncherItem launcherItem = launcherItems.get(i);
             BlissFrameLayout appView = prepareLauncherItem(launcherItem);
@@ -1158,6 +1160,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 addAppToGrid(workspaceScreen, appView);
             }
         }
+
         for (int i = 0; i < pages.size(); i++) {
             mHorizontalPager.addView(pages.get(i));
         }
@@ -1368,7 +1371,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
+                                           @NonNull int[] grantResults) {
         if (requestCode == WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -1666,7 +1669,8 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void startActivitySafely(Context context, LauncherItem launcherItem, View v) {
         Intent intent = launcherItem.getIntent();
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        android.os.UserHandle user = launcherItem.user.getRealHandle();
 
         if (v != null) {
             intent.setSourceBounds(getViewBounds(v));
@@ -1674,8 +1678,13 @@ public class LauncherActivity extends AppCompatActivity implements
 
         if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
             startShortcutIntentSafely(context, intent, launcherItem);
-        } else {
+        } else if (user == null || user.equals(Process.myUserHandle())) {
+            Log.i(TAG, "startActivitySafely: here");
             context.startActivity(intent);
+        } else {
+            Log.i(TAG, "startActivitySafely: here2");
+            ((LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE))
+                    .startMainActivity(intent.getComponent(), user, intent.getSourceBounds(), null);
         }
     }
 
@@ -1764,7 +1773,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void makeAppWobble(BlissFrameLayout blissFrameLayout, boolean shouldPlayAnimation,
-            int i) {
+                               int i) {
         UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);
         Bundle restrictions = userManager.getUserRestrictions();
         boolean uninstallDisabled = restrictions.getBoolean(UserManager.DISALLOW_APPS_CONTROL,
@@ -1848,7 +1857,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     Uri packageUri = Uri.fromParts("package", componentName.getPackageName(),
                             componentName.getClassName());
                     Intent i = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri)
-                            .putExtra(Intent.EXTRA_USER, launcherItem.user);
+                            .putExtra(Intent.EXTRA_USER, launcherItem.user.getRealHandle());
                     startActivity(i);
                 }
             } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -2459,7 +2468,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void updateIcon(BlissFrameLayout appView, LauncherItem app, Drawable drawable,
-            boolean folderFromDock) {
+                            boolean folderFromDock) {
         app.icon = drawable;
         List<Object> tags = (List<Object>) appView.getTag();
         SquareImageView iv = (SquareImageView) tags.get(0);
@@ -2573,13 +2582,13 @@ public class LauncherActivity extends AppCompatActivity implements
         transition.addTransitionListener(new LayoutTransition.TransitionListener() {
             @Override
             public void startTransition(LayoutTransition layoutTransition,
-                    ViewGroup viewGroup, View view, int i) {
+                                        ViewGroup viewGroup, View view, int i) {
                 dragDropEnabled = false;
             }
 
             @Override
             public void endTransition(LayoutTransition layoutTransition,
-                    ViewGroup viewGroup, View view, int i) {
+                                      ViewGroup viewGroup, View view, int i) {
                 dragDropEnabled = true;
             }
         });
@@ -3160,6 +3169,14 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
+    public void reload() {
+        forceReload = true;
+    }
+
+    public void loadAllApps() {
+
+    }
+
     /**
      * Adapter for folder apps.
      */
@@ -3212,7 +3229,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
         @Override
         public void destroyItem(@NonNull ViewGroup container, int position,
-                @NonNull Object object) {
+                                @NonNull Object object) {
             container.removeView((View) object);
         }
     }

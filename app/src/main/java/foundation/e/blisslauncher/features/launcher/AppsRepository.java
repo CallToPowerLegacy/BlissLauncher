@@ -24,6 +24,10 @@ public class AppsRepository {
         return sAppsRepository;
     }
 
+    public void clearAll(){
+        appsRelay = BehaviorRelay.create();
+    }
+
     public void updateAppsRelay(List<LauncherItem> launcherItems) {
         this.appsRelay.accept(launcherItems);
     }

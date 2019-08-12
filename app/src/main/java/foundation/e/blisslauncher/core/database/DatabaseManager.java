@@ -1,8 +1,10 @@
 package foundation.e.blisslauncher.core.database;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.GridLayout;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import foundation.e.blisslauncher.core.customviews.BlissFrameLayout;
@@ -46,6 +48,7 @@ public class DatabaseManager {
     }
 
     private void saveLauncherItems(final List<GridLayout> pages, final GridLayout dock) {
+        List<LauncherItem> items = new ArrayList<>();
         for (int i = 0; i < dock.getChildCount(); i++) {
             LauncherItem launcherItem = ((BlissFrameLayout) dock.getChildAt(i)).getLauncherItem();
             if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
@@ -53,20 +56,20 @@ public class DatabaseManager {
                 folderItem.screenId = -1;
                 folderItem.cell = i;
                 folderItem.container = Constants.CONTAINER_HOTSEAT;
-                LauncherDB.getDatabase(mContext).launcherDao().insert(folderItem);
+                items.add(launcherItem);
 
                 for (int j = 0; j < folderItem.items.size(); j++) {
                     LauncherItem item = folderItem.items.get(j);
                     item.screenId = -1;
                     item.container = Long.parseLong(folderItem.id);
                     item.cell = j;
-                    LauncherDB.getDatabase(mContext).launcherDao().insert(item);
+                    items.add(item);
                 }
             } else {
                 launcherItem.screenId = -1;
                 launcherItem.container = Constants.CONTAINER_HOTSEAT;
                 launcherItem.cell = i;
-                LauncherDB.getDatabase(mContext).launcherDao().insert(launcherItem);
+                items.add(launcherItem);
             }
         }
 
@@ -80,22 +83,24 @@ public class DatabaseManager {
                     folderItem.screenId = i;
                     folderItem.cell = j;
                     folderItem.container = Constants.CONTAINER_DESKTOP;
-                    LauncherDB.getDatabase(mContext).launcherDao().insert(folderItem);
+                    items.add(folderItem);
                     for (int k = 0; k < folderItem.items.size(); k++) {
                         LauncherItem item = folderItem.items.get(k);
                         item.screenId = -1;
                         item.container = Long.parseLong(folderItem.id);
                         item.cell = k;
-                        LauncherDB.getDatabase(mContext).launcherDao().insert(item);
+                        items.add(item);
                     }
                 } else {
                     launcherItem.screenId = i;
                     launcherItem.container = Constants.CONTAINER_DESKTOP;
                     launcherItem.cell = j;
-                    LauncherDB.getDatabase(mContext).launcherDao().insert(launcherItem);
+                    items.add(launcherItem);
                 }
             }
         }
+        Log.i("Database", "saveLauncherItems: "+items.size());
+        LauncherDB.getDatabase(mContext).launcherDao().insertAll(items);
     }
 
     public void removeShortcut(String name) {
@@ -110,17 +115,17 @@ public class DatabaseManager {
                 new_component_name);
     }
 
-    public Single<Integer> getHeightOfWidget(int id){
+    public Single<Integer> getHeightOfWidget(int id) {
         return Single.defer(() -> Single.just(LauncherDB.getDatabase(mContext).widgetDao().getHeight(id)));
     }
 
-    public void saveWidget(int id, int height){
+    public void saveWidget(int id, int height) {
         WidgetItem widgetItem = new WidgetItem(id, height);
         mAppExecutors.diskIO().execute(
                 () -> LauncherDB.getDatabase(mContext).widgetDao().insert(widgetItem));
     }
 
-    public void removeWidget(int id){
+    public void removeWidget(int id) {
         mAppExecutors.diskIO().execute(() -> LauncherDB.getDatabase(mContext).widgetDao().delete(id));
     }
 }

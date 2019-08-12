@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Parcelable;
 import android.os.Process;
+import android.os.UserManager;
 import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
@@ -20,6 +21,7 @@ import foundation.e.blisslauncher.core.Utilities;
 import foundation.e.blisslauncher.core.database.model.ShortcutItem;
 import foundation.e.blisslauncher.core.events.ShortcutAddEvent;
 import foundation.e.blisslauncher.core.utils.Constants;
+import foundation.e.blisslauncher.core.utils.UserHandle;
 
 public class InstallShortcutReceiver extends BroadcastReceiver {
     private static final String TAG = "InstallShortcutReceiver";
@@ -54,9 +56,11 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
     }
 
     public static void queueShortcut(ShortcutInfoCompat info, Context context) {
+        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
         ShortcutItem shortcutItem = new ShortcutItem();
         shortcutItem.id = info.getId();
-        shortcutItem.user = info.getUserHandle();
+        shortcutItem.user = new UserHandle(userManager.getSerialNumberForUser(info.getUserHandle()),
+                info.getUserHandle());
         shortcutItem.packageName = info.getPackage();
         shortcutItem.title = info.getShortLabel().toString();
         shortcutItem.container = Constants.CONTAINER_DESKTOP;
@@ -84,7 +88,7 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
 
         // Only support intents for current user for now. Intents sent from other
         // users wouldn't get here without intent forwarding anyway.
-        item.user = Process.myUserHandle();
+        item.user = new UserHandle();
 
         Drawable icon = null;
         if (bitmap instanceof Bitmap) {

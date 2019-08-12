@@ -3,6 +3,8 @@ package foundation.e.blisslauncher.core.broadcast;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Process;
+import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -10,6 +12,7 @@ import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
+import foundation.e.blisslauncher.core.events.EventRelay;
 import foundation.e.blisslauncher.core.utils.UserHandle;
 import foundation.e.blisslauncher.features.launcher.AppProvider;
 
@@ -18,7 +21,12 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
     private static final String TAG = "PackageAddedRemovedHand";
 
     public static void handleEvent(Context ctx, String action, String packageName, UserHandle user,
-            boolean replacing) {
+                                   boolean replacing) {
+
+        if (!Process.myUserHandle().equals(user.getRealHandle())) {
+            return;
+        }
+        Log.d(TAG, "handleEvent() called with: ctx = [" + ctx + "], action = [" + action + "], packageName = [" + packageName + "], user = [" + user + "], replacing = [" + replacing + "]");
         // Insert into history new packages (not updated ones)
         if ("android.intent.action.PACKAGE_ADDED".equals(action) && !replacing) {
             Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
@@ -26,11 +34,10 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
                 return;
             }
 
-            BlissLauncher.getApplication(ctx).resetIconsHandler();
+            BlissLauncher.getApplication(ctx).getIconsHandler().clearAll();
 
-            AppAddEvent appAddEvent = new AppAddEvent();
-            appAddEvent.packageName = packageName;
-            EventBus.getDefault().post(appAddEvent);
+            AppAddEvent event = new AppAddEvent(packageName, user);
+            EventRelay.getInstance().push(event);
         }
 
         if ("android.intent.action.PACKAGE_CHANGED".equalsIgnoreCase(action)) {
@@ -40,23 +47,14 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
                         launchIntent.getComponent(), user);
             }
 
-            BlissLauncher.getApplication(ctx).resetIconsHandler();
+            BlissLauncher.getApplication(ctx).getIconsHandler().clearAll();
 
-            AppChangeEvent appChangeEvent = new AppChangeEvent();
-            appChangeEvent.packageName = packageName;
-            EventBus.getDefault().post(appChangeEvent);
-
+            AppChangeEvent event = new AppChangeEvent(packageName, user);
+            EventRelay.getInstance().push(event);
         }
         if ("android.intent.action.PACKAGE_REMOVED".equals(action) && !replacing) {
-            AppRemoveEvent appRemoveEvent = new AppRemoveEvent();
-            appRemoveEvent.packageName = packageName;
-            EventBus.getDefault().post(appRemoveEvent);
-        }
-
-        // Reload application list
-        final AppProvider provider = BlissLauncher.getApplication(ctx).getAppProvider();
-        if (provider != null) {
-            provider.reload();
+            AppRemoveEvent event = new AppRemoveEvent(packageName, user);
+            EventRelay.getInstance().push(event);
         }
     }
 

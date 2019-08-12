@@ -7,6 +7,9 @@ import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
+import android.os.Process;
+import android.os.UserManager;
+import android.support.annotation.NonNull;
 
 import foundation.e.blisslauncher.core.database.converters.CharSequenceConverter;
 import foundation.e.blisslauncher.core.database.daos.LauncherDao;
@@ -31,7 +34,13 @@ public abstract class LauncherDB extends RoomDatabase {
         }
     };
 
-    public static LauncherDB getDatabase(Context context){
+    private static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+        }
+    };
+
+    public static LauncherDB getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (LauncherDB.class) {
                 if (INSTANCE == null) {
@@ -43,5 +52,21 @@ public abstract class LauncherDB extends RoomDatabase {
             }
         }
         return INSTANCE;
+    }
+
+    private static final class UserHandleMigration extends Migration {
+        private long userSerialNumber;
+
+        public UserHandleMigration(int startVersion, int endVersion, long userSerialNumber) {
+            super(startVersion, endVersion);
+            this.userSerialNumber = userSerialNumber;
+        }
+
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            String suffix = "\"/" + userSerialNumber +"\"";
+            String query = "UPDATE launcher_items set item_id=item_id || " + suffix +  "WHERE item_type <> 2";
+            database.execSQL(query);
+        }
     }
 }
