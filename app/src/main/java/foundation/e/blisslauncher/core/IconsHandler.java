@@ -3,7 +3,6 @@ package foundation.e.blisslauncher.core;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
@@ -16,7 +15,6 @@ import android.graphics.Canvas;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.UserManager;
 import android.util.Log;
 
 import org.w3c.dom.Document;
@@ -36,7 +34,6 @@ import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.customviews.AdaptiveIconDrawableCompat;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
 import foundation.e.blisslauncher.core.utils.UserHandle;
-import foundation.e.blisslauncher.features.launcher.LauncherActivity;
 
 /**
  * Inspired from http://stackoverflow.com/questions/31490630/how-to-load-icon-from-icon-pack

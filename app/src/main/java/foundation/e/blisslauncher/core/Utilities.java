@@ -7,9 +7,12 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,4 +131,30 @@ public class Utilities {
         Matcher m = sTrimPattern.matcher(s);
         return m.replaceAll("$1");
     }
+
+    public static ArrayList<View> getAllChildrenViews(View view) {
+        if (!(view instanceof ViewGroup)) {
+            ArrayList<View> viewArrayList = new ArrayList<View>();
+            viewArrayList.add(view);
+
+            return viewArrayList;
+        }
+
+        ArrayList<View> result = new ArrayList<View>();
+
+        ViewGroup viewGroup = (ViewGroup) view;
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+
+            View child = viewGroup.getChildAt(i);
+
+            ArrayList<View> viewArrayList = new ArrayList<View>();
+            viewArrayList.add(view);
+            viewArrayList.addAll(getAllChildrenViews(child));
+
+            result.addAll(viewArrayList);
+        }
+
+        return result;
+    }
+
 }

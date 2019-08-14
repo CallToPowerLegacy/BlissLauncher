@@ -18,7 +18,6 @@ package foundation.e.blisslauncher.core.utils;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Process;
-import android.util.Log;
 
 /**
  * Wrapper class for `android.os.UserHandle` that works with all Android versions

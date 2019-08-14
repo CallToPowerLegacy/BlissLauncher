@@ -8,7 +8,6 @@ import android.arch.persistence.room.PrimaryKey;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.os.Process;
 import android.support.annotation.NonNull;
 
 import java.net.URISyntaxException;

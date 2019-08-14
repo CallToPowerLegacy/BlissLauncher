@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Parcelable;
-import android.os.Process;
 import android.os.UserManager;
 import android.util.Log;
 

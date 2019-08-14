@@ -7,7 +7,6 @@ import android.content.IntentFilter;
 import android.os.UserHandle;
 import android.util.Log;
 
-import foundation.e.blisslauncher.core.events.Event;
 import foundation.e.blisslauncher.core.events.EventRelay;
 import foundation.e.blisslauncher.core.events.ForceReloadEvent;
 

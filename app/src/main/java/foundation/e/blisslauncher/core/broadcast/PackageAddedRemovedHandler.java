@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Process;
 import android.util.Log;
 
-import org.greenrobot.eventbus.EventBus;
 
 import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.events.AppAddEvent;
@@ -14,7 +13,6 @@ import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
 import foundation.e.blisslauncher.core.events.EventRelay;
 import foundation.e.blisslauncher.core.utils.UserHandle;
-import foundation.e.blisslauncher.features.launcher.AppProvider;
 
 public class PackageAddedRemovedHandler extends BroadcastReceiver {
 

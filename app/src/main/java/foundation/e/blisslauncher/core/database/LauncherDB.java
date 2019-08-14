@@ -7,8 +7,6 @@ import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
-import android.os.Process;
-import android.os.UserManager;
 import android.support.annotation.NonNull;
 
 import foundation.e.blisslauncher.core.database.converters.CharSequenceConverter;
