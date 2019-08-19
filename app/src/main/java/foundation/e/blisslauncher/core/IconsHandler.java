@@ -226,7 +226,6 @@ public class IconsHandler {
                     cacheStoreDrawable(userHandle.addUserSuffixToString(componentName.flattenToString(), '/'), badgedIcon);
                 }
             }
-
         }
     }
 

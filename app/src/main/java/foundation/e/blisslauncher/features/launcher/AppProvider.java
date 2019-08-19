@@ -192,7 +192,7 @@ public class AppProvider {
             synchronized (AppProvider.class) {
                 if (sInstance == null) {
                     sInstance = new AppProvider(context);
-                    //sInstance.reload(false);
+                    sInstance.reload();
                 }
             }
         }
@@ -205,6 +205,11 @@ public class AppProvider {
 
     public synchronized void reload() {
         Log.d(TAG, "reload() called");
+
+        if(mLauncherItems != null && mLauncherItems.size() > 0) {
+            mAppsRepository.updateAppsRelay(mLauncherItems);
+        }
+
         initializeAppLoading(new LoadAppsTask());
         if (Utilities.ATLEAST_OREO) {
             initializeShortcutsLoading(new LoadShortcutTask());
@@ -400,6 +405,7 @@ public class AppProvider {
         shortcutItem.container = databaseItem.container;
         shortcutItem.screenId = databaseItem.screenId;
         shortcutItem.cell = databaseItem.cell;
+        shortcutItem.user = new UserHandle();
         return shortcutItem;
     }
 
@@ -450,7 +456,7 @@ public class AppProvider {
     }
 
     public void clear() {
-        sInstance.mContext = null;
+        sInstance = null;
     }
 
     public synchronized boolean isRunning() {

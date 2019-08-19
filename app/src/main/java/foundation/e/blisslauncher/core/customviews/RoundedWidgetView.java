@@ -30,6 +30,8 @@ public class RoundedWidgetView extends AppWidgetHostView {
     private long _down;
     private boolean mChildrenFocused;
 
+    private boolean activated = false;
+
     public RoundedWidgetView(Context context) {
         super(context);
         this.mContext = context;
@@ -144,12 +146,18 @@ public class RoundedWidgetView extends AppWidgetHostView {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         resizeBorder.setLayoutParams(layoutParams);
         addView(resizeBorder);
+        activated = true;
     }
 
     public void removeBorder() {
         if (resizeBorder != null) {
             removeView(resizeBorder);
             resizeBorder = null;
+            activated = false;
         }
+    }
+
+    public boolean isWidgetActivated() {
+        return activated;
     }
 }

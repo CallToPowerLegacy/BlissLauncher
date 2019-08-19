@@ -10,6 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 @TargetApi(Build.VERSION_CODES.O)
 public class AddItemActivity extends AppCompatActivity {
 
+    private static final String TAG = "AddItemActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
