@@ -10,7 +10,6 @@ import android.os.Parcelable;
 import android.os.UserManager;
 import android.util.Log;
 
-import org.greenrobot.eventbus.EventBus;
 
 import java.io.ByteArrayOutputStream;
 
@@ -18,6 +17,7 @@ import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.IconsHandler;
 import foundation.e.blisslauncher.core.Utilities;
 import foundation.e.blisslauncher.core.database.model.ShortcutItem;
+import foundation.e.blisslauncher.core.events.EventRelay;
 import foundation.e.blisslauncher.core.events.ShortcutAddEvent;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.UserHandle;
@@ -51,7 +51,11 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
             return;
         }
         ShortcutItem shortcutItem = createShortcutItem(data, context);
-        EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
+        EventRelay.getInstance().push(new ShortcutAddEvent(shortcutItem));
+        context.startActivity(new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_HOME)
+                .setPackage(context.getPackageName())
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 
     public static void queueShortcut(ShortcutInfoCompat info, Context context) {
@@ -68,11 +72,14 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         shortcutItem.icon = BlissLauncher.getApplication(context).getIconsHandler().convertIcon(
                 icon);
         shortcutItem.launchIntent = info.makeIntent();
-        EventBus.getDefault().post(new ShortcutAddEvent(shortcutItem));
+        EventRelay.getInstance().push(new ShortcutAddEvent(shortcutItem));
+        context.startActivity(new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_HOME)
+                .setPackage(context.getPackageName())
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 
     private static ShortcutItem createShortcutItem(Intent data, Context context) {
-
         Intent intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
         String name = data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME);
         Parcelable bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);

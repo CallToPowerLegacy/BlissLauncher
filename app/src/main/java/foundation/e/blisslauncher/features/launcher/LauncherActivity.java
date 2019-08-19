@@ -237,12 +237,13 @@ public class LauncherActivity extends AppCompatActivity implements
     private boolean forceReload;
 
     private AppProvider appProvider;
+    private int moveTo;
 
     @SuppressLint("InflateParams")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
         appProvider = BlissLauncher.getApplication(this).getAppProvider();
 
         prepareBroadcastReceivers();
@@ -288,7 +289,6 @@ public class LauncherActivity extends AppCompatActivity implements
         startService(notificationServiceIntent);
 
         createOrUpdateIconGrid();
-        BlissLauncher.getApplication(this).getAppProvider().reload();
     }
 
     private void setupViews() {
@@ -332,7 +332,11 @@ public class LauncherActivity extends AppCompatActivity implements
                         .subscribeWith(new DisposableObserver<List<LauncherItem>>() {
                             @Override
                             public void onNext(List<LauncherItem> launcherItems) {
-                                showApps(launcherItems, forceReload);
+                                if (launcherItems == null || launcherItems.size() <= 0) {
+                                    BlissLauncher.getApplication(LauncherActivity.this).getAppProvider().reload();
+                                } else if (!allAppsDisplayed) {
+                                    showApps(launcherItems);
+                                }
                             }
 
                             @Override
@@ -445,6 +449,7 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy() called");
         TimeChangeBroadcastReceiver.unregister(this, timeChangedReceiver);
         ManagedProfileBroadcastReceiver.unregister(this, managedProfileReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
@@ -454,10 +459,15 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     public void onAppAddEvent(AppAddEvent appAddEvent) {
+        moveTo = -1;
         ApplicationItem applicationItem = AppUtils.createAppItem(this, appAddEvent.getPackageName(),
                 appAddEvent.getUserHandle());
         addLauncherItem(applicationItem);
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
+        if (moveTo != -1) {
+            mHorizontalPager.setCurrentPage(moveTo);
+            moveTo = -1;
+        }
     }
 
     public void onAppRemoveEvent(AppRemoveEvent appRemoveEvent) {
@@ -472,9 +482,15 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     public void onShortcutAddEvent(ShortcutAddEvent shortcutAddEvent) {
+        moveTo = -1;
         updateOrAddShortcut(shortcutAddEvent.getShortcutItem());
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         Toast.makeText(this, "Shortcut has been added", Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "onShortcutAddEvent: " + moveTo);
+        if (moveTo != -1) {
+            mHorizontalPager.setCurrentPage(moveTo);
+            moveTo = -1;
+        }
     }
 
     private void addLauncherItem(LauncherItem launcherItem) {
@@ -506,6 +522,7 @@ public class LauncherActivity extends AppCompatActivity implements
             launcherItem.cell = pages.get(current).getChildCount() - 1;
             launcherItem.container = Constants.CONTAINER_DESKTOP;
             addAppToGrid(pages.get(current), view);
+            moveTo = current + 1;
         }
     }
 
@@ -591,10 +608,10 @@ public class LauncherActivity extends AppCompatActivity implements
                                         launcherItem);
                                 gridLayout.removeViewAt(j);
                                 addAppToGrid(gridLayout, blissFrameLayout, j);
+                                moveTo = i + 1;
                                 return;
                             }
                         }
-
                     }
                 } else {
                     if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
@@ -603,6 +620,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             BlissFrameLayout blissFrameLayout = prepareLauncherItem(shortcutItem);
                             gridLayout.removeViewAt(j);
                             addAppToGrid(gridLayout, blissFrameLayout, j);
+                            moveTo = i + 1;
                             return;
                         }
                     }
@@ -868,9 +886,9 @@ public class LauncherActivity extends AppCompatActivity implements
         addLauncherItem(updatedAppItem);
     }
 
-    public void showApps(List<LauncherItem> launcherItems, boolean force) {
+    public void showApps(List<LauncherItem> launcherItems) {
         mProgressBar.setVisibility(GONE);
-        if(isWobbling)
+        if (isWobbling)
             handleWobbling(false);
         createUI(launcherItems);
         subscribeToEvents();
@@ -882,9 +900,6 @@ public class LauncherActivity extends AppCompatActivity implements
         createIndicator();
         createOrUpdateBadgeCount();
         allAppsDisplayed = true;
-        if (force) {
-            forceReload = false;
-        }
     }
 
     private void subscribeToEvents() {
@@ -1679,10 +1694,8 @@ public class LauncherActivity extends AppCompatActivity implements
         if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
             startShortcutIntentSafely(context, intent, launcherItem);
         } else if (user == null || user.equals(Process.myUserHandle())) {
-            Log.i(TAG, "startActivitySafely: here");
             context.startActivity(intent);
         } else {
-            Log.i(TAG, "startActivitySafely: here2");
             ((LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE))
                     .startMainActivity(intent.getComponent(), user, intent.getSourceBounds(), null);
         }
@@ -2632,11 +2645,7 @@ public class LauncherActivity extends AppCompatActivity implements
      */
     @Override
     public void onBackPressed() {
-        if (activeRoundedWidgetView != null) {
-            hideWidgetResizeContainer();
-        } else {
-            returnToHomeScreen();
-        }
+        returnToHomeScreen();
     }
 
     private void displayFolder(FolderItem app, BlissFrameLayout v) {
@@ -2797,6 +2806,8 @@ public class LauncherActivity extends AppCompatActivity implements
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
+        Log.d(TAG, "onNewIntent() called with: intent = [" + intent + "]");
+
         final boolean alreadyOnHome = hasWindowFocus() &&
                 ((intent.getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
                         != Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
@@ -2804,8 +2815,7 @@ public class LauncherActivity extends AppCompatActivity implements
         boolean shouldMoveToDefaultScreen =
                 alreadyOnHome && swipeSearchContainer.getVisibility() != VISIBLE && !isWobbling
                         && mFolderWindowContainer.getVisibility() != View.VISIBLE
-                        && activeRoundedWidgetView == null;
-
+                        && (activeRoundedWidgetView == null || !activeRoundedWidgetView.isWidgetActivated());
 
         if (shouldMoveToDefaultScreen) {
             mHorizontalPager.setCurrentPage(1);
@@ -2815,7 +2825,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void returnToHomeScreen() {
-        if (activeRoundedWidgetView != null) {
+        if (activeRoundedWidgetView != null && activeRoundedWidgetView.isWidgetActivated()) {
             hideWidgetResizeContainer();
         }
 
@@ -3167,14 +3177,6 @@ public class LauncherActivity extends AppCompatActivity implements
             set.start();
             currentAnimator = set;
         }
-    }
-
-    public void reload() {
-        forceReload = true;
-    }
-
-    public void loadAllApps() {
-
     }
 
     /**

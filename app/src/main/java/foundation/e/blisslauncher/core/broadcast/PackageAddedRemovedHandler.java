@@ -32,10 +32,11 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
                 return;
             }
 
-            BlissLauncher.getApplication(ctx).getIconsHandler().clearAll();
+            BlissLauncher.getApplication(ctx).resetIconsHandler();
 
             AppAddEvent event = new AppAddEvent(packageName, user);
             EventRelay.getInstance().push(event);
+            BlissLauncher.getApplication(ctx).getAppProvider().reload();
         }
 
         if ("android.intent.action.PACKAGE_CHANGED".equalsIgnoreCase(action)) {
@@ -45,14 +46,16 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
                         launchIntent.getComponent(), user);
             }
 
-            BlissLauncher.getApplication(ctx).getIconsHandler().clearAll();
+            BlissLauncher.getApplication(ctx).resetIconsHandler();
 
             AppChangeEvent event = new AppChangeEvent(packageName, user);
             EventRelay.getInstance().push(event);
+            BlissLauncher.getApplication(ctx).getAppProvider().reload();
         }
         if ("android.intent.action.PACKAGE_REMOVED".equals(action) && !replacing) {
             AppRemoveEvent event = new AppRemoveEvent(packageName, user);
             EventRelay.getInstance().push(event);
+            BlissLauncher.getApplication(ctx).getAppProvider().reload();
         }
     }
 
