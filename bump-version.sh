@@ -15,6 +15,7 @@ NOCOLOR="\033[0m"
 
 QUESTION_FLAG="${GREEN}?"
 NOTICE_FLAG="${CYAN}❯"
+WARNING_FLAG="${YELLOW}!"
 ERROR_FLAG="${RED}\U25CF"
 
 BUMPING_MSG="${NOTICE_FLAG} Bumping up version...${NOCOLOR}"
@@ -145,6 +146,11 @@ do_version_upgrade() {
 # It must check for dev or hotfix* branch and bump the version only when current branch is dev or hotfix.
 branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 if [[ ${branch} = "dev" ]] || [[ ${branch} = hotfix* ]]; then
+    git diff-index --quiet HEAD
+    if [[ $? == 1 ]] ; then
+        echo -e "${WARNING_FLAG} Working tree must be empty before bumping the version."
+        exit 1
+    fi
     do_version_upgrade $1
 else
     echo -e "${ERROR_FLAG} Can only be used on dev or hotfix branch."
