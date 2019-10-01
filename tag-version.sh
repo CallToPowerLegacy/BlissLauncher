@@ -3,8 +3,12 @@
 # It must check for master branch and tag only if current branch is master.
 
 YELLOW="\033[1;33m"
+GREEN='\033[1;32m'
+NOCOLOR="\033[0m"
 
-WARNING_FLAG=${YELLOW}!
+WARNING_FLAG="${YELLOW}!"
+QUESTION_FLAG="${GREEN}?"
+
 branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 
 if [[ ${branch} = "master" ]]; then
@@ -31,7 +35,7 @@ if [[ ${branch} = "master" ]]; then
 
     version="${major}.${minor}.${patch}"
     git tag -a "v${version}" -m "Bliss Launcher Version ${version}"
-    echo -e "Do you want to push tag to remote now?[Y/n]: "
+    echo -e "${QUESTION_FLAG} Do you want to push tag to remote now?[Y/n]: ${NOCOLOR}"
     read -r -p "" response
     response=${response,,}
     if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
@@ -40,5 +44,5 @@ if [[ ${branch} = "master" ]]; then
         exit 1
     fi
 else
-    echo "Can only be used on master branch."
+    echo -e "${WARNING_FLAG} Can only be used on master branch.${NOCOLOR}"
 fi
