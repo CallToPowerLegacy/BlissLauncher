@@ -1,5 +1,4 @@
 #!/bin/bash
-git diff-index --quiet HEAD --
 
 #if [ $? -ne 0 ]; then
   #echo "Working tree must be empty before bumping the version"
@@ -16,6 +15,7 @@ NOCOLOR="\033[0m"
 
 QUESTION_FLAG="${GREEN}?"
 NOTICE_FLAG="${CYAN}❯"
+ERROR_FLAG="${RED}🛑🛑\U25CF"
 
 BUMPING_MSG="${NOTICE_FLAG} Bumping up version...${NOCOLOR}"
 PUSHING_MSG="${NOTICE_FLAG} Pushing new version to the ${WHITE}origin${CYAN}...${NOCOLOR}"
@@ -52,89 +52,101 @@ usage() {
 }
 
 commit_and_push() {
-git add app/build.gradle
-git commit -m "Bump version to v$1"
-echo -e "${QUESTION_FLAG} ${RED}Do you want to push it to remote now?[Y/n]: ${NOCOLOR}"
-read -r -p "" response
-response=${response,,}
-if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
-    echo -e ${PUSHING_MSG}
-    branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-    git push -u origin ${branch}
-else
-    exit 1
-fi
+    git add app/build.gradle
+    git commit -m "Bump version to v$1"
+    echo -e "${QUESTION_FLAG} ${RED}Do you want to push it to remote now?[Y/n]: ${NOCOLOR}"
+    read -r -p "" response
+    response=${response,,}
+    if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
+        echo -e ${PUSHING_MSG}
+        branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+        git push -u origin ${branch}
+    else
+        exit 1
+    fi
 }
 
-VERSION_UPGRADE_TYPE=$1
+do_version_upgrade() {
+    VERSION_UPGRADE_TYPE=$1
 
-old_major=$((`cat app/build.gradle | grep "versionMajor = " | awk '{print $4}'`))
-old_minor=$((`cat app/build.gradle | grep "versionMinor = " | awk '{print $4}'`))
-old_patch=$((`cat app/build.gradle | grep "versionPatch = " | awk '{print $4}'`))
+    old_major=$((`cat app/build.gradle | grep "versionMajor = " | awk '{print $4}'`))
+    old_minor=$((`cat app/build.gradle | grep "versionMinor = " | awk '{print $4}'`))
+    old_patch=$((`cat app/build.gradle | grep "versionPatch = " | awk '{print $4}'`))
 
-if [[ "${VERSION_UPGRADE_TYPE,,}" = "major" ]]; then
-    echo -e ${BUMPING_MSG}
-    echo -e "${NOTICE_FLAG} Current version: ${WHITE}${old_major}.${old_minor}.${old_patch}"
+    if [[ "${VERSION_UPGRADE_TYPE,,}" = "major" ]]; then
+        echo -e ${BUMPING_MSG}
+        echo -e "${NOTICE_FLAG} Current version: ${WHITE}${old_major}.${old_minor}.${old_patch}"
 
-    new_major=$(($old_major + 1))
-    new_version="${new_major}.0.0"
-
-    echo -e "${NOTICE_FLAG} Will set new version to ${GREEN}${new_version}${NOCOLOR}."
-    echo -ne "${QUESTION_FLAG} ${RED}Are you sure? [Y/n]: ${NOCOLOR}"
-    response=${response,,}
-
-    if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
-        sed -i "s/versionMajor = .*/versionMajor = ${new_major}/" app/build.gradle
-        sed -i "s/versionMinor = .*/versionMinor = 0/" app/build.gradle
-        sed -i "s/versionPatch = .*/versionPatch = 0/" app/build.gradle
+        new_major=$(($old_major + 1))
         new_version="${new_major}.0.0"
-        commit_and_push ${new_version}
+
+        echo -e "${NOTICE_FLAG} Will set new version to ${GREEN}${new_version}${NOCOLOR}."
+        echo -ne "${QUESTION_FLAG} ${RED}Are you sure? [Y/n]: ${NOCOLOR}"
+        read response
+        response=${response,,}
+
+        if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
+            sed -i "s/versionMajor = .*/versionMajor = ${new_major}/" app/build.gradle
+            sed -i "s/versionMinor = .*/versionMinor = 0/" app/build.gradle
+            sed -i "s/versionPatch = .*/versionPatch = 0/" app/build.gradle
+            new_version="${new_major}.0.0"
+            commit_and_push ${new_version}
+        else
+            exit 1
+        fi
+
+    elif [[ "${VERSION_UPGRADE_TYPE,,}" = "minor" ]]; then
+        echo -e ${BUMPING_MSG}
+        echo -e "${NOTICE_FLAG} Current version: ${WHITE}${old_major}.${old_minor}.${old_patch}"
+
+        new_minor=$((old_minor + 1))
+        new_version="${old_major}.${new_minor}.0"
+
+        echo -e "${NOTICE_FLAG} Will set new version to ${GREEN}${new_version}${NOCOLOR}."
+        echo -ne "${QUESTION_FLAG} ${RED}Are you sure? [Y/n]: ${NOCOLOR}"
+        read response
+        response=${response,,}
+
+        if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
+            sed -i "s/versionMinor = .*/versionMinor = ${new_minor}/" app/build.gradle
+            sed -i "s/versionPatch = .*/versionPatch = 0/" app/build.gradle
+            commit_and_push ${new_version}
+        else
+            exit 1
+        fi
+
+    elif [[ "${VERSION_UPGRADE_TYPE,,}" = "patch" ]]; then
+        echo -e ${BUMPING_MSG}
+        echo -e "${NOTICE_FLAG} Current version: ${WHITE}${old_major}.${old_minor}.${old_patch}"
+
+        new_patch=$((old_patch + 1))
+        new_version="${old_major}.${old_minor}.${new_patch}"
+
+        echo -e "${NOTICE_FLAG} Will set new version to ${GREEN}${new_version}${NOCOLOR}."
+        echo -ne "${QUESTION_FLAG} ${RED}Are you sure? [Y/n]: ${NOCOLOR}"
+        read response
+        response=${response,,}
+
+        if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
+            sed -i "s/versionPatch = .*/versionPatch = ${new_patch}/" app/build.gradle
+            commit_and_push ${new_version}
+        else
+            exit 1
+        fi
+
+    elif [[ "${VERSION_UPGRADE_TYPE,,}" = "help" ]]; then
+        usage
     else
-        exit 1
+        echo " Wrong or empty arguments passed for <revision_type>. See usage below."
+        usage
     fi
+}
 
-elif [[ "${VERSION_UPGRADE_TYPE,,}" = "minor" ]]; then
-    echo -e ${BUMPING_MSG}
-    echo -e "${NOTICE_FLAG} Current version: ${WHITE}${old_major}.${old_minor}.${old_patch}"
-
-    new_minor=$((old_minor + 1))
-    new_version="${old_major}.${new_minor}.0"
-
-    echo -e "${NOTICE_FLAG} Will set new version to ${GREEN}${new_version}${NOCOLOR}."
-    echo -ne "${QUESTION_FLAG} ${RED}Are you sure? [Y/n]: ${NOCOLOR}"
-    read response
-    response=${response,,}
-
-    if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
-        sed -i "s/versionMinor = .*/versionMinor = ${new_minor}/" app/build.gradle
-        sed -i "s/versionPatch = .*/versionPatch = 0/" app/build.gradle
-        commit_and_push ${new_version}
-    else
-        exit 1
-    fi
-
-elif [[ "${VERSION_UPGRADE_TYPE,,}" = "patch" ]]; then
-    echo -e ${BUMPING_MSG}
-    echo -e "${NOTICE_FLAG} Current version: ${WHITE}${old_major}.${old_minor}.${old_patch}"
-
-    new_patch=$((old_patch + 1))
-    new_version="${old_major}.${old_minor}.${new_patch}"
-
-    echo -e "${NOTICE_FLAG} Will set new version to ${GREEN}${new_version}${NOCOLOR}."
-    echo -ne "${QUESTION_FLAG} ${RED}Are you sure? [Y/n]: ${NOCOLOR}"
-    read response
-    response=${response,,}
-
-    if [[ ${response} =~ ^(yes|y| ) ]] || [[ -z ${response} ]]; then
-        sed -i "s/versionPatch = .*/versionPatch = ${new_patch}/" app/build.gradle
-        commit_and_push ${new_version}
-    else
-        exit 1
-    fi
-
-elif [[ "${VERSION_UPGRADE_TYPE,,}" = "help" ]]; then
-    usage
+# It must check for dev or hotfix* branch and bump the version only when current branch is dev or hotfix.
+branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+if [[ ${branch} = "dev" ]] || [[ ${branch} = hotfix* ]]; then
+    do_version_upgrade $1
 else
-    echo " Wrong or empty arguments passed for <revision_type>. See usage below."
-    usage
+    echo -e "${ERROR_FLAG} Can only be used on dev or hotfix branch."
+    exit 1
 fi

@@ -129,3 +129,7 @@ named as major.minor.patch. For proper versioning, one MUST use the
 features have been merged into dev branch and are ready to be released
 in production. After merging into the master, `tag-version.sh` MUST be
 used to tag the release version at the latest commit.
+
+> Notes - `bump-version.sh` will and must execute only on **dev** and
+> **hotfix\*** branches while `tag-version.sh` will and must only work
+> on **master** branch.

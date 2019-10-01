@@ -1,6 +1,8 @@
 #!/bin/bash
+
+# It must check for master branch and tag only if current branch is master.
+
 branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-response=${response,,}
 if [[ ${branch} = "master" ]]; then
     major=$((`cat app/build.gradle | grep "versionMajor = " | awk '{print $4}'`))
     minor=$((`cat app/build.gradle | grep "versionMinor = " | awk '{print $4}'`))
