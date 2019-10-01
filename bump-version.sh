@@ -15,7 +15,7 @@ NOCOLOR="\033[0m"
 
 QUESTION_FLAG="${GREEN}?"
 NOTICE_FLAG="${CYAN}❯"
-ERROR_FLAG="${RED}🛑🛑\U25CF"
+ERROR_FLAG="${RED}\U25CF"
 
 BUMPING_MSG="${NOTICE_FLAG} Bumping up version...${NOCOLOR}"
 PUSHING_MSG="${NOTICE_FLAG} Pushing new version to the ${WHITE}origin${CYAN}...${NOCOLOR}"
