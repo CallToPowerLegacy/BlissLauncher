@@ -382,6 +382,7 @@ public class AppProvider {
         shortcutItem.container = databaseItem.container;
         shortcutItem.screenId = databaseItem.screenId;
         shortcutItem.cell = databaseItem.cell;
+        shortcutItem.user = new UserHandle();
         return shortcutItem;
     }
 
