@@ -72,7 +72,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import com.jakewharton.rxbinding2.widget.RxTextView;
+import com.jakewharton.rxbinding3.widget.RxTextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,9 +145,12 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
+<<<<<<< HEAD
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+=======
+>>>>>>> Fix build error because of wrong dependencies
 
 public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener, OnSwipeDownListener {
@@ -357,10 +360,13 @@ public class LauncherActivity extends AppCompatActivity implements
         managedProfileReceiver = ManagedProfileBroadcastReceiver.register(this);
     }
 
+<<<<<<< HEAD
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(ViewPumpContextWrapper.wrap(context));
     }
 
+=======
+>>>>>>> Fix build error because of wrong dependencies
     public CompositeDisposable getCompositeDisposable() {
         if (mCompositeDisposable == null || mCompositeDisposable.isDisposed()) {
             mCompositeDisposable = new CompositeDisposable();

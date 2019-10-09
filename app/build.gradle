@@ -81,14 +81,10 @@ android {
 }
 
 dependencies {
-    implementation 'me.relex:circleindicator:1.2.2@aar'
-    implementation 'io.github.inflationx:calligraphy3:3.1.1'
-    implementation 'io.github.inflationx:viewpump:1.0.0'
+    implementation 'me.relex:circleindicator:2.1.4'
 
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
-
-    debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
 
@@ -99,7 +95,7 @@ dependencies {
     // Rx Java and Android
     implementation Libs.RxJava.rxAndroid
     implementation Libs.RxJava.rxJava
-    implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
+    implementation 'com.jakewharton.rxbinding3:rxbinding:3.0.0'
 
     // Retrofit
     implementation Libs.Retrofit.retrofit
@@ -111,34 +107,23 @@ dependencies {
     implementation Libs.OkHttp.loggingInterceptor
 
     // Rx Relay
-    implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
+    implementation "com.jakewharton.rxrelay2:rxrelay:2.1.1"
 
     // Room
     implementation Libs.AndroidX.Room.runtime
     annotationProcessor Libs.AndroidX.Room.compiler
 
     // Unit test dependencies
-    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
-    testImplementation "org.robolectric:robolectric:${rootProject.ext.robolectricVersion}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoVersion}"
-    testImplementation "org.hamcrest:hamcrest-core:${rootProject.ext.hamcrestVersion}"
-    testImplementation "org.hamcrest:hamcrest-library:${rootProject.ext.hamcrestVersion}"
-    testImplementation "org.hamcrest:hamcrest-integration:${rootProject.ext.hamcrestVersion}"
+    testImplementation Libs.junit
+    testImplementation Libs.robolectric
+    testImplementation "org.mockito:mockito-core:2.19.0"
+    testImplementation Libs.AndroidX.Test.archCoreTesting
 
     // Instrumentation tests dependencies
-    androidTestImplementation "junit:junit:${rootProject.ext.junitVersion}"
-    androidTestImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoVersion}"
-    androidTestImplementation "org.mockito:mockito-android:${rootProject.ext.mockitoVersion}"
-    androidTestImplementation "com.android.support:support-annotations:${rootProject.ext.supportLibraryVersion}"
-    androidTestImplementation("com.android.support.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}", {
-        exclude group: 'com.android.support', module: 'appcompat-v7'
-        exclude group: 'com.android.support', module: 'support-v4'
-        exclude group: 'com.android.support', module: 'recyclerview-v7'
-        exclude group: 'com.android.support', module: 'design'
-    })
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
-    androidTestImplementation "com.android.support.test:runner:${rootProject.ext.runnerRulesVersion}"
-    androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
+    androidTestImplementation Libs.junit
+    androidTestImplementation Libs.AndroidX.Test.espressoCore
+    androidTestImplementation Libs.AndroidX.Test.runner
+    androidTestImplementation Libs.AndroidX.Test.rules
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 }
 

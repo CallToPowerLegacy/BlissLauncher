@@ -74,9 +74,11 @@ object Libs {
             const val rules = "androidx.test:rules:$version"
 
             const val espressoCore = "androidx.test.espresso:espresso-core:3.2.0"
-        }
+            const val espressoContrib = "androidx.test.espresso:espresso-contrib:3.2.0"
+            const val espressoIntents = "androidx.test.espresso:espresso-intents:3.2.0"
+            const val archCoreTesting = "androidx.arch.core:core-testing:2.0.1"
 
-        const val archCoreTesting = "androidx.arch.core:core-testing:2.0.1"
+        }
 
         const val preference = "androidx.preference:preference:1.1.0-rc01"
 
