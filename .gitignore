@@ -6,7 +6,6 @@
 .externalNativeBuild
 .idea/
 *iml
-gradle.properties
 bin/
 gen/
 out/
