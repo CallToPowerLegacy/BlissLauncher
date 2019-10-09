@@ -15,8 +15,9 @@
  */
 package foundation.e.blisslauncher.core.utils;
 
-import android.support.annotation.NonNull;
 import android.util.LongSparseArray;
+
+import androidx.annotation.NonNull;
 
 import java.util.Iterator;
 

@@ -6,8 +6,9 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import org.xmlpull.v1.XmlPullParser;
 
