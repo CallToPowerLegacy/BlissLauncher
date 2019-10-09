@@ -1,5 +1,10 @@
+import foundation.e.blisslauncher.buildsrc.Libs
+import foundation.e.blisslauncher.buildsrc.Versions
+
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
 
 // Manifest version information!
 def versionMajor = 1
@@ -7,11 +12,11 @@ def versionMinor = 2
 def versionPatch = 4
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    compileSdkVersion Versions.compile_sdk
     defaultConfig {
         applicationId "foundation.e.blisslauncher"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdkVersion Versions.min_sdk
+        targetSdkVersion Versions.target_sdk
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -83,38 +88,34 @@ dependencies {
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
 
-    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
-    debugImplementation 'com.google.firebase:firebase-core:16.0.6'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
 
     // Support Libs
-    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibraryVersion}"
-    implementation "com.android.support:support-media-compat:${rootProject.ext.supportLibraryVersion}"
-    implementation "com.android.support:support-v4:${rootProject.ext.supportLibraryVersion}"
-    implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportLibraryVersion}"
+    implementation Libs.AndroidX.appcompat
+    implementation Libs.AndroidX.recyclerview
 
     // Rx Java and Android
-    implementation "io.reactivex.rxjava2:rxandroid:${rootProject.ext.rxAndroidVersion}"
-    implementation "io.reactivex.rxjava2:rxjava:${rootProject.ext.rxJavaVersion}"
+    implementation Libs.RxJava.rxAndroid
+    implementation Libs.RxJava.rxJava
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
 
     // Retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
-    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
+    implementation Libs.Retrofit.retrofit
+    implementation Libs.Retrofit.gsonConverter
+    implementation Libs.Retrofit.retrofit_rxjava_adapter
 
     // Okhttp
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.11.0'
+    implementation Libs.OkHttp.okhttp
+    implementation Libs.OkHttp.loggingInterceptor
 
     // Rx Relay
     implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
 
     // Room
-    implementation "android.arch.persistence.room:runtime:1.1.1"
-    annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
-    implementation "com.android.support:support-annotations:${rootProject.ext.supportLibraryVersion}"
+    implementation Libs.AndroidX.Room.runtime
+    annotationProcessor Libs.AndroidX.Room.compiler
 
     // Unit test dependencies
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
@@ -138,7 +139,7 @@ dependencies {
     androidTestImplementation "com.android.support.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "com.android.support.test:runner:${rootProject.ext.runnerRulesVersion}"
     androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 }
 
-apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.getkeepsafe.dexcount'

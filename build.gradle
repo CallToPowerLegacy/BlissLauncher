@@ -1,5 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+
+import foundation.e.blisslauncher.buildsrc.Libs
+
 buildscript {
     repositories {
         google()
@@ -9,15 +12,21 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.1'
-        classpath 'io.fabric.tools:gradle:1.26.1'
-        classpath 'com.google.gms:google-services:4.2.0'
-        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.6'
+        classpath Libs.androidGradlePlugin
+
+        classpath Libs.Kotlin.gradlePlugin
+        classpath Libs.Kotlin.extensions
+
+        classpath Libs.Google.fabricPlugin
+        classpath Libs.Google.gmsGoogleServices
+
+        classpath Libs.dexcountGradlePlugin
     }
 }
 
 plugins {
     id "com.diffplug.gradle.spotless" version "3.14.0"
+    id 'com.github.ben-manes.versions' version "0.25.0"
 }
 
 allprojects {
@@ -35,6 +44,10 @@ subprojects {
         java {
             target '**/*.java'
             removeUnusedImports() // removes any unused imports
+        }
+        kotlin {
+            target "**/*.kt"
+            ktlint()
         }
     }
 }
