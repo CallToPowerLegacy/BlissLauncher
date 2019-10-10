@@ -1939,9 +1939,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                }
-
-                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
                     if (getAppDetails(movingApp).container != Constants.CONTAINER_DESKTOP
@@ -2012,9 +2010,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         mDockReorderAlarm.setAlarm(REORDER_TIMEOUT);
                     }
                     return true;
-                }
-
-                else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupDockReorder(true);
                     cleanupReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
@@ -2044,14 +2040,15 @@ public class LauncherActivity extends AppCompatActivity implements
                         cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                         cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
                         // Drop functionality when the folder window is visible
-                        Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
-                                (int) mFolderAppsViewPager.getY(),
-                                (int) (mFolderAppsViewPager.getWidth()
-                                        + mFolderAppsViewPager.getX()),
-                                (int) (mFolderAppsViewPager.getHeight()
-                                        + mFolderAppsViewPager.getY()));
+                        int[] topLeftCorner = new int[2];
+                        mFolderAppsViewPager.getLocationOnScreen(topLeftCorner);
+                        int left = topLeftCorner[0];
+                        int top = topLeftCorner[1];
+                        int right = left + mFolderAppsViewPager.getWidth();
+                        int bottom = top + mFolderAppsViewPager.getHeight();
 
-                        if (!bounds.contains((int) cX, (int) cY)) {
+                        if (!(left < right && top < bottom && cX >= left
+                                && cX < right && cY >= top && cY < bottom)) {
                             removeAppFromFolder();
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
@@ -2081,9 +2078,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                }
-
-                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                     cY = mHorizontalPager.getY() + dragEvent.getY()
                             - dragShadowBuilder.yOffset;
@@ -2196,9 +2191,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             }
                         }
                     }
-                }
-
-                else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupReorder(true);
                     cleanupDockReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
@@ -2228,13 +2221,15 @@ public class LauncherActivity extends AppCompatActivity implements
                                 - dragShadowBuilder.yOffset;
 
                         // Drop functionality when the folder window is visible
-                        Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
-                                (int) mFolderAppsViewPager.getY(),
-                                (int) (mFolderAppsViewPager.getWidth()
-                                        + mFolderAppsViewPager.getX()),
-                                (int) (mFolderAppsViewPager.getHeight()
-                                        + mFolderAppsViewPager.getY()));
-                        if (!bounds.contains((int) cX, (int) cY)) {
+                        int[] topLeftCorner = new int[2];
+                        mFolderAppsViewPager.getLocationOnScreen(topLeftCorner);
+                        int left = topLeftCorner[0];
+                        int top = topLeftCorner[1];
+                        int right = left + mFolderAppsViewPager.getWidth();
+                        int bottom = top + mFolderAppsViewPager.getHeight();
+
+                        if (!(left < right && top < bottom && cX >= left
+                                && cX < right && cY >= top && cY < bottom)) {
                             removeAppFromFolder();
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
@@ -2244,9 +2239,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                             currentItem)).indexOfChild(movingApp));
                         }
                     }
-                }
-
-                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
                     if (isDragging) {
                         isDragging = false;
                     }
