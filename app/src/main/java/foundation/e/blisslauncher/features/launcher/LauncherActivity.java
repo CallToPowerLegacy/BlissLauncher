@@ -51,7 +51,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -243,7 +242,6 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
         appProvider = BlissLauncher.getApplication(this).getAppProvider();
 
         prepareBroadcastReceivers();
@@ -449,7 +447,6 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy() called");
         TimeChangeBroadcastReceiver.unregister(this, timeChangedReceiver);
         ManagedProfileBroadcastReceiver.unregister(this, managedProfileReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
@@ -486,7 +483,6 @@ public class LauncherActivity extends AppCompatActivity implements
         updateOrAddShortcut(shortcutAddEvent.getShortcutItem());
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         Toast.makeText(this, "Shortcut has been added", Toast.LENGTH_SHORT).show();
-        Log.i(TAG, "onShortcutAddEvent: " + moveTo);
         if (moveTo != -1) {
             mHorizontalPager.setCurrentPage(moveTo);
             moveTo = -1;
@@ -705,15 +701,43 @@ public class LauncherActivity extends AppCompatActivity implements
                         }
                     }
                     updateFolderInGrid(grid, folderItem, j);
+
+                    if (grid.getChildCount() == 0) {
+                        pages.remove(i);
+                        mHorizontalPager.removeViewAt(i + 1);
+                        if (i == pages.size()) {
+                            mHorizontalPager.scrollLeft(100);
+                        }
+                        mIndicator.removeViewAt(i);
+                        updateIndicator();
+                    }
                 } else if (launcherItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                     ApplicationItem applicationItem = (ApplicationItem) launcherItem;
                     if (applicationItem.packageName.equalsIgnoreCase(packageName) && applicationItem.user.isSameUser(userHandle)) {
                         grid.removeViewAt(j);
+                        if (grid.getChildCount() == 0) {
+                            pages.remove(i);
+                            mHorizontalPager.removeViewAt(i + 1);
+                            if (i == pages.size()) {
+                                mHorizontalPager.scrollLeft(100);
+                            }
+                            mIndicator.removeViewAt(i);
+                            updateIndicator();
+                        }
                     }
                 } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
                     ShortcutItem shortcutItem = (ShortcutItem) launcherItem;
                     if (shortcutItem.packageName.equalsIgnoreCase(packageName)) {
                         grid.removeViewAt(j);
+                        if (grid.getChildCount() == 0) {
+                            pages.remove(i);
+                            mHorizontalPager.removeViewAt(i + 1);
+                            if (i == pages.size()) {
+                                mHorizontalPager.scrollLeft(100);
+                            }
+                            mIndicator.removeViewAt(i);
+                            updateIndicator();
+                        }
                     }
                 }
             }
@@ -1943,8 +1967,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                }
-                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
                     if (getAppDetails(movingApp).container != Constants.CONTAINER_DESKTOP
@@ -2039,21 +2062,21 @@ public class LauncherActivity extends AppCompatActivity implements
                             } else {
                                 createOrUpdateFolder(true);
                             }
-
+                            folderInterest = false;
                         }
-                        folderInterest = false;
                     } else {
                         cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                         cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
                         // Drop functionality when the folder window is visible
-                        Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
-                                (int) mFolderAppsViewPager.getY(),
-                                (int) (mFolderAppsViewPager.getWidth()
-                                        + mFolderAppsViewPager.getX()),
-                                (int) (mFolderAppsViewPager.getHeight()
-                                        + mFolderAppsViewPager.getY()));
+                        int[] topLeftCorner = new int[2];
+                        mFolderAppsViewPager.getLocationOnScreen(topLeftCorner);
+                        int left = topLeftCorner[0];
+                        int top = topLeftCorner[1];
+                        int right = left + mFolderAppsViewPager.getWidth();
+                        int bottom = top + mFolderAppsViewPager.getHeight();
 
-                        if (!bounds.contains((int) cX, (int) cY)) {
+                        if (!(left < right && top < bottom && cX >= left
+                                && cX < right && cY >= top && cY < bottom)) {
                             removeAppFromFolder();
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
@@ -2065,6 +2088,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     }
                     return true;
                 }
+
                 return true;
             }
         });
@@ -2082,9 +2106,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                }
-
-                if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                     cY = mHorizontalPager.getY() + dragEvent.getY()
                             - dragShadowBuilder.yOffset;
@@ -2219,22 +2241,23 @@ public class LauncherActivity extends AppCompatActivity implements
                             } else {
                                 createOrUpdateFolder(true);
                             }
-
+                            folderInterest = false;
                         }
-                        folderInterest = false;
                     } else {
                         cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                         cY = mHorizontalPager.getY() + dragEvent.getY()
                                 - dragShadowBuilder.yOffset;
 
                         // Drop functionality when the folder window is visible
-                        Rect bounds = new Rect((int) mFolderAppsViewPager.getX(),
-                                (int) mFolderAppsViewPager.getY(),
-                                (int) (mFolderAppsViewPager.getWidth()
-                                        + mFolderAppsViewPager.getX()),
-                                (int) (mFolderAppsViewPager.getHeight()
-                                        + mFolderAppsViewPager.getY()));
-                        if (!bounds.contains((int) cX, (int) cY)) {
+                        int[] topLeftCorner = new int[2];
+                        mFolderAppsViewPager.getLocationOnScreen(topLeftCorner);
+                        int left = topLeftCorner[0];
+                        int top = topLeftCorner[1];
+                        int right = left + mFolderAppsViewPager.getWidth();
+                        int bottom = top + mFolderAppsViewPager.getHeight();
+
+                        if (!(left < right && top < bottom && cX >= left
+                                && cX < right && cY >= top && cY < bottom)) {
                             removeAppFromFolder();
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
@@ -2247,10 +2270,13 @@ public class LauncherActivity extends AppCompatActivity implements
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
                     if (isDragging) {
                         isDragging = false;
-
                     }
-                    if (!dragEvent.getResult()) {
+
+                    if (movingApp.getVisibility() != VISIBLE) {
                         movingApp.setVisibility(View.VISIBLE);
+                    }
+
+                    if (!dragEvent.getResult()) {
                         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
                             int currentItem = mFolderAppsViewPager.getCurrentItem();
                             makeAppWobble(movingApp, true,
@@ -2285,17 +2311,18 @@ public class LauncherActivity extends AppCompatActivity implements
                     for (int i = 0; i < pages.size(); i++) {
                         if (pages.get(i).getChildCount() <= 0) {
                             pages.remove(i);
-                            int current = getCurrentAppsPageNumber();
                             mHorizontalPager.removeViewAt(i + 1);
-                            mIndicator.removeViewAt(i);
-                            if (current > i) {
-                                mHorizontalPager.scrollLeft(1);
+                            if (i == pages.size()) {
+                                mHorizontalPager.scrollLeft(100);
                             }
+                            mIndicator.removeViewAt(i);
+                            updateIndicator();
                             i--;
                         }
                     }
                     DatabaseManager.getManager(LauncherActivity.this).saveLayouts(pages, mDock);
                 }
+
                 return true;
             }
         });
@@ -2806,8 +2833,6 @@ public class LauncherActivity extends AppCompatActivity implements
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        Log.d(TAG, "onNewIntent() called with: intent = [" + intent + "]");
-
         final boolean alreadyOnHome = hasWindowFocus() &&
                 ((intent.getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
                         != Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
@@ -3104,9 +3129,6 @@ public class LauncherActivity extends AppCompatActivity implements
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.d(TAG,
-                        "onProgressChanged() called with: seekBar = [" + seekBar + "], progress = ["
-                                + progress + "], fromUser = [" + fromUser + "]");
                 int newHeight = minHeight + (normalisedDifference * progress);
                 LinearLayout.LayoutParams layoutParams =
                         (LinearLayout.LayoutParams) activeRoundedWidgetView.getLayoutParams();
