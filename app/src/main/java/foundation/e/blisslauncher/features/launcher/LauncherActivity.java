@@ -701,15 +701,43 @@ public class LauncherActivity extends AppCompatActivity implements
                         }
                     }
                     updateFolderInGrid(grid, folderItem, j);
+
+                    if (grid.getChildCount() == 0) {
+                        pages.remove(i);
+                        mHorizontalPager.removeViewAt(i + 1);
+                        if (i == pages.size()) {
+                            mHorizontalPager.scrollLeft(100);
+                        }
+                        mIndicator.removeViewAt(i);
+                        updateIndicator();
+                    }
                 } else if (launcherItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                     ApplicationItem applicationItem = (ApplicationItem) launcherItem;
                     if (applicationItem.packageName.equalsIgnoreCase(packageName) && applicationItem.user.isSameUser(userHandle)) {
                         grid.removeViewAt(j);
+                        if (grid.getChildCount() == 0) {
+                            pages.remove(i);
+                            mHorizontalPager.removeViewAt(i + 1);
+                            if (i == pages.size()) {
+                                mHorizontalPager.scrollLeft(100);
+                            }
+                            mIndicator.removeViewAt(i);
+                            updateIndicator();
+                        }
                     }
                 } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
                     ShortcutItem shortcutItem = (ShortcutItem) launcherItem;
                     if (shortcutItem.packageName.equalsIgnoreCase(packageName)) {
                         grid.removeViewAt(j);
+                        if (grid.getChildCount() == 0) {
+                            pages.remove(i);
+                            mHorizontalPager.removeViewAt(i + 1);
+                            if (i == pages.size()) {
+                                mHorizontalPager.scrollLeft(100);
+                            }
+                            mIndicator.removeViewAt(i);
+                            updateIndicator();
+                        }
                     }
                 }
             }
@@ -2283,12 +2311,12 @@ public class LauncherActivity extends AppCompatActivity implements
                     for (int i = 0; i < pages.size(); i++) {
                         if (pages.get(i).getChildCount() <= 0) {
                             pages.remove(i);
-                            int current = getCurrentAppsPageNumber();
                             mHorizontalPager.removeViewAt(i + 1);
-                            mIndicator.removeViewAt(i);
-                            if (current > i) {
-                                mHorizontalPager.scrollLeft(1);
+                            if (i == pages.size()) {
+                                mHorizontalPager.scrollLeft(100);
                             }
+                            mIndicator.removeViewAt(i);
+                            updateIndicator();
                             i--;
                         }
                     }
