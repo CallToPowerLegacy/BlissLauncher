@@ -39,7 +39,6 @@ public class HorizontalPager extends ViewGroup {
     private boolean firstLayout = true;
 
     private int currentPage;
-    private int nextPage = INVALID_SCREEN;
 
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
@@ -131,12 +130,17 @@ public class HorizontalPager extends ViewGroup {
 
     @Override
     public void computeScroll() {
-        if (mScroller.computeScrollOffset()) {
-            scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
-            postInvalidate();
-        } else if (nextPage != INVALID_SCREEN) {
-            currentPage = nextPage;
-            nextPage = INVALID_SCREEN;
+        if (!mScroller.isFinished() && mScroller.computeScrollOffset()) {
+            int oldX = getScrollX();
+            int oldY = getScrollY();
+            int x = mScroller.getCurrX();
+            int y = mScroller.getCurrY();
+
+            if (oldX != x || oldY != y) {
+                scrollTo(x, y);
+            }
+            postInvalidateOnAnimation();
+            return;
         }
     }
 
@@ -209,11 +213,7 @@ public class HorizontalPager extends ViewGroup {
             return false;
         }
         int focusableScreen;
-        if (nextPage != INVALID_SCREEN) {
-            focusableScreen = nextPage;
-        } else {
-            focusableScreen = currentPage;
-        }
+        focusableScreen = currentPage;
         getChildAt(focusableScreen).requestFocus(direction, previouslyFocusedRect);
         return false;
     }
@@ -454,7 +454,6 @@ public class HorizontalPager extends ViewGroup {
         } else if (getScrollX() > startX + getWidth() / 8) {
             whichPage = Math.min(getChildCount() - 1, whichPage + 1);
         }
-
         snapToPage(whichPage);
     }
 
@@ -462,8 +461,7 @@ public class HorizontalPager extends ViewGroup {
         enableChildrenCache();
 
         boolean changingPages = whichPage != currentPage;
-
-        nextPage = whichPage;
+        currentPage = whichPage;
 
         View focusedChild = getFocusedChild();
         if (focusedChild != null && changingPages && focusedChild == getChildAt(currentPage)) {
@@ -472,7 +470,6 @@ public class HorizontalPager extends ViewGroup {
 
         final int newX = getScrollXForPage(whichPage);
         final int delta = newX - getScrollX();
-        //mScroller.startScroll(getScrollX(), 0, delta, 0, Math.abs(delta) * 2);
         mScroller.startScroll(getScrollX(), 0, delta, 0, duration);
         invalidate();
     }
@@ -497,27 +494,14 @@ public class HorizontalPager extends ViewGroup {
         }
     }
 
-    public void scrollLeft() {
-        if (nextPage == INVALID_SCREEN && currentPage > 0 && mScroller.isFinished()) {
-            snapToPage(currentPage - 1);
-        }
-    }
-
     public void scrollLeft(int duration) {
-        if (nextPage == INVALID_SCREEN && currentPage > 0 && mScroller.isFinished()) {
+        if (currentPage > 0 && mScroller.isFinished()) {
             snapToPage(currentPage - 1, duration);
         }
     }
 
-    public void scrollRight() {
-        if (nextPage == INVALID_SCREEN && currentPage < getChildCount() - 1
-                && mScroller.isFinished()) {
-            snapToPage(currentPage + 1);
-        }
-    }
-
     public void scrollRight(int duration) {
-        if (nextPage == INVALID_SCREEN && currentPage < getChildCount() - 1
+        if (currentPage < getChildCount() - 1
                 && mScroller.isFinished()) {
             snapToPage(currentPage + 1, duration);
         }
