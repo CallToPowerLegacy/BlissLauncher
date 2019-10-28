@@ -1,8 +1,5 @@
 package foundation.e.blisslauncher.features.launcher;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -139,6 +136,7 @@ import foundation.e.blisslauncher.features.weather.WeatherUtils;
 import foundation.e.blisslauncher.features.widgets.WidgetManager;
 import foundation.e.blisslauncher.features.widgets.WidgetViewBuilder;
 import foundation.e.blisslauncher.features.widgets.WidgetsActivity;
+import io.github.inflationx.viewpump.ViewPumpContextWrapper;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -146,7 +144,9 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
-import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 
 public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener, OnSwipeDownListener {
@@ -200,6 +200,8 @@ public class LauncherActivity extends AppCompatActivity implements
     private FrameLayout swipeSearchContainer;
     private RelativeLayout workspace;
     private View backgroundLayer;
+    private View scrollCornerRight;
+    private View scrollCornerLeft;
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
         @Override
@@ -293,6 +295,8 @@ public class LauncherActivity extends AppCompatActivity implements
         workspace = mLauncherView.findViewById(R.id.workspace);
         mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
         backgroundLayer = mLauncherView.findViewById(R.id.background_layer);
+        scrollCornerLeft = mLauncherView.findViewById(R.id.scroll_corner_left);
+        scrollCornerRight = mLauncherView.findViewById(R.id.scroll_corner_right);
         statusBarHeight = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
@@ -310,6 +314,11 @@ public class LauncherActivity extends AppCompatActivity implements
         maxDistanceForFolderCreation = (int) (0.45f * mDeviceProfile.iconSizePx);
 
         scrollCorner = mDeviceProfile.iconDrawablePaddingPx / 2;
+        scrollCornerLeft.getLayoutParams().width = scrollCorner;
+        ((RelativeLayout.LayoutParams) scrollCornerLeft.getLayoutParams()).topMargin = (int) (statusBarHeight + Utilities.pxFromDp(8, this));
+        scrollCornerRight.getLayoutParams().width = scrollCorner;
+        ((RelativeLayout.LayoutParams) scrollCornerRight.getLayoutParams()).topMargin = (int) (statusBarHeight + Utilities.pxFromDp(8, this));
+
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
         getWindow().getDecorView().setSystemUiVisibility(
@@ -356,7 +365,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(context));
+        super.attachBaseContext(ViewPumpContextWrapper.wrap(context));
     }
 
     public CompositeDisposable getCompositeDisposable() {
@@ -2106,6 +2115,20 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
+                    AnimatorSet animatorSet = new AnimatorSet();
+                    animatorSet.play(ObjectAnimator.ofFloat(scrollCornerLeft, View.ALPHA, 1f))
+                            .with(ObjectAnimator.ofFloat(scrollCornerRight, View.ALPHA, 1f));
+                    animatorSet.setDuration(100);
+                    animatorSet.addListener(new AnimatorListenerAdapter() {
+
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            super.onAnimationStart(animation);
+                            scrollCornerRight.setVisibility(VISIBLE);
+                            scrollCornerLeft.setVisibility(VISIBLE);
+                        }
+                    });
+                    animatorSet.start();
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                     cY = mHorizontalPager.getY() + dragEvent.getY()
@@ -2123,11 +2146,41 @@ public class LauncherActivity extends AppCompatActivity implements
                         return true;
                     }
 
-
                     GridLayout page = pages.get(getCurrentAppsPageNumber());
 
-                    if (cX < mDeviceProfile.availableWidthPx - scrollCorner
-                            && cX > scrollCorner) {
+                    if ((cX - mDeviceProfile.iconSizePx / 10) > mDeviceProfile.availableWidthPx - 2 * scrollCorner) {
+                        if (getCurrentAppsPageNumber() + 1 < pages.size()) {
+                            mHorizontalPager.scrollRight(300);
+                        } else if (getCurrentAppsPageNumber() + 1 == pages.size()
+                                && getGridFromPage(page).getChildCount() > 1) {
+                            GridLayout layout = preparePage();
+                            pages.add(layout);
+                            ImageView dot = new ImageView(LauncherActivity.this);
+                            dot.setImageDrawable(getDrawable(R.drawable.dot_off));
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                    getResources().getDimensionPixelSize(
+                                            R.dimen.dotSize),
+                                    getResources().getDimensionPixelSize(
+                                            R.dimen.dotSize)
+                            );
+                            dot.setLayoutParams(params);
+                            mIndicator.addView(dot);
+                            mHorizontalPager.addView(layout);
+                        }
+                    } else if ((cX + mDeviceProfile.iconSizePx / 10) < 2 * scrollCorner) {
+                        if (getCurrentAppsPageNumber() == 0) {
+                            return true;
+                        }
+                        if (getCurrentAppsPageNumber() - 1 >= 0) {
+                            mHorizontalPager.scrollLeft(300);
+                        } else if (getCurrentAppsPageNumber() + 1 == pages.size() - 2
+                                && getGridFromPage(pages.get(pages.size() - 1)).getChildCount()
+                                <= 0) {
+                            mIndicator.removeViewAt(pages.size());
+                            mHorizontalPager.removeViewAt(pages.size());
+                            pages.remove(pages.size() - 1);
+                        }
+                    } else {
 
                         int index = getIndex(page, cX, cY);
                         // If hovering over self, ignore drag/drop
@@ -2184,40 +2237,6 @@ public class LauncherActivity extends AppCompatActivity implements
                             mReorderAlarm.setOnAlarmListener(reorderAlarmListener);
                             mReorderAlarm.setAlarm(REORDER_TIMEOUT);
                         }
-                    } else {
-                        if (cX > mDeviceProfile.availableWidthPx - scrollCorner) {
-                            if (getCurrentAppsPageNumber() + 1 < pages.size()) {
-                                mHorizontalPager.scrollRight(300);
-                            } else if (getCurrentAppsPageNumber() + 1 == pages.size()
-                                    && getGridFromPage(page).getChildCount() > 1) {
-                                GridLayout layout = preparePage();
-                                pages.add(layout);
-                                ImageView dot = new ImageView(LauncherActivity.this);
-                                dot.setImageDrawable(getDrawable(R.drawable.dot_off));
-                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                                        getResources().getDimensionPixelSize(
-                                                R.dimen.dotSize),
-                                        getResources().getDimensionPixelSize(
-                                                R.dimen.dotSize)
-                                );
-                                dot.setLayoutParams(params);
-                                mIndicator.addView(dot);
-                                mHorizontalPager.addView(layout);
-                            }
-                        } else if (cX < scrollCorner) {
-                            if (getCurrentAppsPageNumber() == 0) {
-                                return true;
-                            }
-                            if (getCurrentAppsPageNumber() - 1 >= 0) {
-                                mHorizontalPager.scrollLeft(300);
-                            } else if (getCurrentAppsPageNumber() + 1 == pages.size() - 2
-                                    && getGridFromPage(pages.get(pages.size() - 1)).getChildCount()
-                                    <= 0) {
-                                mIndicator.removeViewAt(pages.size());
-                                mHorizontalPager.removeViewAt(pages.size());
-                                pages.remove(pages.size() - 1);
-                            }
-                        }
                     }
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupReorder(true);
@@ -2271,6 +2290,27 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (isDragging) {
                         isDragging = false;
                     }
+
+                    AnimatorSet animatorSet = new AnimatorSet();
+                    animatorSet.play(ObjectAnimator.ofFloat(scrollCornerLeft, View.ALPHA, 0f))
+                            .with(ObjectAnimator.ofFloat(scrollCornerRight, View.ALPHA, 0f));
+                    animatorSet.setDuration(100);
+                    animatorSet.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+                            super.onAnimationCancel(animation);
+                            scrollCornerRight.setVisibility(GONE);
+                            scrollCornerLeft.setVisibility(GONE);
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            scrollCornerRight.setVisibility(GONE);
+                            scrollCornerLeft.setVisibility(GONE);
+                        }
+                    });
+                    animatorSet.start();
 
                     if (movingApp.getVisibility() != VISIBLE) {
                         movingApp.setVisibility(View.VISIBLE);

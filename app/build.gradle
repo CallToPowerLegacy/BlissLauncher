@@ -77,7 +77,8 @@ android {
 
 dependencies {
     implementation 'me.relex:circleindicator:1.2.2@aar'
-    implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
+    implementation 'io.github.inflationx:calligraphy3:3.1.1'
+    implementation 'io.github.inflationx:viewpump:1.0.0'
 
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
