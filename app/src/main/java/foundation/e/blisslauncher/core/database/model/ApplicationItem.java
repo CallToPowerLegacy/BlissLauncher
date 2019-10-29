@@ -25,6 +25,8 @@ public class ApplicationItem extends LauncherItem {
     public static final int TYPE_CALENDAR = 746;
     public static final int TYPE_DEFAULT = 111;
 
+    public boolean isDisabled = false;
+
     /**
      * Indicates the type of app item ie. Clock or Calendar (in case of none, It will be )
      */

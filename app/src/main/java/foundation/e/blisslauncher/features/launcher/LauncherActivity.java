@@ -1726,12 +1726,20 @@ public class LauncherActivity extends AppCompatActivity implements
 
         if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
             startShortcutIntentSafely(context, intent, launcherItem);
-        } else if (user == null || user.equals(Process.myUserHandle())) {
-            context.startActivity(intent);
         } else {
-            ((LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE))
-                    .startMainActivity(intent.getComponent(), user, intent.getSourceBounds(), null);
+            ApplicationItem applicationItem = (ApplicationItem) launcherItem;
+            if (applicationItem.isDisabled) {
+                Toast.makeText(this, "Package not available or disabled", Toast.LENGTH_SHORT).show();
+            } else {
+                if (user == null || user.equals(Process.myUserHandle())) {
+                    context.startActivity(intent);
+                } else {
+                    ((LauncherApps) getSystemService(LAUNCHER_APPS_SERVICE))
+                            .startMainActivity(intent.getComponent(), user, intent.getSourceBounds(), null);
+                }
+            }
         }
+
     }
 
     private void startShortcutIntentSafely(Context context, Intent intent, LauncherItem appItem) {
