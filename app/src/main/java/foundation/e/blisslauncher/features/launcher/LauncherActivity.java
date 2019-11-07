@@ -200,8 +200,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private FrameLayout swipeSearchContainer;
     private RelativeLayout workspace;
     private View backgroundLayer;
-    private View scrollCornerRight;
-    private View scrollCornerLeft;
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
         @Override
@@ -295,8 +293,6 @@ public class LauncherActivity extends AppCompatActivity implements
         workspace = mLauncherView.findViewById(R.id.workspace);
         mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
         backgroundLayer = mLauncherView.findViewById(R.id.background_layer);
-        scrollCornerLeft = mLauncherView.findViewById(R.id.scroll_corner_left);
-        scrollCornerRight = mLauncherView.findViewById(R.id.scroll_corner_right);
         statusBarHeight = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
@@ -314,10 +310,6 @@ public class LauncherActivity extends AppCompatActivity implements
         maxDistanceForFolderCreation = (int) (0.45f * mDeviceProfile.iconSizePx);
 
         scrollCorner = mDeviceProfile.iconDrawablePaddingPx / 2;
-        scrollCornerLeft.getLayoutParams().width = scrollCorner;
-        ((RelativeLayout.LayoutParams) scrollCornerLeft.getLayoutParams()).topMargin = (int) (statusBarHeight + Utilities.pxFromDp(8, this));
-        scrollCornerRight.getLayoutParams().width = scrollCorner;
-        ((RelativeLayout.LayoutParams) scrollCornerRight.getLayoutParams()).topMargin = (int) (statusBarHeight + Utilities.pxFromDp(8, this));
 
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
@@ -2123,20 +2115,6 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                    AnimatorSet animatorSet = new AnimatorSet();
-                    animatorSet.play(ObjectAnimator.ofFloat(scrollCornerLeft, View.ALPHA, 1f))
-                            .with(ObjectAnimator.ofFloat(scrollCornerRight, View.ALPHA, 1f));
-                    animatorSet.setDuration(100);
-                    animatorSet.addListener(new AnimatorListenerAdapter() {
-
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-                            super.onAnimationStart(animation);
-                            scrollCornerRight.setVisibility(VISIBLE);
-                            scrollCornerLeft.setVisibility(VISIBLE);
-                        }
-                    });
-                    animatorSet.start();
                 } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                     cY = mHorizontalPager.getY() + dragEvent.getY()
@@ -2298,27 +2276,6 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (isDragging) {
                         isDragging = false;
                     }
-
-                    AnimatorSet animatorSet = new AnimatorSet();
-                    animatorSet.play(ObjectAnimator.ofFloat(scrollCornerLeft, View.ALPHA, 0f))
-                            .with(ObjectAnimator.ofFloat(scrollCornerRight, View.ALPHA, 0f));
-                    animatorSet.setDuration(100);
-                    animatorSet.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-                            super.onAnimationCancel(animation);
-                            scrollCornerRight.setVisibility(GONE);
-                            scrollCornerLeft.setVisibility(GONE);
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            scrollCornerRight.setVisibility(GONE);
-                            scrollCornerLeft.setVisibility(GONE);
-                        }
-                    });
-                    animatorSet.start();
 
                     if (movingApp.getVisibility() != VISIBLE) {
                         movingApp.setVisibility(View.VISIBLE);
