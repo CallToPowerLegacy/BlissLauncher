@@ -1,8 +1,5 @@
 package foundation.e.blisslauncher.features.launcher;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -26,9 +23,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -51,6 +50,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -93,6 +93,7 @@ import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
 import foundation.e.blisslauncher.core.Preferences;
 import foundation.e.blisslauncher.core.Utilities;
+import foundation.e.blisslauncher.core.blur.BlurWallpaperProvider;
 import foundation.e.blisslauncher.core.broadcast.ManagedProfileBroadcastReceiver;
 import foundation.e.blisslauncher.core.broadcast.TimeChangeBroadcastReceiver;
 import foundation.e.blisslauncher.core.customviews.BlissDragShadowBuilder;
@@ -148,8 +149,11 @@ import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 public class LauncherActivity extends AppCompatActivity implements
-        AutoCompleteAdapter.OnSuggestionClickListener, OnSwipeDownListener {
+        AutoCompleteAdapter.OnSuggestionClickListener, OnSwipeDownListener, BlurWallpaperProvider.Listener {
 
     public static final int REORDER_TIMEOUT = 350;
     private final static int EMPTY_LOCATION_DRAG = -999;
@@ -1069,8 +1073,6 @@ public class LauncherActivity extends AppCompatActivity implements
      * updated
      */
     private void createPageChangeListener() {
-        Integer color1 = Color.TRANSPARENT;
-        Integer color2 = ContextCompat.getColor(this, R.color.dark_grey_44);
         mHorizontalPager.addOnScrollListener(new HorizontalPager.OnScrollListener() {
             boolean isViewScrolling = true;
 
@@ -1079,8 +1081,8 @@ public class LauncherActivity extends AppCompatActivity implements
                 if (scrollX >= 0 && scrollX < mDeviceProfile.availableWidthPx) {
                     float fraction = (float) (mDeviceProfile.availableWidthPx - scrollX)
                             / mDeviceProfile.availableWidthPx;
-                    mHorizontalPager.setBackgroundColor(
-                            (Integer) argbEvaluator.evaluate(fraction, color1, color2));
+                    int radius = (int) (fraction * 25);
+                    BlurWallpaperProvider.getInstance(LauncherActivity.this).blur(radius);
                 }
                 if (isViewScrolling) {
                     dragDropEnabled = false;
@@ -1089,11 +1091,14 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public void onViewScrollFinished(int page) {
-                mHorizontalPager.setBackgroundColor(page == 0 ? color2 : color1);
+                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
                 isViewScrolling = false;
-
+                if(page != 0) {
+                    backgroundLayer.setBackground(null);
+                }else {
+                    BlurWallpaperProvider.getInstance(LauncherActivity.this).blur(25);
+                }
                 if (currentPageNumber != page) {
-
                     currentPageNumber = page;
                     // Remove mIndicator and mDock from widgets page, and make them
                     // reappear when user swipes to the first apps page
@@ -1123,6 +1128,12 @@ public class LauncherActivity extends AppCompatActivity implements
                 }
             }
         });
+    }
+
+    @Override
+    public void onBlurSuccess(Bitmap bitmap) {
+        BitmapDrawable drawable = new BitmapDrawable(bitmap);
+        runOnUiThread(() -> backgroundLayer.setBackground(drawable));
     }
 
     public void refreshSuggestedApps(ViewGroup viewGroup, boolean forceRefresh) {

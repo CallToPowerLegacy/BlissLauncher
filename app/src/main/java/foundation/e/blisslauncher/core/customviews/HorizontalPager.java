@@ -156,9 +156,10 @@ public class HorizontalPager extends ViewGroup {
 
         for (OnScrollListener mListener : mListeners) {
             int adjustedScrollX = getScrollX() + pageWidthPadding();
-            mListener.onScroll(adjustedScrollX);
             if (adjustedScrollX % pageWidth == 0) {
                 mListener.onViewScrollFinished(adjustedScrollX / pageWidth);
+            } else {
+                mListener.onScroll(adjustedScrollX);
             }
         }
     }

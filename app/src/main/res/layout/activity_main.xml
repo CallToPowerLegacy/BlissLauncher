@@ -11,7 +11,7 @@
         android:id="@+id/background_layer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:alpha="0"
+        android:alpha="1"
         android:background="@color/dark_grey_44" />
 
     <foundation.e.blisslauncher.core.customviews.HorizontalPager
