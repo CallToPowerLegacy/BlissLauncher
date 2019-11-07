@@ -14,26 +14,6 @@
         android:alpha="0"
         android:background="@color/dark_grey_44" />
 
-    <View
-        android:id="@+id/scroll_corner_left"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/dock"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:background="#88FFFFFF"
-        android:visibility="gone"/>
-
-    <View
-        android:id="@+id/scroll_corner_right"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/dock"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:background="#88FFFFFF"
-        android:visibility="gone"/>
-
     <foundation.e.blisslauncher.core.customviews.HorizontalPager
         android:id="@+id/pages_container"
         android:layout_width="match_parent"
