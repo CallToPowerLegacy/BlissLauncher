@@ -2,6 +2,7 @@ package foundation.e.blisslauncher.features.launcher;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
@@ -10,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Process;
 import android.os.UserManager;
 import android.provider.MediaStore;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import foundation.e.blisslauncher.BlissLauncher;
+import foundation.e.blisslauncher.R;
 import foundation.e.blisslauncher.core.Utilities;
 import foundation.e.blisslauncher.core.broadcast.PackageAddedRemovedHandler;
 import foundation.e.blisslauncher.core.database.DatabaseManager;
@@ -36,6 +39,7 @@ import foundation.e.blisslauncher.core.executors.AppExecutors;
 import foundation.e.blisslauncher.core.utils.AppUtils;
 import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
+import foundation.e.blisslauncher.core.utils.MultiHashMap;
 import foundation.e.blisslauncher.core.utils.UserHandle;
 import foundation.e.blisslauncher.features.launcher.tasks.LoadAppsTask;
 import foundation.e.blisslauncher.features.launcher.tasks.LoadDatabaseTask;
@@ -81,6 +85,8 @@ public class AppProvider {
 
     public static HashSet<String> DISABLED_PACKAGES = new HashSet<>();
 
+    private MultiHashMap<UserHandle, String> pendingPackages = new MultiHashMap<>();
+
     static {
         DISABLED_PACKAGES.add(MICROG_PACKAGE);
         DISABLED_PACKAGES.add(MUPDF_PACKAGE);
@@ -93,6 +99,7 @@ public class AppProvider {
     private static AppProvider sInstance;
     private boolean isLoading;
     private boolean mStopped;
+    private boolean isSdCardReady;
 
     private AppProvider(Context context) {
         this.mContext = context;
@@ -206,7 +213,9 @@ public class AppProvider {
     public synchronized void reload() {
         Log.d(TAG, "reload() called");
 
-        if(mLauncherItems != null && mLauncherItems.size() > 0) {
+        isSdCardReady = Utilities.isBootCompleted();
+
+        if (mLauncherItems != null && mLauncherItems.size() > 0) {
             mAppsRepository.updateAppsRelay(mLauncherItems);
         }
 
@@ -288,8 +297,38 @@ public class AppProvider {
             if (databaseItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                 ApplicationItem applicationItem = mApplicationItems.get(databaseItem.id);
                 if (applicationItem == null) {
-                    DatabaseManager.getManager(mContext).removeLauncherItem(databaseItem.id);
-                    continue;
+                    UserHandle userHandle = null;
+                    int index = databaseItem.id.lastIndexOf((int) '/');
+                    if (index > -1) {
+                        String serialText = databaseItem.id.substring(index);
+                        try {
+                            long serial = Long.parseLong(serialText);
+                            userHandle = new UserHandle(serial, Process.myUserHandle());
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(userHandle == null){
+                        userHandle = new UserHandle();
+                    }
+                    if (isAppOnSdcard(databaseItem.packageName, userHandle) || !isSdCardReady) {
+                        Log.d(TAG, "Missing package: " + databaseItem.packageName);
+                        Log.d(TAG, "Is App on Sdcard " + isAppOnSdcard(databaseItem.packageName, databaseItem.user));
+                        Log.d(TAG, "Is Sdcard ready " + isSdCardReady);
+
+
+                        pendingPackages.addToList(userHandle, databaseItem.packageName);
+                        applicationItem = new ApplicationItem();
+                        applicationItem.title = databaseItem.title;
+                        applicationItem.user = userHandle;
+                        applicationItem.componentName = databaseItem.getTargetComponent();
+                        applicationItem.packageName = databaseItem.packageName;
+                        applicationItem.icon = getContext().getDrawable(R.drawable.default_icon);
+                        applicationItem.isDisabled = true;
+                    } else {
+                        DatabaseManager.getManager(mContext).removeLauncherItem(databaseItem.id);
+                        continue;
+                    }
                 }
 
                 applicationItem.container = databaseItem.container;
@@ -366,6 +405,25 @@ public class AppProvider {
         });
         mLauncherItems.addAll(mutableList);
         return mLauncherItems;
+    }
+
+    private boolean isAppOnSdcard(String packageName, UserHandle userHandle) {
+        ApplicationInfo info = null;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                info = ((LauncherApps) mContext.getSystemService(
+                        Context.LAUNCHER_APPS_SERVICE)).getApplicationInfo(
+                        packageName, PackageManager.MATCH_UNINSTALLED_PACKAGES, userHandle.getRealHandle());
+                return info != null && (info.flags & ApplicationInfo.FLAG_EXTERNAL_STORAGE) != 0;
+            } else {
+                info = getContext().getPackageManager()
+                        .getApplicationInfo(packageName, PackageManager.MATCH_UNINSTALLED_PACKAGES);
+                return info != null && info.enabled;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private ShortcutItem prepareShortcutForNougat(LauncherItem databaseItem) {
@@ -452,7 +510,7 @@ public class AppProvider {
         });
 
         mLauncherItems.addAll(pinnedItems);
-        Log.i(TAG, "prepareDefaultLauncherItems: "+mLauncherItems.size());
+        Log.i(TAG, "prepareDefaultLauncherItems: " + mLauncherItems.size());
         return mLauncherItems;
     }
 

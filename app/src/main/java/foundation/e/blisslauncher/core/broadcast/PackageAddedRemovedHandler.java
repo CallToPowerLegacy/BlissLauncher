@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Process;
 import android.util.Log;
 
-
 import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
@@ -56,6 +55,16 @@ public class PackageAddedRemovedHandler extends BroadcastReceiver {
             AppRemoveEvent event = new AppRemoveEvent(packageName, user);
             EventRelay.getInstance().push(event);
             BlissLauncher.getApplication(ctx).getAppProvider().reload();
+        }
+
+        if("android.intent.action.MEDIA_MOUNTED".equals(action)) {
+            Intent launchIntent = ctx.getPackageManager().getLaunchIntentForPackage(packageName);
+            if (launchIntent != null) {
+                BlissLauncher.getApplication(ctx).getIconsHandler().resetIconDrawableForPackage(
+                        launchIntent.getComponent(), user);
+                AppChangeEvent appChangeEvent = new AppChangeEvent(packageName, user);
+                EventRelay.getInstance().push(appChangeEvent);
+            }
         }
     }
 
