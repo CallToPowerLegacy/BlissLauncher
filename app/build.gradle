@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
 
 // Manifest version information!
 def versionMajor = 1
@@ -16,7 +15,7 @@ android {
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        renderscriptTargetApi 18
+        renderscriptTargetApi 28
         renderscriptSupportModeEnabled true
     }
     buildTypes {
@@ -82,8 +81,6 @@ dependencies {
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
 
-    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
-    debugImplementation 'com.google.firebase:firebase-core:16.0.6'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
@@ -142,5 +139,4 @@ dependencies {
     androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
 }
 
-apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.getkeepsafe.dexcount'
