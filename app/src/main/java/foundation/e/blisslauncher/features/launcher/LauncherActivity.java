@@ -204,7 +204,8 @@ public class LauncherActivity extends AppCompatActivity implements
     private List<UsageStats> mUsageStats;
     private FrameLayout swipeSearchContainer;
     private RelativeLayout workspace;
-    private View backgroundLayer;
+    private View backgroundLayer; // Blur layer for horizontal pager.
+    private View frontLayer; // Blur layer for folders and search container.
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
         @Override
@@ -306,6 +307,7 @@ public class LauncherActivity extends AppCompatActivity implements
         workspace = mLauncherView.findViewById(R.id.workspace);
         mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
         backgroundLayer = mLauncherView.findViewById(R.id.background_layer);
+        frontLayer = mLauncherView.findViewById(R.id.blur_layer);
         statusBarHeight = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
@@ -1104,10 +1106,14 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public void onViewScrollFinished(int page) {
+                Log.d(TAG, "onViewScrollFinished() called with: page = [" + page + "]");
                 isViewScrolling = false;
-                if (page != 0 && mFolderWindowContainer.getVisibility() != VISIBLE) {
-                    BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
+                if (page != 0) {
                     backgroundLayer.setBackground(null);
+                }
+
+                if (mFolderWindowContainer.getVisibility() != VISIBLE) {
+                    frontLayer.setBackground(null);
                 }
                 if (currentPageNumber != page) {
                     currentPageNumber = page;
@@ -1142,10 +1148,17 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onBlurSuccess(Bitmap bitmap) {
-        Log.d(TAG, "onBlurSuccess() called with: bitmap = [" + bitmap + "]");
+    public void blurBackgroundLayer(Bitmap bitmap) {
+        Log.d(TAG, "blurBackgroundLayer() called with: bitmap = [" + bitmap + "]");
         BitmapDrawable drawable = new BitmapDrawable(bitmap);
         runOnUiThread(() -> backgroundLayer.setBackground(drawable));
+    }
+
+    @Override
+    public void blurFrontLayer(Bitmap bitmap) {
+        Log.d(TAG, "blurFrontLayer() called with: bitmap = [" + bitmap + "]");
+        BitmapDrawable drawable = new BitmapDrawable(bitmap);
+        runOnUiThread(() -> frontLayer.setBackground(drawable));
     }
 
     @Override
@@ -1157,6 +1170,14 @@ public class LauncherActivity extends AppCompatActivity implements
         int green = Color.green(color);
         int blue = Color.blue(color);
         runOnUiThread(() -> backgroundLayer.setBackgroundColor(Color.argb(alpha, red, green, blue)));
+    }
+
+    private void removeBlur(View view) {
+        new Handler(Looper.getMainLooper())
+                .post(() -> {
+                    Log.d(TAG, "removeBlur() called");
+                    view.setBackground(null);
+                });
     }
 
     public void refreshSuggestedApps(ViewGroup viewGroup, boolean forceRefresh) {
@@ -2761,6 +2782,8 @@ public class LauncherActivity extends AppCompatActivity implements
             startBounds.bottom += deltaHeight;
         }
 
+        Log.d("ShowFolder", "displayFolder() called with: app = [" + app + "], v = [" + v + "]");
+
         // Construct and run the parallel animation of the four translation and
         // scale properties (X, Y, SCALE_X, and SCALE_Y).
         AnimatorSet set = new AnimatorSet();
@@ -2786,6 +2809,7 @@ public class LauncherActivity extends AppCompatActivity implements
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
+                Log.d("ShowFolder", "onAnimationStart() called with: animation = [" + animation + "]");
                 mFolderWindowContainer.setVisibility(View.VISIBLE);
 
                 // Set the pivot point for SCALE_X and SCALE_Y transformations
@@ -2798,12 +2822,21 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                Log.d("ShowFolder", "onAnimationEnd() called with: animation = [" + animation + "]");
                 currentAnimator = null;
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
+                Log.d("ShowFolder", "onAnimationCancel() called with: animation = [" + animation + "]");
                 currentAnimator = null;
+                mergedView = null;
+                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
+                removeBlur(frontLayer);
+                mFolderWindowContainer.setVisibility(GONE);
+                mHorizontalPager.setAlpha(1f);
+                mIndicator.setAlpha(1f);
+                mDock.setAlpha(1f);
             }
         });
         set.start();
@@ -2844,6 +2877,8 @@ public class LauncherActivity extends AppCompatActivity implements
             currentAnimator.cancel();
         }
 
+        Log.d("HideFolder", "hideFolderWindowContainer() called");
+
         // Animate the four positioning/sizing properties in parallel,
         // back to their original values.
         AnimatorSet set = new AnimatorSet();
@@ -2870,20 +2905,22 @@ public class LauncherActivity extends AppCompatActivity implements
         set.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
+                Log.d("HideFolder", "onAnimationEnd() called with: animation = [" + animation + "]");
                 mFolderWindowContainer.setVisibility(View.GONE);
                 currentAnimator = null;
                 mergedView = null;
                 BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                backgroundLayer.setBackground(null);
+                removeBlur(frontLayer);
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
+                Log.d("HideFolder", "onAnimationCancel() called with: animation = [" + animation + "]");
                 mFolderWindowContainer.setVisibility(View.GONE);
                 currentAnimator = null;
                 mergedView = null;
                 BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                backgroundLayer.setBackground(null);
+                removeBlur(frontLayer);
                 mHorizontalPager.setAlpha(1f);
                 mIndicator.setAlpha(1f);
                 mDock.setAlpha(1f);
@@ -2955,12 +2992,12 @@ public class LauncherActivity extends AppCompatActivity implements
                                 super.onAnimationCancel(animation);
                                 Log.d(TAG, "onAnimationCancel() called with: animation = [" + animation + "]");
                                 currentAnimator = null;
+                                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
+                                removeBlur(frontLayer);
                                 swipeSearchContainer.setVisibility(GONE);
                                 mHorizontalPager.setVisibility(VISIBLE);
                                 mIndicator.setVisibility(VISIBLE);
                                 mDock.setVisibility(VISIBLE);
-                                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                                backgroundLayer.setBackground(null);
                             }
 
                             @Override
@@ -3093,9 +3130,9 @@ public class LauncherActivity extends AppCompatActivity implements
                                 super.onAnimationEnd(animation);
                                 currentAnimator = null;
                                 mergedView = null;
-                                swipeSearchContainer.setVisibility(GONE);
                                 BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                                backgroundLayer.setBackground(null);
+                                removeBlur(frontLayer);
+                                swipeSearchContainer.setVisibility(GONE);
                                 if (searchDisposableObserver != null
                                         && !searchDisposableObserver.isDisposed()) {
                                     searchDisposableObserver.dispose();

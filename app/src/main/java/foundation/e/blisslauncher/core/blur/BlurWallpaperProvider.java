@@ -68,10 +68,6 @@ public class BlurWallpaperProvider {
         updateWallpaper();
     }
 
-    private void updateAsync() {
-        mDispatcher.submit(updateRunnable);
-    }
-
     private void updateWallpaper() {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -92,8 +88,7 @@ public class BlurWallpaperProvider {
             @Override
             void onBlurSuccess(Bitmap bitmap) {
                 if (bitmap != null && listener != null) {
-                    listener.onBlurSuccess(bitmap);
-                    //bitmap.recycle();
+                    listener.blurBackgroundLayer(bitmap);
                 }
             }
 
@@ -134,8 +129,8 @@ public class BlurWallpaperProvider {
             @Override
             void onBlurSuccess(Bitmap bitmap) {
                 if (bitmap != null && listener != null) {
-                    listener.onBlurSuccess(bitmap);
-                    //bitmap.recycle();
+                    Log.d(TAG, "blurBackgroundLayer() called with: bitmap = [" + bitmap + "]");
+                    listener.blurFrontLayer(bitmap);
                 }
             }
 
@@ -148,6 +143,7 @@ public class BlurWallpaperProvider {
 
     public void cancelPreTask(boolean interrupt) {
         if (mFuture != null && !mFuture.isCancelled() && !mFuture.isDone()) {
+            Log.d(TAG, "cancelPreTask() called with: interrupt = [" + interrupt + "]");
             mFuture.cancel(interrupt);
             mFuture = null;
         }
@@ -191,12 +187,15 @@ public class BlurWallpaperProvider {
     }
 
     public interface Listener {
-        void onBlurSuccess(Bitmap bitmap);
+        void blurBackgroundLayer(Bitmap bitmap);
+
+        void blurFrontLayer(Bitmap bitmap);
 
         void fallbackToDimBackground(float dimAlpha);
     }
 
     public void clear() {
+        Log.d(TAG, "clear() called");
         listener = null;
         cancelPreTask(true);
         sInstance = null;

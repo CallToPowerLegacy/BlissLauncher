@@ -10,9 +10,7 @@
     <View
         android:id="@+id/background_layer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="1"
-        android:background="@color/dark_grey_44" />
+        android:layout_height="match_parent" />
 
     <foundation.e.blisslauncher.core.customviews.HorizontalPager
         android:id="@+id/pages_container"
@@ -41,6 +39,11 @@
         android:background="@color/dockColor"
         android:columnCount="@integer/col_count"
         android:rowCount="1" />
+
+    <View
+        android:id="@+id/blur_layer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <RelativeLayout
         android:id="@+id/folder_window_container"
