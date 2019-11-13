@@ -175,15 +175,13 @@ public class BlurWallpaperProvider {
 
         wallpaper = Bitmap.createScaledBitmap(wallpaper, scaledWidth, scaledHeight, false);
 
-        if(wallpaper.getWidth() >= wallpaper.getHeight()){
-            return Bitmap.createBitmap(wallpaper, 0, 0, width, height);
-        } else {
-            int x = (wallpaper.getWidth() - width) / 2;
-            if (x < 0 || x + width > wallpaper.getWidth()) {
-                x = 0;
-            }
-            return Bitmap.createBitmap(wallpaper, x, 0, width, height);
-        }
+
+        int y;
+        if (wallpaper.getHeight() > height) {
+            y = (wallpaper.getHeight() - height) / 2;
+        } else y = 0;
+
+        return Bitmap.createBitmap(wallpaper, 0, y, width, height);
     }
 
     public interface Listener {

@@ -305,6 +305,18 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void setupViews() {
         workspace = mLauncherView.findViewById(R.id.workspace);
+        wallpaperChangeReceiver = new WallpaperChangeReceiver(workspace);
+        workspace.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                wallpaperChangeReceiver.setWindowToken(v.getWindowToken());
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                wallpaperChangeReceiver.setWindowToken(null);
+            }
+        });
         mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
         backgroundLayer = mLauncherView.findViewById(R.id.background_layer);
         frontLayer = mLauncherView.findViewById(R.id.blur_layer);
@@ -369,7 +381,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private void prepareBroadcastReceivers() {
         timeChangedReceiver = TimeChangeBroadcastReceiver.register(this);
         managedProfileReceiver = ManagedProfileBroadcastReceiver.register(this);
-        wallpaperChangeReceiver = WallpaperChangeReceiver.register(this);
     }
 
     protected void attachBaseContext(Context context) {
@@ -466,7 +477,6 @@ public class LauncherActivity extends AppCompatActivity implements
         super.onDestroy();
         TimeChangeBroadcastReceiver.unregister(this, timeChangedReceiver);
         ManagedProfileBroadcastReceiver.unregister(this, managedProfileReceiver);
-        WallpaperChangeReceiver.unregister(this, wallpaperChangeReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
         getCompositeDisposable().dispose();
         events.unsubscribe();
@@ -1109,10 +1119,12 @@ public class LauncherActivity extends AppCompatActivity implements
                 Log.d(TAG, "onViewScrollFinished() called with: page = [" + page + "]");
                 isViewScrolling = false;
                 if (page != 0) {
+                    BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
                     backgroundLayer.setBackground(null);
                 }
 
                 if (mFolderWindowContainer.getVisibility() != VISIBLE) {
+                    BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
                     frontLayer.setBackground(null);
                 }
                 if (currentPageNumber != page) {
@@ -1151,14 +1163,21 @@ public class LauncherActivity extends AppCompatActivity implements
     public void blurBackgroundLayer(Bitmap bitmap) {
         Log.d(TAG, "blurBackgroundLayer() called with: bitmap = [" + bitmap + "]");
         BitmapDrawable drawable = new BitmapDrawable(bitmap);
-        runOnUiThread(() -> backgroundLayer.setBackground(drawable));
-    }
+        new Handler(Looper.getMainLooper())
+                .post(() -> {
+                    Log.d(TAG, "removeBlur() called");
+                    backgroundLayer.setBackground(drawable);
+                });    }
 
     @Override
     public void blurFrontLayer(Bitmap bitmap) {
         Log.d(TAG, "blurFrontLayer() called with: bitmap = [" + bitmap + "]");
         BitmapDrawable drawable = new BitmapDrawable(bitmap);
-        runOnUiThread(() -> frontLayer.setBackground(drawable));
+        new Handler(Looper.getMainLooper())
+                .post(() -> {
+                    Log.d(TAG, "removeBlur() called");
+                    frontLayer.setBackground(drawable);
+                });
     }
 
     @Override
@@ -2803,7 +2822,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 1f, 0f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 1f, 0f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f, 0f));
-        set.setDuration(300);
+        set.setDuration(400);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -2900,7 +2919,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 0f, 1f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 0f, 1f))
                 .with(valueAnimator);
-        set.setDuration(300);
+        set.setDuration(400);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -2984,7 +3003,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 0f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 0f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 0f));
-        set.setDuration(200);
+        set.setDuration(500);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
                             @Override
@@ -3103,7 +3122,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f));
-        set.setDuration(200);
+        set.setDuration(500);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
                             @Override
