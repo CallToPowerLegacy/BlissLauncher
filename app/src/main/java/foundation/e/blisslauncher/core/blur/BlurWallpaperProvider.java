@@ -128,6 +128,7 @@ public class BlurWallpaperProvider {
     }
 
     public void blurWithLauncherView(Bitmap view, int radius) {
+        Log.d(TAG, "blurWithLauncherView() called with: view = [" + view + "], radius = [" + radius + "]");
         cancelPreTask(false);
         mFuture = mDispatcher.submit(new BlurTask(view, blurProcessor, radius) {
             @Override
@@ -178,14 +179,15 @@ public class BlurWallpaperProvider {
 
         wallpaper = Bitmap.createScaledBitmap(wallpaper, scaledWidth, scaledHeight, false);
 
-        int x = 0;
-        int y = (wallpaper.getHeight() - height) / 2;
-        if (y < 0 || y + height > wallpaper.getHeight()) {
-            y = 0;
+        if(wallpaper.getWidth() >= wallpaper.getHeight()){
+            return Bitmap.createBitmap(wallpaper, 0, 0, width, height);
+        } else {
+            int x = (wallpaper.getWidth() - width) / 2;
+            if (x < 0 || x + width > wallpaper.getWidth()) {
+                x = 0;
+            }
+            return Bitmap.createBitmap(wallpaper, x, 0, width, height);
         }
-
-        Log.i(TAG, "X and Y: " + x + "*" + y);
-        return Bitmap.createBitmap(wallpaper, x, 0, width, height);
     }
 
     public interface Listener {
