@@ -44,6 +44,7 @@ public class WallpaperChangeReceiver extends BroadcastReceiver {
 
     private void updateOffset() {
         WallpaperManager wm = (WallpaperManager) mContext.getSystemService(WALLPAPER_SERVICE);
-        wm.setWallpaperOffsets(mWorkspace.getWindowToken(), 0f, 0.5f);
+        wm.setWallpaperOffsets(mWindowToken, 0f, 0.5f);
+        wm.setWallpaperOffsetSteps(0.0f, 0.0f);
     }
 }

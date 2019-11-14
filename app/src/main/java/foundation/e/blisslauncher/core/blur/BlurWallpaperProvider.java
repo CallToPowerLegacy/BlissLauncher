@@ -9,7 +9,6 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.support.v4.app.ActivityCompat;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -20,11 +19,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.Utilities;
 
 public class BlurWallpaperProvider {
-
-    private static final String TAG = "BlurWallpaperProvider";
 
     private final Context context;
     private final WallpaperManager wallpaperManager;
@@ -49,7 +47,7 @@ public class BlurWallpaperProvider {
         this.wallpaperManager = WallpaperManager.getInstance(context);
         blurProcessor = HokoBlur.with(context).sampleFactor(SAMPLE_FACTOR)
                 .scheme(HokoBlur.SCHEME_OPENGL)
-                .mode(HokoBlur.MODE_GAUSSIAN)
+                .mode(HokoBlur.MODE_STACK)
                 .forceCopy(false)
                 .needUpscale(true)
                 .processor();
@@ -109,8 +107,11 @@ public class BlurWallpaperProvider {
         int overlayWidth = launcherView.getWidth();
         int overlayHeight = launcherView.getHeight();
 
-        Log.i(BlurWallpaperProvider.class.getName(), "mergeLauncherView: " + wallpaperWidth + "*" + wallpaperHeight);
-        Log.i(BlurWallpaperProvider.class.getName(), "mergeLauncherView: " + overlayWidth + "*" + overlayHeight);
+        // Hack for removing soft navigation bar
+        if(overlayHeight > wallpaperHeight) {
+            overlayHeight = wallpaperHeight;
+            launcherView = Bitmap.createBitmap(launcherView, 0, 0, overlayWidth, overlayHeight);
+        }
 
         float marginLeft = (float) (wallpaperWidth * 0.5 - overlayWidth * 0.5);
         float marginTop = (float) (wallpaperHeight * 0.5 - overlayHeight * 0.5);
@@ -123,13 +124,11 @@ public class BlurWallpaperProvider {
     }
 
     public void blurWithLauncherView(Bitmap view, int radius) {
-        Log.d(TAG, "blurWithLauncherView() called with: view = [" + view + "], radius = [" + radius + "]");
         cancelPreTask(false);
         mFuture = mDispatcher.submit(new BlurTask(view, blurProcessor, radius) {
             @Override
             void onBlurSuccess(Bitmap bitmap) {
                 if (bitmap != null && listener != null) {
-                    Log.d(TAG, "blurBackgroundLayer() called with: bitmap = [" + bitmap + "]");
                     listener.blurFrontLayer(bitmap);
                 }
             }
@@ -143,7 +142,6 @@ public class BlurWallpaperProvider {
 
     public void cancelPreTask(boolean interrupt) {
         if (mFuture != null && !mFuture.isCancelled() && !mFuture.isDone()) {
-            Log.d(TAG, "cancelPreTask() called with: interrupt = [" + interrupt + "]");
             mFuture.cancel(interrupt);
             mFuture = null;
         }
@@ -166,22 +164,26 @@ public class BlurWallpaperProvider {
             return wallpaper;
         }
 
-        Log.i(TAG, "Screen dimension: " + width + "*" + height);
-        Log.i(TAG, "wallpaper dimension: " + wallpaper.getWidth() + "*" + wallpaper.getHeight());
-
         int scaledWidth = (int) Math.max(width, (wallpaper.getWidth() * upscaleFactor));
         int scaledHeight = (int) Math.max(height, (wallpaper.getHeight() * upscaleFactor));
-        Log.i(TAG, "Scaled dimension: " + scaledWidth + "*" + scaledHeight);
 
         wallpaper = Bitmap.createScaledBitmap(wallpaper, scaledWidth, scaledHeight, false);
 
+        int navigationBarHeight = 0;
+        if (BlissLauncher.getApplication(context).getDeviceProfile().hasSoftNavigationBar(context)) {
+
+            int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                navigationBarHeight = context.getResources().getDimensionPixelSize(resourceId);
+            }
+        }
 
         int y;
         if (wallpaper.getHeight() > height) {
             y = (wallpaper.getHeight() - height) / 2;
         } else y = 0;
 
-        return Bitmap.createBitmap(wallpaper, 0, y, width, height);
+        return Bitmap.createBitmap(wallpaper, 0, y, width, height - navigationBarHeight);
     }
 
     public interface Listener {
@@ -193,7 +195,6 @@ public class BlurWallpaperProvider {
     }
 
     public void clear() {
-        Log.d(TAG, "clear() called");
         listener = null;
         cancelPreTask(true);
         sInstance = null;
@@ -216,7 +217,7 @@ public class BlurWallpaperProvider {
                 blurProcessor.radius(radius);
                 onBlurSuccess(blurProcessor.blur(bitmap));
             } else {
-                onBlurFailed((float) radius / 25);
+                onBlurFailed((float) radius / 15);
             }
         }
 

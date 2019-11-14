@@ -10,7 +10,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -28,6 +27,7 @@ public class DeviceProfile {
 
     public static Path path;
     private final float widthCm;
+    private int statusBarHeight;
     public int cellHeightWithoutPaddingPx;
     public int hotseatCellHeightWithoutPaddingPx;
     public int fillResIconDpi;
@@ -158,12 +158,17 @@ public class DeviceProfile {
         widthPx = realSize.x;
         double x = widthPx / dm.xdpi;
         widthCm = (float) (x * 2.540001f);
-        Log.i(TAG, "DeviceProfile: " + availableWidthPx);
-        Log.i(TAG, "DeviceProfile: " + widthPx);
         heightPx = realSize.y;
 
         context = getContext(context, Configuration.ORIENTATION_PORTRAIT);
         Resources res = context.getResources();
+
+        // status bar height
+        statusBarHeight = 0;
+        int resourceId = res.getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = res.getDimensionPixelSize(resourceId);
+        }
 
         ComponentName cn = new ComponentName(context.getPackageName(),
                 this.getClass().getName());
@@ -248,8 +253,6 @@ public class DeviceProfile {
         dateTextBottomPadding = (dateTextviewHeight - (int) (0.86 * Utilities.calculateTextHeight(
                 (float) dateTextSize / 2))) / 2;
 
-        Log.i(TAG, "datepadding: " + dateTextTopPadding + "*" + dateTextBottomPadding);
-
         cellHeightWithoutPaddingPx = iconSizePx + Utilities.pxFromDp(4, dm)
                 + Utilities.calculateTextHeight(iconTextSizePx);
 
@@ -304,7 +307,7 @@ public class DeviceProfile {
         return pageIndicatorSizePx + pageIndicatorBottomPaddingPx + pageIndicatorTopPaddingPx;
     }
 
-    public int getMaxWidgetWidth(){
+    public int getMaxWidgetWidth() {
         return maxWidgetWidth;
     }
 
@@ -349,6 +352,34 @@ public class DeviceProfile {
         resizedPath.transform(resizeMatrix);
 
         return resizedPath;
+    }
+
+    public boolean hasSoftNavigationBar(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        DisplayMetrics dm = new DisplayMetrics();
+        display.getMetrics(dm);
+
+        Point smallestSize = new Point();
+        Point largestSize = new Point();
+        display.getCurrentSizeRange(smallestSize, largestSize);
+
+        int availableHeight = largestSize.y;
+
+        Point realSize = new Point();
+        display.getRealSize(realSize);
+        int realHeight = realSize.y;
+        context = getContext(context, Configuration.ORIENTATION_PORTRAIT);
+        Resources res = context.getResources();
+
+        // status bar height
+        statusBarHeight = 0;
+        int resourceId = res.getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = res.getDimensionPixelSize(resourceId);
+        }
+
+        return (realHeight - availableHeight - statusBarHeight) > 0;
     }
 
     private int getLauncherIconDensity(int requiredSize) {
