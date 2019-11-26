@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 // Manifest version information!
 def versionMajor = 1
@@ -108,8 +109,10 @@ dependencies {
     // Rx Relay
     implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
 
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
     // Blur Library
-    implementation 'com.hoko:hoko-blur:1.3.4'
+    implementation project(':hoko-blur')
 
     // Room
     implementation "android.arch.persistence.room:runtime:1.1.1"
