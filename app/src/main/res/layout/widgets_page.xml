@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:animateLayoutChanges="true">
-    <ScrollView
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
+    <foundation.e.blisslauncher.core.customviews.InsettableScrollLayout
+        android:id="@+id/widgets_scroll_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:animateLayoutChanges="true"
         android:orientation="vertical"
         android:scrollbars="none"
-        android:id="@+id/widgets_scroll_container"
         tools:ignore="ContentDescription">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -19,21 +20,22 @@
             android:orientation="vertical"
             android:padding="8dp">
 
-            <include layout="@layout/layout_search_suggestion"/>
+            <include layout="@layout/layout_search_suggestion" />
 
             <include
                 android:id="@+id/weather_info_layout"
-                layout="@layout/layout_weather_info"/>
+                layout="@layout/layout_weather_info" />
 
             <FrameLayout
                 android:id="@+id/drag_layer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
                 <LinearLayout
                     android:id="@+id/widget_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"/>
+                    android:orientation="vertical" />
             </FrameLayout>
 
             <Button
@@ -43,44 +45,51 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/btn_rounded_corner"
                 android:fontFamily="sans-serif-medium"
-                android:text="Edit"/>
+                android:text="Edit" />
         </LinearLayout>
-    </ScrollView>
+    </foundation.e.blisslauncher.core.customviews.InsettableScrollLayout>
 
-    <RelativeLayout android:id="@+id/widget_resizer_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_gravity="bottom"
-                    android:background="#000"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="16dp"
-                    android:visibility="gone">
-        <TextView android:id="@+id/min_label"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_alignParentLeft="true"
-                  android:layout_centerVertical="true"
-                  android:drawableTop="@drawable/ic_minus_white_16dp"
-                  android:text="Min"
-                  android:textColor="@color/white"/>
-        <SeekBar android:id="@+id/widget_resizer_seekbar"
-                 android:layout_width="match_parent"
-                 android:layout_height="48dp"
-                 android:layout_centerVertical="true"
-                 android:layout_marginLeft="8dp"
-                 android:layout_marginRight="8dp"
-                 android:layout_toLeftOf="@id/max_label"
-                 android:layout_toRightOf="@id/min_label"/>
-        <TextView android:id="@+id/max_label"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_alignParentRight="true"
-                  android:layout_centerVertical="true"
-                  android:drawableTop="@drawable/ic_add_white_16dp"
-                  android:text="Max"
-                  android:textColor="@color/white"/>
+    <RelativeLayout
+        android:id="@+id/widget_resizer_container"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom"
+        android:background="#000"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/min_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:drawableTop="@drawable/ic_minus_white_16dp"
+            android:text="Min"
+            android:textColor="@color/white" />
+
+        <SeekBar
+            android:id="@+id/widget_resizer_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_toLeftOf="@id/max_label"
+            android:layout_toRightOf="@id/min_label" />
+
+        <TextView
+            android:id="@+id/max_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:drawableTop="@drawable/ic_add_white_16dp"
+            android:text="Max"
+            android:textColor="@color/white" />
     </RelativeLayout>
 </FrameLayout>

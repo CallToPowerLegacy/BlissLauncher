@@ -4,10 +4,8 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.animation.ArgbEvaluator;
 import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -20,15 +18,14 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -68,7 +65,6 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -92,7 +88,6 @@ import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
 import foundation.e.blisslauncher.core.Preferences;
 import foundation.e.blisslauncher.core.Utilities;
-import foundation.e.blisslauncher.core.blur.BlurWallpaperProvider;
 import foundation.e.blisslauncher.core.broadcast.ManagedProfileBroadcastReceiver;
 import foundation.e.blisslauncher.core.broadcast.TimeChangeBroadcastReceiver;
 import foundation.e.blisslauncher.core.broadcast.WallpaperChangeReceiver;
@@ -101,6 +96,8 @@ import foundation.e.blisslauncher.core.customviews.BlissFrameLayout;
 import foundation.e.blisslauncher.core.customviews.BlissInput;
 import foundation.e.blisslauncher.core.customviews.DockGridLayout;
 import foundation.e.blisslauncher.core.customviews.HorizontalPager;
+import foundation.e.blisslauncher.core.customviews.InsettableRelativeLayout;
+import foundation.e.blisslauncher.core.customviews.InsettableScrollLayout;
 import foundation.e.blisslauncher.core.customviews.PageIndicatorLinearLayout;
 import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
 import foundation.e.blisslauncher.core.customviews.SquareFrameLayout;
@@ -154,7 +151,7 @@ import static android.view.View.VISIBLE;
 
 public class LauncherActivity extends AppCompatActivity implements
         AutoCompleteAdapter.OnSuggestionClickListener,
-        OnSwipeDownListener, BlurWallpaperProvider.Listener {
+        OnSwipeDownListener {
 
     public static final int REORDER_TIMEOUT = 350;
     private final static int EMPTY_LOCATION_DRAG = -999;
@@ -204,9 +201,8 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private List<UsageStats> mUsageStats;
     private FrameLayout swipeSearchContainer;
-    private RelativeLayout workspace;
-    private View backgroundLayer; // Blur layer for horizontal pager.
-    private View frontLayer; // Blur layer for folders and search container.
+    private InsettableRelativeLayout workspace;
+    private View blurLayer; // Blur layer for folders and search container.
 
     private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
         @Override
@@ -219,14 +215,12 @@ public class LauncherActivity extends AppCompatActivity implements
     private FolderItem activeFolder;
     private BlissFrameLayout activeFolderView;
     private int activeDot;
-    private int statusBarHeight;
 
     private static final String TAG = "LauncherActivity";
     private AppWidgetManager mAppWidgetManager;
     private WidgetHost mAppWidgetHost;
     private LinearLayout widgetContainer;
 
-    ArgbEvaluator argbEvaluator = new ArgbEvaluator();
     private FrameLayout widgetsPage;
     private SearchInputDisposableObserver searchDisposableObserver;
     private AnimatorSet currentAnimator;
@@ -235,25 +229,25 @@ public class LauncherActivity extends AppCompatActivity implements
     private float startScaleFinal;
     private boolean showSwipeSearch;
     private RoundedWidgetView activeRoundedWidgetView;
-    private boolean widgetResizeContainerVisible;
 
     // EventRelay to handle pass events related to app addition, deletion or changed.
     private EventRelay events;
     private ManagedProfileBroadcastReceiver managedProfileReceiver;
-    private boolean forceReload;
 
-    private AppProvider appProvider;
     private int moveTo;
-    private Bitmap mergedView;
-    private int blurRadius;
     private WallpaperChangeReceiver wallpaperChangeReceiver;
+
+    public static LauncherActivity getLauncher(Context context) {
+        if (context instanceof LauncherActivity) {
+            return (LauncherActivity) context;
+        }
+        return ((LauncherActivity) ((ContextWrapper) context).getBaseContext());
+    }
 
     @SuppressLint("InflateParams")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        appProvider = BlissLauncher.getApplication(this).getAppProvider();
-
         prepareBroadcastReceivers();
 
         mDeviceProfile = BlissLauncher.getApplication(this).getDeviceProfile();
@@ -322,13 +316,8 @@ public class LauncherActivity extends AppCompatActivity implements
             }
         });
         mHorizontalPager = mLauncherView.findViewById(R.id.pages_container);
-        backgroundLayer = mLauncherView.findViewById(R.id.background_layer);
-        frontLayer = mLauncherView.findViewById(R.id.blur_layer);
-        statusBarHeight = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-        }
+        blurLayer = mLauncherView.findViewById(R.id.blur_layer);
+        blurLayer.setAlpha(0f);
 
         mDock = mLauncherView.findViewById(R.id.dock);
         mIndicator = mLauncherView.findViewById(R.id.page_indicator);
@@ -345,11 +334,12 @@ public class LauncherActivity extends AppCompatActivity implements
         wobbleAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble);
         wobbleReverseAnimation = AnimationUtils.loadAnimation(this, R.anim.wobble_reverse);
         getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         workspace.setOnClickListener(v -> {
             if (swipeSearchContainer.getVisibility() == VISIBLE) {
-                hideSwipeSearchContainer(18);
+                hideSwipeSearchContainer();
             }
         });
     }
@@ -485,7 +475,6 @@ public class LauncherActivity extends AppCompatActivity implements
         getCompositeDisposable().dispose();
         events.unsubscribe();
         BlissLauncher.getApplication(this).getAppProvider().clear();
-        BlurWallpaperProvider.getInstance(this).clear();
     }
 
     public void onAppAddEvent(AppAddEvent appAddEvent) {
@@ -1111,7 +1100,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     float fraction = (float) (mDeviceProfile.availableWidthPx - scrollX)
                             / mDeviceProfile.availableWidthPx;
                     int radius = (int) (fraction * 18);
-                    BlurWallpaperProvider.getInstance(LauncherActivity.this).blur(radius);
+                    blurLayer.setAlpha(fraction);
                 }
                 if (isViewScrolling) {
                     dragDropEnabled = false;
@@ -1120,16 +1109,19 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public void onViewScrollFinished(int page) {
+                Log.d(TAG, "onViewScrollFinished() called with: page = [" + page + "]");
                 isViewScrolling = false;
-                if (page != 0) {
-                    BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                    backgroundLayer.setBackground(null);
-                }
 
-                if (mFolderWindowContainer.getVisibility() != VISIBLE) {
-                    BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                    frontLayer.setBackground(null);
-                }
+                /*if(page == 0) {
+                    int flags = getWindow().getDecorView().getSystemUiVisibility();
+                    getWindow().getDecorView().setSystemUiVisibility(flags ^ SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+                } else {
+                    int flags = getWindow().getDecorView().getSystemUiVisibility();
+                    getWindow().getDecorView().setSystemUiVisibility(flags | SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+                }*/
+
+                blurLayer.setAlpha(page == 0 ? 1f : 0f);
+
                 if (currentPageNumber != page) {
                     currentPageNumber = page;
                     // Remove mIndicator and mDock from widgets page, and make them
@@ -1160,38 +1152,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 }
             }
         });
-    }
-
-    @Override
-    public void blurBackgroundLayer(Bitmap bitmap) {
-        BitmapDrawable drawable = new BitmapDrawable(bitmap);
-        new Handler(Looper.getMainLooper())
-                .post(() -> {
-                    backgroundLayer.setBackground(drawable);
-                });    }
-
-    @Override
-    public void blurFrontLayer(Bitmap bitmap) {
-        BitmapDrawable drawable = new BitmapDrawable(bitmap);
-        new Handler(Looper.getMainLooper())
-                .post(() -> {
-                    frontLayer.setBackground(drawable);
-                });
-    }
-
-    @Override
-    public void fallbackToDimBackground(float dimAlpha) {
-        int color = 0x44000000;
-        int alpha = Math.round(Color.alpha(color) * dimAlpha);
-        int red = Color.red(color);
-        int green = Color.green(color);
-        int blue = Color.blue(color);
-        runOnUiThread(() -> backgroundLayer.setBackgroundColor(Color.argb(alpha, red, green, blue)));
-    }
-
-    private void removeBlur(View view) {
-        new Handler(Looper.getMainLooper())
-                .post(() -> view.setBackground(null));
     }
 
     public void refreshSuggestedApps(ViewGroup viewGroup, boolean forceRefresh) {
@@ -1286,7 +1246,7 @@ public class LauncherActivity extends AppCompatActivity implements
         grid.setRowCount(mDeviceProfile.numRows);
         grid.setLayoutTransition(getDefaultLayoutTransition());
         grid.setPadding(mDeviceProfile.iconDrawablePaddingPx / 2,
-                (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
+                (int) (Utilities.pxFromDp(8, this)),
                 mDeviceProfile.iconDrawablePaddingPx / 2, 0);
         return grid;
     }
@@ -1295,12 +1255,12 @@ public class LauncherActivity extends AppCompatActivity implements
         widgetsPage = (FrameLayout) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
         widgetContainer = widgetsPage.findViewById(R.id.widget_container);
-        widgetsPage.setPadding(0,
-                (int) (statusBarHeight + Utilities.pxFromDp(8, this)),
-                0, 0);
+        /*widgetsPage.setPadding(0,
+                (int) (Utilities.pxFromDp(8, this)),
+                0, 0);*/
         mHorizontalPager.addView(widgetsPage, 0);
         widgetsPage.setOnDragListener(null);
-        ScrollView scrollView = widgetsPage.findViewById(R.id.widgets_scroll_container);
+        InsettableScrollLayout scrollView = widgetsPage.findViewById(R.id.widgets_scroll_container);
         scrollView.setOnTouchListener((v, event) -> {
             if (widgetsPage.findViewById(R.id.widget_resizer_container).getVisibility()
                     == VISIBLE) {
@@ -1308,6 +1268,7 @@ public class LauncherActivity extends AppCompatActivity implements
             }
             return false;
         });
+        scrollView.post(() -> scrollView.setInsets(workspace.getRootWindowInsets()));
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
 
@@ -2799,10 +2760,9 @@ public class LauncherActivity extends AppCompatActivity implements
         // Construct and run the parallel animation of the four translation and
         // scale properties (X, Y, SCALE_X, and SCALE_Y).
         AnimatorSet set = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofInt(0, 18);
-        mergedView = BlurWallpaperProvider.getInstance(this).mergeLauncherView(getLauncherView());
+        /*ValueAnimator valueAnimator = ValueAnimator.ofInt(0, 18);
         valueAnimator.addUpdateListener(animation ->
-                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));
+                BlurWallpaperProvider.getInstance(this).blur((Integer) animation.getAnimatedValue()));*/
         set.play(ObjectAnimator.ofFloat(mFolderWindowContainer, View.X,
                 startBounds.left, finalBounds.left))
                 .with(ObjectAnimator.ofFloat(mFolderWindowContainer, View.Y,
@@ -2811,11 +2771,11 @@ public class LauncherActivity extends AppCompatActivity implements
                         startScale, 1f))
                 .with(ObjectAnimator.ofFloat(mFolderWindowContainer,
                         View.SCALE_Y, startScale, 1f))
-                .with(valueAnimator)
-                .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 1f, 0f))
-                .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 1f, 0f))
-                .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f, 0f));
-        set.setDuration(360);
+                .with(ObjectAnimator.ofFloat(blurLayer, View.ALPHA, 1f))
+                .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 0f))
+                .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 0f))
+                .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 0f));
+        set.setDuration(300);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -2828,22 +2788,21 @@ public class LauncherActivity extends AppCompatActivity implements
                 // is the center of the view).
                 mFolderWindowContainer.setPivotX(0f);
                 mFolderWindowContainer.setPivotY(0f);
-                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
+                //BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 currentAnimator = null;
-                mergedView = null;
+
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
                 currentAnimator = null;
-                mergedView = null;
-                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                removeBlur(frontLayer);
+
                 mFolderWindowContainer.setVisibility(GONE);
+                blurLayer.setAlpha(0f);
                 mHorizontalPager.setAlpha(1f);
                 mIndicator.setAlpha(1f);
                 mDock.setAlpha(1f);
@@ -2889,9 +2848,9 @@ public class LauncherActivity extends AppCompatActivity implements
         // Animate the four positioning/sizing properties in parallel,
         // back to their original values.
         AnimatorSet set = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofInt(18, 0);
+        /*ValueAnimator valueAnimator = ValueAnimator.ofInt(18, 0);
         valueAnimator.addUpdateListener(animation ->
-                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));
+                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));*/
         set.play(ObjectAnimator
                 .ofFloat(mFolderWindowContainer, View.X, startBounds.left))
                 .with(ObjectAnimator
@@ -2903,29 +2862,27 @@ public class LauncherActivity extends AppCompatActivity implements
                 .with(ObjectAnimator
                         .ofFloat(mFolderWindowContainer,
                                 View.SCALE_Y, startScaleFinal))
-                .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 0f, 1f))
-                .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 0f, 1f))
-                .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 0f, 1f))
-                .with(valueAnimator);
-        set.setDuration(360);
+                .with(ObjectAnimator.ofFloat(blurLayer, View.ALPHA, 0f))
+                .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 1f))
+                .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 1f))
+                .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f));
+        //.with(valueAnimator);
+        set.setDuration(300);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mFolderWindowContainer.setVisibility(View.GONE);
                 currentAnimator = null;
-                mergedView = null;
-                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                removeBlur(frontLayer);
+
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
                 mFolderWindowContainer.setVisibility(View.GONE);
                 currentAnimator = null;
-                mergedView = null;
-                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                removeBlur(frontLayer);
+
+                blurLayer.setAlpha(0f);
                 mHorizontalPager.setAlpha(1f);
                 mIndicator.setAlpha(1f);
                 mDock.setAlpha(1f);
@@ -2965,7 +2922,7 @@ public class LauncherActivity extends AppCompatActivity implements
         }
 
         if (swipeSearchContainer.getVisibility() == VISIBLE) {
-            hideSwipeSearchContainer(18);
+            hideSwipeSearchContainer();
         }
 
         if (isWobbling) {
@@ -2980,23 +2937,21 @@ public class LauncherActivity extends AppCompatActivity implements
             currentAnimator.cancel();
         }
         AnimatorSet set = new AnimatorSet();
-        ValueAnimator blurAnimator = ValueAnimator.ofInt(blurRadius, 18);
+        /*ValueAnimator blurAnimator = ValueAnimator.ofInt(blurRadius, 18);
         blurAnimator.addUpdateListener(animation ->
-                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));
+                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));*/
         set.play(ObjectAnimator.ofFloat(swipeSearchContainer, View.TRANSLATION_Y, 0))
-                .with(blurAnimator)
+                .with(ObjectAnimator.ofFloat(blurLayer, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 0f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 0f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 0f));
-        set.setDuration(500);
+        set.setDuration(300);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationCancel(Animator animation) {
                                 super.onAnimationCancel(animation);
                                 currentAnimator = null;
-                                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                                removeBlur(frontLayer);
                                 swipeSearchContainer.setVisibility(GONE);
                                 mHorizontalPager.setVisibility(VISIBLE);
                                 mIndicator.setVisibility(VISIBLE);
@@ -3007,7 +2962,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             public void onAnimationEnd(Animator animation) {
                                 super.onAnimationEnd(animation);
                                 currentAnimator = null;
-                                mergedView = null;
+
                                 mHorizontalPager.setVisibility(GONE);
                                 mIndicator.setVisibility(GONE);
                                 mDock.setVisibility(GONE);
@@ -3089,22 +3044,20 @@ public class LauncherActivity extends AppCompatActivity implements
         });
     }
 
-    private void hideSwipeSearchContainer(int startBlurRadius) {
+    private void hideSwipeSearchContainer() {
         if (currentAnimator != null) {
             currentAnimator.cancel();
         }
-        if (mergedView == null) {
-            mergedView = BlurWallpaperProvider.getInstance(this).mergeLauncherView(getLauncherView());
-        }
         AnimatorSet set = new AnimatorSet();
-        ValueAnimator blurAnimator = ValueAnimator.ofInt(startBlurRadius, 0);
+        /*ValueAnimator blurAnimator = ValueAnimator.ofInt(startBlurRadius, 0);
         blurAnimator.addUpdateListener(animation ->
-                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));
+                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));*/
         set.play(ObjectAnimator.ofFloat(swipeSearchContainer, View.TRANSLATION_Y,
                 -swipeSearchContainer.getHeight()))
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 1f))
-                .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f));
+                .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f))
+                .with(ObjectAnimator.ofFloat(blurLayer, View.ALPHA, 0f));
         set.setDuration(500);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
@@ -3131,9 +3084,6 @@ public class LauncherActivity extends AppCompatActivity implements
                             public void onAnimationEnd(Animator animation) {
                                 super.onAnimationEnd(animation);
                                 currentAnimator = null;
-                                mergedView = null;
-                                BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-                                removeBlur(frontLayer);
                                 swipeSearchContainer.setVisibility(GONE);
                                 if (searchDisposableObserver != null
                                         && !searchDisposableObserver.isDisposed()) {
@@ -3156,8 +3106,6 @@ public class LauncherActivity extends AppCompatActivity implements
                 BlissLauncher.getApplication(this).getDeviceProfile().availableHeightPx);
         swipeSearchContainer.setVisibility(VISIBLE);
         showSwipeSearch = false;
-        BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
-        mergedView = BlurWallpaperProvider.getInstance(this).mergeLauncherView(getLauncherView());
     }
 
     @Override
@@ -3169,8 +3117,7 @@ public class LauncherActivity extends AppCompatActivity implements
             mHorizontalPager.setAlpha(deltaAlpha);
             mIndicator.setAlpha(deltaAlpha);
             mDock.setAlpha(deltaAlpha);
-            blurRadius = (int) ((1 - deltaAlpha) * 18);
-            BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, blurRadius);
+            blurLayer.setAlpha(1 - deltaAlpha);
         }
 
         if (translateBy >= swipeSearchContainer.getHeight() / 2) {
@@ -3185,7 +3132,7 @@ public class LauncherActivity extends AppCompatActivity implements
         if (showSwipeSearch) {
             showSwipeSearchContainer();
         } else {
-            hideSwipeSearchContainer(blurRadius);
+            hideSwipeSearchContainer();
         }
     }
 
@@ -3248,7 +3195,6 @@ public class LauncherActivity extends AppCompatActivity implements
         int defaultHeight = activeRoundedWidgetView.getHeight();
         int currentProgress = (defaultHeight - minHeight) * 100 / (maxHeight - minHeight);
 
-        seekBar.setMin(1);
         seekBar.setMax(100);
         seekBar.setProgress(currentProgress);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

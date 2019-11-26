@@ -25,7 +25,7 @@ public class WallpaperChangeReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        BlurWallpaperProvider.getInstance(context).clear();
+        BlurWallpaperProvider.Companion.getInstance(context).updateAsync();
         updateOffset();
     }
 

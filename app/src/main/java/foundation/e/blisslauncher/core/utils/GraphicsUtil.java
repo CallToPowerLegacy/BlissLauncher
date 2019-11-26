@@ -130,7 +130,7 @@ public class GraphicsUtil {
         Bitmap mergedBitmap = Bitmap.createBitmap(width, height, Bitmap
                 .Config.ARGB_8888);
         Canvas canvas = new Canvas(mergedBitmap);
-        canvas.drawColor(isFolder ? Color.WHITE : getDominantColor(bitmap));
+        canvas.drawColor(isFolder ? 0xCCD3D3D3 : getDominantColor(bitmap));
 
         Paint paint = new Paint(
                 Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
