@@ -1109,18 +1109,9 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public void onViewScrollFinished(int page) {
-                Log.d(TAG, "onViewScrollFinished() called with: page = [" + page + "]");
                 isViewScrolling = false;
 
-                /*if(page == 0) {
-                    int flags = getWindow().getDecorView().getSystemUiVisibility();
-                    getWindow().getDecorView().setSystemUiVisibility(flags ^ SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-                } else {
-                    int flags = getWindow().getDecorView().getSystemUiVisibility();
-                    getWindow().getDecorView().setSystemUiVisibility(flags | SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-                }*/
-
-                blurLayer.setAlpha(page == 0 ? 1f : 0f);
+                blurLayer.setAlpha((page == 0 || mFolderWindowContainer.getVisibility() == VISIBLE) ? 1f : 0f);
 
                 if (currentPageNumber != page) {
                     currentPageNumber = page;
@@ -2794,13 +2785,11 @@ public class LauncherActivity extends AppCompatActivity implements
             @Override
             public void onAnimationEnd(Animator animation) {
                 currentAnimator = null;
-
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
                 currentAnimator = null;
-
                 mFolderWindowContainer.setVisibility(GONE);
                 blurLayer.setAlpha(0f);
                 mHorizontalPager.setAlpha(1f);

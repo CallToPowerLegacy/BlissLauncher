@@ -22,6 +22,7 @@ import foundation.e.blisslauncher.core.utils.SingletonHolder
 import foundation.e.blisslauncher.core.utils.ensureOnMainThread
 import foundation.e.blisslauncher.core.utils.useApplicationContext
 import java.util.*
+import kotlin.math.max
 
 class BlurWallpaperProvider(val context: Context) {
 
@@ -43,12 +44,6 @@ class BlurWallpaperProvider(val context: Context) {
                 field = value
             }
         }
-
-    private val notifyRunnable = Runnable {
-        for (listener in listeners) {
-            listener.onWallpaperChanged()
-        }
-    }
 
     private val vibrancyPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 
@@ -94,7 +89,7 @@ class BlurWallpaperProvider(val context: Context) {
                 listeners.safeForEach(Listener::onEnabledChanged)
             }
         }
-0
+
         if (!isEnabled) {
             wallpaper = null
             val wm =
@@ -174,17 +169,17 @@ class BlurWallpaperProvider(val context: Context) {
         display.getRealMetrics(displayMetrics)
         val width = displayMetrics.widthPixels
         val height = displayMetrics.heightPixels
-        val widthFactor = width.toFloat() / wallpaper!!.width
+        val widthFactor = width.toFloat() / wallpaper.width
         val heightFactor = height.toFloat() / wallpaper.height
         val upscaleFactor = Math.max(widthFactor, heightFactor)
         if (upscaleFactor <= 0) {
             return wallpaper
         }
         val scaledWidth =
-            Math.max(width.toFloat(), wallpaper.width * upscaleFactor).toInt()
+            max(width.toFloat(), wallpaper.width * upscaleFactor).toInt()
         val scaledHeight =
-            Math.max(height.toFloat(), wallpaper.height * upscaleFactor).toInt()
-        var scaledWallpaper =
+            max(height.toFloat(), wallpaper.height * upscaleFactor).toInt()
+        val scaledWallpaper =
             Bitmap.createScaledBitmap(wallpaper, scaledWidth, scaledHeight, false)
         val navigationBarHeight = 0
         /*if (BlissLauncher.getApplication(context).getDeviceProfile().hasSoftNavigationBar(context)) {
