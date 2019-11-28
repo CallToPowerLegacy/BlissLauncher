@@ -1,6 +1,0 @@
-# ninja log v5
-4	456	0	CMakeFiles/hoko_blur.dir/BlurUtil.cpp.o	ece2a59fbdd93469
-4	691	0	CMakeFiles/hoko_blur.dir/BoxBlurFilter.cpp.o	2b52dff360046b82
-4	975	0	CMakeFiles/hoko_blur.dir/StackBlurFilter.cpp.o	b10912100f4b3e98
-4	1190	0	CMakeFiles/hoko_blur.dir/GaussianBlurFilter.cpp.o	b8224d8e7e652ad3
-1190	1296	0	/home/amit/projects/BlissLauncher/hoko-blur/build/intermediates/cmake/release/obj/arm64-v8a/libhoko_blur.so	f84a666a5405617a

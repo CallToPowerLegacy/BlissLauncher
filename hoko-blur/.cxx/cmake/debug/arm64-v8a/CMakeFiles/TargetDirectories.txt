@@ -1,3 +1,0 @@
-/home/amit/projects/BlissLauncher/hoko-blur/.cxx/cmake/debug/arm64-v8a/CMakeFiles/edit_cache.dir
-/home/amit/projects/BlissLauncher/hoko-blur/.cxx/cmake/debug/arm64-v8a/CMakeFiles/rebuild_cache.dir
-/home/amit/projects/BlissLauncher/hoko-blur/.cxx/cmake/debug/arm64-v8a/CMakeFiles/hoko_blur.dir
