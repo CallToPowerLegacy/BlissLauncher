@@ -1060,7 +1060,7 @@ public class LauncherActivity extends AppCompatActivity implements
             return false;
         });
         mFolderTitleInput.setOnClickListener(view -> mFolderTitleInput.setCursorVisible(true));
-        mFolderWindowContainer.setOnClickListener(view -> hideFolderWindowContainer());
+        mFolderWindowContainer.setOnClickListener(view -> returnToHomeScreen());
     }
 
     public void hideKeyboard(View view) {
@@ -2785,6 +2785,10 @@ public class LauncherActivity extends AppCompatActivity implements
             @Override
             public void onAnimationEnd(Animator animation) {
                 currentAnimator = null;
+                blurLayer.setAlpha(1f);
+                mHorizontalPager.setAlpha(0f);
+                mIndicator.setAlpha(0f);
+                mDock.setAlpha(0f);
             }
 
             @Override
@@ -2859,18 +2863,28 @@ public class LauncherActivity extends AppCompatActivity implements
         set.setDuration(300);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationStart(Animator animation) {
+                mHorizontalPager.setVisibility(VISIBLE);
+                mDock.setVisibility(VISIBLE);
+                mIndicator.setVisibility(VISIBLE);
+            }
+
             @Override
             public void onAnimationEnd(Animator animation) {
                 mFolderWindowContainer.setVisibility(View.GONE);
                 currentAnimator = null;
-
+                blurLayer.setAlpha(0f);
+                mHorizontalPager.setAlpha(1f);
+                mIndicator.setAlpha(1f);
+                mDock.setAlpha(1f);
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
                 mFolderWindowContainer.setVisibility(View.GONE);
                 currentAnimator = null;
-
                 blurLayer.setAlpha(0f);
                 mHorizontalPager.setAlpha(1f);
                 mIndicator.setAlpha(1f);
@@ -2894,10 +2908,18 @@ public class LauncherActivity extends AppCompatActivity implements
                         && mFolderWindowContainer.getVisibility() != View.VISIBLE
                         && (activeRoundedWidgetView == null || !activeRoundedWidgetView.isWidgetActivated());
 
-        if (shouldMoveToDefaultScreen) {
-            mHorizontalPager.setCurrentPage(1);
-        } else if (alreadyOnHome) {
+        if (alreadyOnHome) {
             returnToHomeScreen();
+        }
+
+        if (shouldMoveToDefaultScreen) {
+            mHorizontalPager.setVisibility(VISIBLE);
+            mHorizontalPager.setAlpha(1f);
+            mDock.setVisibility(VISIBLE);
+            mDock.setAlpha(1f);
+            mIndicator.setVisibility(VISIBLE);
+            mIndicator.setAlpha(1f);
+            mHorizontalPager.setCurrentPage(1);
         }
     }
 
@@ -2942,9 +2964,10 @@ public class LauncherActivity extends AppCompatActivity implements
                                 super.onAnimationCancel(animation);
                                 currentAnimator = null;
                                 swipeSearchContainer.setVisibility(GONE);
+                                blurLayer.setAlpha(0f);
                                 mHorizontalPager.setVisibility(VISIBLE);
-                                mIndicator.setVisibility(VISIBLE);
                                 mDock.setVisibility(VISIBLE);
+                                mIndicator.setVisibility(VISIBLE);
                             }
 
                             @Override
@@ -2952,9 +2975,11 @@ public class LauncherActivity extends AppCompatActivity implements
                                 super.onAnimationEnd(animation);
                                 currentAnimator = null;
 
+                                blurLayer.setAlpha(1f);
                                 mHorizontalPager.setVisibility(GONE);
-                                mIndicator.setVisibility(GONE);
                                 mDock.setVisibility(GONE);
+                                mIndicator.setVisibility(GONE);
+
                                 BlissInput searchEditText = swipeSearchContainer.findViewById(
                                         R.id.search_input);
                                 ImageView clearSuggestions = swipeSearchContainer.findViewById(
@@ -3038,25 +3063,22 @@ public class LauncherActivity extends AppCompatActivity implements
             currentAnimator.cancel();
         }
         AnimatorSet set = new AnimatorSet();
-        /*ValueAnimator blurAnimator = ValueAnimator.ofInt(startBlurRadius, 0);
-        blurAnimator.addUpdateListener(animation ->
-                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));*/
         set.play(ObjectAnimator.ofFloat(swipeSearchContainer, View.TRANSLATION_Y,
                 -swipeSearchContainer.getHeight()))
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(blurLayer, View.ALPHA, 0f));
-        set.setDuration(500);
+        set.setDuration(300);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationStart(Animator animation) {
                                 super.onAnimationStart(animation);
-                                //BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
                                 mHorizontalPager.setVisibility(VISIBLE);
-                                mIndicator.setVisibility(VISIBLE);
                                 mDock.setVisibility(VISIBLE);
+                                mIndicator.setVisibility(VISIBLE);
+                                //BlurWallpaperProvider.getInstance(LauncherActivity.this).clear();
                             }
 
                             @Override
@@ -3064,9 +3086,10 @@ public class LauncherActivity extends AppCompatActivity implements
                                 super.onAnimationCancel(animation);
                                 currentAnimator = null;
                                 swipeSearchContainer.setVisibility(VISIBLE);
+                                blurLayer.setAlpha(1f);
                                 mHorizontalPager.setVisibility(GONE);
-                                mIndicator.setVisibility(GONE);
                                 mDock.setVisibility(GONE);
+                                mIndicator.setVisibility(GONE);
                             }
 
                             @Override
@@ -3074,6 +3097,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                 super.onAnimationEnd(animation);
                                 currentAnimator = null;
                                 swipeSearchContainer.setVisibility(GONE);
+                                blurLayer.setAlpha(0f);
                                 if (searchDisposableObserver != null
                                         && !searchDisposableObserver.isDisposed()) {
                                     searchDisposableObserver.dispose();

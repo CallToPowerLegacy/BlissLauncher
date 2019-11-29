@@ -297,28 +297,15 @@ public class AppProvider {
             if (databaseItem.itemType == Constants.ITEM_TYPE_APPLICATION) {
                 ApplicationItem applicationItem = mApplicationItems.get(databaseItem.id);
                 if (applicationItem == null) {
-                    UserHandle userHandle = null;
-                    int index = databaseItem.id.lastIndexOf((int) '/');
-                    if (index > -1) {
-                        String serialText = databaseItem.id.substring(index);
-                        try {
-                            long serial = Long.parseLong(serialText);
-                            userHandle = new UserHandle(serial, Process.myUserHandle());
-                        } catch (NumberFormatException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if(userHandle == null){
-                        userHandle = new UserHandle();
-                    }
+                    UserHandle userHandle = new UserHandle();
                     if (isAppOnSdcard(databaseItem.packageName, userHandle) || !isSdCardReady) {
                         Log.d(TAG, "Missing package: " + databaseItem.packageName);
                         Log.d(TAG, "Is App on Sdcard " + isAppOnSdcard(databaseItem.packageName, databaseItem.user));
                         Log.d(TAG, "Is Sdcard ready " + isSdCardReady);
 
-
                         pendingPackages.addToList(userHandle, databaseItem.packageName);
                         applicationItem = new ApplicationItem();
+                        applicationItem.id = databaseItem.id;
                         applicationItem.title = databaseItem.title;
                         applicationItem.user = userHandle;
                         applicationItem.componentName = databaseItem.getTargetComponent();
