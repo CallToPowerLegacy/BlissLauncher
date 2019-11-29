@@ -3168,7 +3168,7 @@ public class LauncherActivity extends AppCompatActivity implements
             AnimatorSet set = new AnimatorSet();
             set.play(ObjectAnimator.ofFloat(widgetResizeContainer, View.Y,
                     mDeviceProfile.availableHeightPx,
-                    mDeviceProfile.availableHeightPx - Utilities.pxFromDp(24, this)));
+                    mDeviceProfile.availableHeightPx - Utilities.pxFromDp(48, this)));
             set.setDuration(200);
             set.setInterpolator(new LinearInterpolator());
             set.addListener(new AnimatorListenerAdapter() {
