@@ -6,6 +6,7 @@ import android.content.Context;
 
 import foundation.e.blisslauncher.core.DeviceProfile;
 import foundation.e.blisslauncher.core.IconsHandler;
+import foundation.e.blisslauncher.core.blur.BlurWallpaperProvider;
 import foundation.e.blisslauncher.core.customviews.WidgetHost;
 import foundation.e.blisslauncher.features.launcher.AppProvider;
 import io.github.inflationx.calligraphy3.CalligraphyConfig;
@@ -20,8 +21,6 @@ public class BlissLauncher extends Application {
 
     private static WidgetHost sAppWidgetHost;
     private static AppWidgetManager sAppWidgetManager;
-
-    private static final String TAG = "BlissLauncher";
 
     @Override
     public void onCreate() {
@@ -39,6 +38,9 @@ public class BlissLauncher extends Application {
         sAppWidgetHost = new WidgetHost(getApplicationContext(),
                 R.id.APPWIDGET_HOST_ID);
         sAppWidgetHost.startListening();
+
+        connectAppProvider();
+        BlurWallpaperProvider.Companion.getInstance(this);
     }
 
     public static BlissLauncher getApplication(Context context) {

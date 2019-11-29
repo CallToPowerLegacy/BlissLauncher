@@ -34,7 +34,6 @@ import foundation.e.blisslauncher.features.notification.DotRenderer;
 
 public class BlissFrameLayout extends FrameLayout {
 
-    private static final String TAG = "BlissFrameLayout";
     private final Context mContext;
 
     private boolean hasBadge = false;
@@ -66,16 +65,15 @@ public class BlissFrameLayout extends FrameLayout {
     }
 
     public BlissFrameLayout(Context context,
-            AttributeSet attrs) {
+                            AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
     public BlissFrameLayout(Context context, AttributeSet attrs,
-            int defStyleAttr) {
+                            int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
         init();
-
     }
 
     private void init() {
@@ -86,8 +84,8 @@ public class BlissFrameLayout extends FrameLayout {
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
     }
 
     @Override
@@ -148,7 +146,7 @@ public class BlissFrameLayout extends FrameLayout {
             bindApplicationItem((ApplicationItem) launcherItem);
         } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
             bindShortcutItem((ShortcutItem) launcherItem);
-        }else if(launcherItem.itemType == Constants.ITEM_TYPE_FOLDER){
+        } else if (launcherItem.itemType == Constants.ITEM_TYPE_FOLDER) {
             bindFolderItem((FolderItem) launcherItem);
         }
     }
@@ -253,6 +251,4 @@ public class BlissFrameLayout extends FrameLayout {
         tags.add(applicationItem);
         setTag(tags);
     }
-
-
 }
