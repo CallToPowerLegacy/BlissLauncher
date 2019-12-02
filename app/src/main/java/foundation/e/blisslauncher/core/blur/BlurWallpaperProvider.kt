@@ -9,7 +9,6 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.os.Build
 import android.support.v4.app.ActivityCompat
 import android.util.DisplayMetrics
 import android.util.Log
@@ -71,15 +70,24 @@ class BlurWallpaperProvider(val context: Context) {
             return
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                Log.d("BWP", "NO permission granted")
-                return
-            }
+        // Prepare a placeholder before hand so that it can be used in case wallpaper is null
+        val wm =
+            context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display = wm.defaultDisplay
+        display.getRealMetrics(displayMetrics)
+        val width = displayMetrics.widthPixels
+        val height = displayMetrics.heightPixels
+        placeholder = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(placeholder!!)
+        canvas.drawColor(0x44000000)
+
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("BWP", "NO permission granted")
+            return
         }
 
         val enabled = getEnabledStatus()
@@ -92,15 +100,6 @@ class BlurWallpaperProvider(val context: Context) {
 
         if (!isEnabled) {
             wallpaper = null
-            val wm =
-                context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            val display = wm.defaultDisplay
-            display.getRealMetrics(displayMetrics)
-            val width = displayMetrics.widthPixels
-            val height = displayMetrics.heightPixels
-            placeholder = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(placeholder!!)
-            canvas.drawColor(0x44000000)
             return
         }
 

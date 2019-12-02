@@ -88,6 +88,7 @@ import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
 import foundation.e.blisslauncher.core.Preferences;
 import foundation.e.blisslauncher.core.Utilities;
+import foundation.e.blisslauncher.core.blur.BlurWallpaperProvider;
 import foundation.e.blisslauncher.core.broadcast.ManagedProfileBroadcastReceiver;
 import foundation.e.blisslauncher.core.broadcast.TimeChangeBroadcastReceiver;
 import foundation.e.blisslauncher.core.broadcast.WallpaperChangeReceiver;
@@ -1450,6 +1451,7 @@ public class LauncherActivity extends AppCompatActivity implements
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "Storage permission granted");
+                BlurWallpaperProvider.Companion.getInstance(getApplicationContext()).updateAsync();
             }
         }
     }
