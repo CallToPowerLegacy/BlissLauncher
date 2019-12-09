@@ -19,10 +19,12 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -48,6 +50,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -145,6 +148,8 @@ import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import me.relex.circleindicator.CircleIndicator;
 
+import static android.content.pm.ActivityInfo.CONFIG_ORIENTATION;
+import static android.content.pm.ActivityInfo.CONFIG_SCREEN_SIZE;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
@@ -237,6 +242,14 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private AppProvider appProvider;
     private int moveTo;
+    private Configuration oldConfig;
+
+    public static LauncherActivity getLauncher(Context context) {
+        if (context instanceof LauncherActivity) {
+            return (LauncherActivity) context;
+        }
+        return ((LauncherActivity) ((ContextWrapper) context).getBaseContext());
+    }
 
     @SuppressLint("InflateParams")
     @Override
@@ -246,6 +259,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
         prepareBroadcastReceivers();
 
+        oldConfig = new Configuration(getResources().getConfiguration());
         mDeviceProfile = BlissLauncher.getApplication(this).getDeviceProfile();
 
         mAppWidgetManager = BlissLauncher.getApplication(this).getAppWidgetManager();
@@ -454,6 +468,17 @@ public class LauncherActivity extends AppCompatActivity implements
         getCompositeDisposable().dispose();
         events.unsubscribe();
         BlissLauncher.getApplication(this).getAppProvider().clear();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        Log.d(TAG, "onConfigurationChanged() called with: newConfig = [" + newConfig + "]");
+        int diff = newConfig.diff(oldConfig);
+        if ((diff & (CONFIG_ORIENTATION | CONFIG_SCREEN_SIZE)) != 0) {
+            recreate();
+        }
+        oldConfig.setTo(newConfig);
+        super.onConfigurationChanged(newConfig);
     }
 
     public void onAppAddEvent(AppAddEvent appAddEvent) {

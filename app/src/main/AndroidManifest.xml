@@ -45,6 +45,7 @@
             android:resumeWhilePausing="true"
             android:screenOrientation="nosensor"
             android:stateNotNeeded="true"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
             android:theme="@style/HomeScreenTheme"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
