@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.WindowInsets;
 import android.widget.Scroller;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import foundation.e.blisslauncher.features.launcher.DetectSwipeGestureListener;
 import foundation.e.blisslauncher.features.launcher.LauncherActivity;
 import foundation.e.blisslauncher.features.launcher.OnSwipeDownListener;
 
-public class HorizontalPager extends ViewGroup {
+public class HorizontalPager extends ViewGroup implements Insettable{
     private static final String TAG = "HorizontalPager";
     private static final int INVALID_SCREEN = -1;
     public static final int SPEC_UNDEFINED = -1;
@@ -61,6 +62,7 @@ public class HorizontalPager extends ViewGroup {
     private Set<OnScrollListener> mListeners = new HashSet<>();
     private boolean mIsUiCreated;
     private GestureDetectorCompat gestureDetectorCompat;
+    private WindowInsets insets;
 
     public HorizontalPager(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -147,6 +149,7 @@ public class HorizontalPager extends ViewGroup {
     @Override
     protected void dispatchDraw(Canvas canvas) {
 
+        Log.d(TAG, "dispatchDraw() called with: canvas = [" + canvas + "]");
         final long drawingTime = getDrawingTime();
         // todo be smarter about which children need drawing
         final int count = getChildCount();
@@ -156,9 +159,10 @@ public class HorizontalPager extends ViewGroup {
 
         for (OnScrollListener mListener : mListeners) {
             int adjustedScrollX = getScrollX() + pageWidthPadding();
-            mListener.onScroll(adjustedScrollX);
             if (adjustedScrollX % pageWidth == 0) {
                 mListener.onViewScrollFinished(adjustedScrollX / pageWidth);
+            } else {
+                mListener.onScroll(adjustedScrollX);
             }
         }
     }
@@ -526,6 +530,26 @@ public class HorizontalPager extends ViewGroup {
      */
     public boolean allowLongPress() {
         return mAllowLongPress;
+    }
+
+    @Override
+    public void setInsets(WindowInsets insets) {
+        InsettableRelativeLayout.LayoutParams lp = (InsettableRelativeLayout.LayoutParams) getLayoutParams();
+        lp.topMargin = insets.getSystemWindowInsetTop();
+        setLayoutParams(lp);
+        updateInsetsForChildren();
+        this.insets = insets;
+    }
+
+    private void updateInsetsForChildren() {
+        int childCount = getChildCount();
+        for (int index = 0; index < childCount; ++index){
+            View child = getChildAt(index);
+            if(child instanceof Insettable) {
+                Log.d(TAG, "child is instance of insettable");
+                ((Insettable) child).setInsets(insets);
+            }
+        }
     }
 
     public static class SavedState extends BaseSavedState {

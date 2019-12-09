@@ -11,18 +11,20 @@ import android.widget.FrameLayout;
  */
 
 public class SquareFrameLayout extends FrameLayout {
+
     public SquareFrameLayout(@NonNull Context context) {
-        super(context);
+        this(context, null);
     }
 
     public SquareFrameLayout(@NonNull Context context,
             @Nullable AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public SquareFrameLayout(@NonNull Context context, @Nullable AttributeSet attrs,
             int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        setWillNotDraw(false);
     }
 
     @Override

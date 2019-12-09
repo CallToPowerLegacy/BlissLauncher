@@ -144,15 +144,10 @@ do_version_upgrade() {
 }
 
 # It must check for dev or hotfix* branch and bump the version only when current branch is dev or hotfix.
-branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-if [[ ${branch} = "dev" ]] || [[ ${branch} = hotfix* ]]; then
-    git diff-index --quiet HEAD
-    if [[ $? == 1 ]] ; then
-        echo -e "${WARNING_FLAG} Working tree must be empty before bumping the version."
-        exit 1
-    fi
-    do_version_upgrade $1
-else
-    echo -e "${ERROR_FLAG} Can only be used on dev or hotfix branch."
+git diff-index --quiet HEAD
+if [[ $? == 1 ]] ; then
+    echo -e "${WARNING_FLAG} Working tree must be empty before bumping the version."
     exit 1
 fi
+do_version_upgrade $1
+

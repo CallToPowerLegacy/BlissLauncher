@@ -17,7 +17,6 @@ public class BlissInput extends android.support.v7.widget.AppCompatEditText {
         super(context, attrs, defStyleAttr);
     }
 
-
     @Override
     public boolean onDragEvent(DragEvent event) {
         // Without this drag/drop apps won't work on API <24.
