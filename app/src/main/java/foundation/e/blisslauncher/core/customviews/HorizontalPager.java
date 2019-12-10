@@ -334,7 +334,7 @@ public class HorizontalPager extends ViewGroup implements Insettable {
 
         if (xMoved || yMoved) {
 
-            if (yMoved && (y - mLastMotionY) > 0 && yDiff > xDiff && touchedInBottom() && currentPage != 0) {
+            if (yMoved && (y - mLastMotionY) > 0 && yDiff > xDiff && inThresholdRegion() && currentPage != 0) {
                 mTouchState = TOUCH_STATE_VERTICAL_SCROLLING;
                 ((OnSwipeDownListener) getContext()).onSwipeStart();
             } else if (xMoved && yDiff < xDiff) {
@@ -356,8 +356,8 @@ public class HorizontalPager extends ViewGroup implements Insettable {
         }
     }
 
-    private boolean touchedInBottom() {
-        return (mLastMotionRawY / BlissLauncher.getApplication(getContext()).getDeviceProfile().availableHeightPx) > (float) 2 / 3;
+    private boolean inThresholdRegion() {
+        return (mLastMotionRawY / BlissLauncher.getApplication(getContext()).getDeviceProfile().availableHeightPx) > (float) 1 / 5;
     }
 
     void enableChildrenCache() {
