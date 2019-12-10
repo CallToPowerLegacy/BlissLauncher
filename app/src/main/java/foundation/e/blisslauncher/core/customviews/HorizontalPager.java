@@ -539,6 +539,7 @@ public class HorizontalPager extends ViewGroup implements Insettable{
         setLayoutParams(lp);
         updateInsetsForChildren();
         this.insets = insets;
+        postInvalidate();
     }
 
     private void updateInsetsForChildren() {
