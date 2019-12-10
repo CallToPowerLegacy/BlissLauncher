@@ -24,7 +24,6 @@ import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -2966,16 +2965,14 @@ public class LauncherActivity extends AppCompatActivity implements
         if (currentAnimator != null) {
             currentAnimator.cancel();
         }
+        int animationDuration = (int) (blurLayer.getAlpha() * 300);
         AnimatorSet set = new AnimatorSet();
-        /*ValueAnimator blurAnimator = ValueAnimator.ofInt(blurRadius, 18);
-        blurAnimator.addUpdateListener(animation ->
-                BlurWallpaperProvider.getInstance(this).blurWithLauncherView(mergedView, (Integer) animation.getAnimatedValue()));*/
         set.play(ObjectAnimator.ofFloat(swipeSearchContainer, View.TRANSLATION_Y, 0))
                 .with(ObjectAnimator.ofFloat(blurLayer, View.ALPHA, 1f))
                 .with(ObjectAnimator.ofFloat(mHorizontalPager, View.ALPHA, 0f))
                 .with(ObjectAnimator.ofFloat(mIndicator, View.ALPHA, 0f))
                 .with(ObjectAnimator.ofFloat(mDock, View.ALPHA, 0f));
-        set.setDuration(300);
+        set.setDuration(animationDuration);
         set.setInterpolator(new LinearInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
                             @Override
