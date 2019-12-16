@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<foundation.e.blisslauncher.core.customviews.InsettableRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/workspace"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="false"
+    android:clipToPadding="false"
+    android:clipChildren="false"
     tools:context="features.launcher.LauncherActivity">
 
-    <View
-        android:id="@+id/background_layer"
+    <foundation.e.blisslauncher.core.customviews.BlurBackgroundView
+        android:id="@+id/blur_layer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="0"
-        android:background="@color/dark_grey_44" />
+        android:layout_height="match_parent" />
 
     <foundation.e.blisslauncher.core.customviews.HorizontalPager
         android:id="@+id/pages_container"
@@ -38,7 +37,6 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:animateLayoutChanges="false"
-        android:background="@color/dockColor"
         android:columnCount="@integer/col_count"
         android:rowCount="1" />
 
@@ -108,4 +106,4 @@
         android:layout_centerInParent="true"
         android:visibility="gone" />
 
-</RelativeLayout>
+</foundation.e.blisslauncher.core.customviews.InsettableRelativeLayout>

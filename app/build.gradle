@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
+apply plugin: 'kotlin-android'
 
 // Manifest version information!
 def versionMajor = 1
-def versionMinor = 2
-def versionPatch = 4
+def versionMinor = 3
+def versionPatch = 0
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -16,7 +16,7 @@ android {
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        renderscriptTargetApi 18
+        renderscriptTargetApi 28
         renderscriptSupportModeEnabled true
     }
     buildTypes {
@@ -83,8 +83,6 @@ dependencies {
     apiNougatImplementation 'org.cyanogenmod:platform.sdk:6.0'
     apiOreoImplementation files('libs/lineage-sdk.jar')
 
-    debugImplementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
-    debugImplementation 'com.google.firebase:firebase-core:16.0.6'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
@@ -110,6 +108,11 @@ dependencies {
 
     // Rx Relay
     implementation "com.jakewharton.rxrelay2:rxrelay:${rootProject.ext.rxRelayVersion}"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    // Blur Library
+    implementation project(':hoko-blur')
 
     // Room
     implementation "android.arch.persistence.room:runtime:1.1.1"
@@ -140,5 +143,4 @@ dependencies {
     androidTestImplementation "com.android.support.test:rules:${rootProject.ext.runnerRulesVersion}"
 }
 
-apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.getkeepsafe.dexcount'

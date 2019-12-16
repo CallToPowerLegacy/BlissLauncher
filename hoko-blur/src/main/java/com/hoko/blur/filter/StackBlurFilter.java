@@ -1,88 +1,69 @@
-package foundation.e.blisslauncher.core.utils.blur;
+package com.hoko.blur.filter;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicBlur;
+import com.hoko.blur.HokoBlur;
+import com.hoko.blur.anno.Direction;
 
-public class BlurUtils {
+/**
+ * Stack HokoBlur v1.0 from
+ * http://www.quasimondo.com/StackBlurForCanvas/StackBlurDemo.html
+ * <p>
+ * Java Author: Mario Klingemann <a href="mailto:mario@quasimondo.com">mario@quasimondo.com</a>
+ * http://incubator.quasimondo.com
+ * created Feburary 29, 2004
+ * Android port : Yahel Bouaziz  <a href="mailto:yahel@kayenko.com">yahel@kayenko.com</a>
+ * http://www.kayenko.com
+ * ported april 5th, 2012
+ * <p>
+ * This is a compromise between Gaussian HokoBlur and Box blur
+ * It creates much better looking blurs than Box HokoBlur, but is
+ * 7x faster than my Gaussian HokoBlur implementation.
+ * <p>
+ * I called it Stack HokoBlur because this describes best how this
+ * filter works internally: it creates a kind of moving stack
+ * of colors whilst scanning through the image. Thereby it
+ * just has to add one new block of color to the right side
+ * of the stack and remove the leftmost color. The remaining
+ * colors on the topmost layer of the stack are either added on
+ * or reduced by one, depending on if they are on the right or
+ * on the left side of the stack.
+ * <p>
+ * If you are using this algorithm in your code please add
+ * the following line:
+ * <p>
+ * Stack HokoBlur Algorithm by Mario Klingemann  <a href="mailto:mario@quasimondo.com">mario@quasimondo.com</a>
+ **/
+final class StackBlurFilter {
 
-    private Context mContext;
-    private RenderScript mRenderScript;
-    private ScriptIntrinsicBlur mScriptIntrinsicBlur;
+    public static void doBlur(int[] pix, int w, int h, int radius, @Direction int direction) {
 
-    // enum
-    public enum BlurEngine {
-        RenderScriptBlur,
-        StackBlur,
-        FastBlur
-    }
-
-    // interface
-    public interface BlurTaskCallback {
-        void blurTaskDone(Bitmap blurredBitmap);
-        void dominantColor(int color);
-    }
-
-    public BlurUtils(Context context) {
-        mContext = context;
-        mRenderScript = RenderScript.create(mContext);
-        mScriptIntrinsicBlur = ScriptIntrinsicBlur.create(mRenderScript, Element.U8_4 (mRenderScript));
-    }
-
-    public Context getContext() {
-        return mContext;
-    }
-
-    public Bitmap renderScriptBlur(Bitmap bitmap, int radius) {
-
-        if (mRenderScript == null)
-            return null;
-
-        Allocation input = Allocation.createFromBitmap(mRenderScript, bitmap);
-        Allocation output = Allocation.createTyped(mRenderScript, input.getType());
-        mScriptIntrinsicBlur.setRadius(radius);
-        mScriptIntrinsicBlur.setInput(input);
-        mScriptIntrinsicBlur.forEach(output);
-        output.copyTo(bitmap);
-
-        return bitmap;
+        if (direction == HokoBlur.HORIZONTAL) {
+            doHorizontalBlur(pix, w, h, radius);
+        } else if (direction == HokoBlur.VERTICAL) {
+            doVerticalBlur(pix, w, h, radius);
+        } else {
+            doHorizontalBlur(pix, w, h, radius);
+            doVerticalBlur(pix, w, h, radius);
+        }
 
     }
 
-    public Bitmap stackBlur(Bitmap bitmap, int radius) {
-
-        // raio válido ?
-        if (radius < 1)
-            return null;
-
-        int w = bitmap.getWidth();
-        int h = bitmap.getHeight();
-
-        int[] pix = new int[w * h];
-        bitmap.getPixels(pix, 0, w, 0, 0, w, h);
-
+    private static void doHorizontalBlur(int[] pix, int w, int h, int radius) {
         int wm = w - 1;
         int hm = h - 1;
         int wh = w * h;
         int div = radius + radius + 1;
 
-        int r[] = new int[wh];
-        int g[] = new int[wh];
-        int b[] = new int[wh];
+        int[] r = new int[wh];
+        int[] g = new int[wh];
+        int[] b = new int[wh];
         int rsum, gsum, bsum, x, y, i, p, yp, yi, yw;
-        int vmin[] = new int[Math.max(w, h)];
+        int[] vmin = new int[Math.max(w, h)];
 
         int divsum = (div + 1) >> 1;
         divsum *= divsum;
-        int dv[] = new int[256 * divsum];
-
+        int[] dv = new int[256 * divsum];
         for (i = 0; i < 256 * divsum; i++) {
-
             dv[i] = (i / divsum);
-
         }
 
         yw = yi = 0;
@@ -96,11 +77,10 @@ public class BlurUtils {
         int routsum, goutsum, boutsum;
         int rinsum, ginsum, binsum;
 
-        for (y = 0; y < h; y++) {
 
+        for (y = 0; y < h; y++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
             for (i = -radius; i <= radius; i++) {
-
                 p = pix[yi + Math.min(wm, Math.max(i, 0))];
                 sir = stack[i + radius];
                 sir[0] = (p & 0xff0000) >> 16;
@@ -110,22 +90,16 @@ public class BlurUtils {
                 rsum += sir[0] * rbs;
                 gsum += sir[1] * rbs;
                 bsum += sir[2] * rbs;
-
                 if (i > 0) {
-
                     rinsum += sir[0];
                     ginsum += sir[1];
                     binsum += sir[2];
-
                 } else {
-
                     routsum += sir[0];
                     goutsum += sir[1];
                     boutsum += sir[2];
-
                 }
             }
-
             stackpointer = radius;
 
             for (x = 0; x < w; x++) {
@@ -133,6 +107,8 @@ public class BlurUtils {
                 r[yi] = dv[rsum];
                 g[yi] = dv[gsum];
                 b[yi] = dv[bsum];
+
+                pix[yi] = (0xff000000 & pix[yi]) | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
 
                 rsum -= routsum;
                 gsum -= goutsum;
@@ -146,11 +122,8 @@ public class BlurUtils {
                 boutsum -= sir[2];
 
                 if (y == 0) {
-
                     vmin[x] = Math.min(x + radius + 1, wm);
-
                 }
-
                 p = pix[yw + vmin[x]];
 
                 sir[0] = (p & 0xff0000) >> 16;
@@ -177,20 +150,52 @@ public class BlurUtils {
                 binsum -= sir[2];
 
                 yi++;
-
             }
-
             yw += w;
+        }
+    }
 
+    private static void doVerticalBlur(int[] pix, int w, int h, int radius) {
+        int wm = w - 1;
+        int hm = h - 1;
+        int wh = w * h;
+        int div = radius + radius + 1;
+
+        int[] r = new int[wh];
+        int[] g = new int[wh];
+        int[] b = new int[wh];
+        int rsum, gsum, bsum, x, y, i, p, yp, yi, yw;
+        int[] vmin = new int[Math.max(w, h)];
+
+        int divsum = (div + 1) >> 1;
+        divsum *= divsum;
+        int[] dv = new int[256 * divsum];
+        for (i = 0; i < 256 * divsum; i++) {
+            dv[i] = (i / divsum);
+        }
+
+        yw = yi = 0;
+
+        int[][] stack = new int[div][3];
+        int stackpointer;
+        int stackstart;
+        int[] sir;
+        int rbs;
+        int r1 = radius + 1;
+        int routsum, goutsum, boutsum;
+        int rinsum, ginsum, binsum;
+
+        for (i = 0; i < wh; i++) {
+
+            r[i] = (pix[i] & 0xff0000) >> 16;
+            g[i] = (pix[i] & 0x00ff00) >> 8;
+            b[i] = (pix[i] & 0x0000ff);
         }
 
         for (x = 0; x < w; x++) {
-
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
             yp = -radius * w;
-
             for (i = -radius; i <= radius; i++) {
-
                 yi = Math.max(0, yp) + x;
 
                 sir = stack[i + radius];
@@ -206,31 +211,23 @@ public class BlurUtils {
                 bsum += b[yi] * rbs;
 
                 if (i > 0) {
-
                     rinsum += sir[0];
                     ginsum += sir[1];
                     binsum += sir[2];
-
                 } else {
-
                     routsum += sir[0];
                     goutsum += sir[1];
                     boutsum += sir[2];
-
                 }
 
                 if (i < hm) {
-
                     yp += w;
-
                 }
             }
-
             yi = x;
             stackpointer = radius;
-
             for (y = 0; y < h; y++) {
-
+                // Preserve alpha channel: ( 0xff000000 & pix[yi] )
                 pix[yi] = (0xff000000 & pix[yi]) | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
 
                 rsum -= routsum;
@@ -245,11 +242,8 @@ public class BlurUtils {
                 boutsum -= sir[2];
 
                 if (x == 0) {
-
                     vmin[y] = Math.min(y + r1, hm) * w;
-
                 }
-
                 p = x + vmin[y];
 
                 sir[0] = r[p];
@@ -276,124 +270,8 @@ public class BlurUtils {
                 binsum -= sir[2];
 
                 yi += w;
-
             }
         }
-
-        bitmap.setPixels(pix, 0, w, 0, 0, w, h);
-
-        return bitmap;
-
-    }
-
-    public void fastBlur(Bitmap bitmap, int radius){
-
-        if (radius < 1)
-            return;
-
-        int w = bitmap.getWidth();
-        int h = bitmap.getHeight();
-        int wm = w - 1;
-        int hm = h - 1;
-        int wh = w * h;
-        int div = radius + radius + 1;
-        int r[] = new int[wh];
-        int g[] = new int[wh];
-        int b[] = new int[wh];
-        int rsum, gsum, bsum, x, y, i, p, p1, p2, yp, yi, yw;
-        int vmin[] = new int[Math.max(w, h)];
-        int vmax[] = new int[Math.max(w, h)];
-        int[] pix = new  int[w * h];
-
-        bitmap.getPixels(pix, 0, w, 0, 0, w, h);
-
-        int dv[]=new int[256*div];
-
-        for (i = 0; i < 256 * div; i++) {
-
-            dv[i] = (i / div);
-
-        }
-
-        yw = yi = 0;
-
-        for (y = 0; y < h; y++) {
-
-            rsum = gsum = bsum = 0;
-            for(i = -radius; i <= radius; i++) {
-
-                p = pix[yi + Math.min(wm, Math.max(i, 0))];
-                rsum += (p & 0xff0000) >> 16;
-                gsum += (p & 0x00ff00) >> 8;
-                bsum += p & 0x0000ff;
-
-            }
-
-            for (x = 0; x < w; x++) {
-
-                r[yi]=dv[rsum];
-                g[yi]=dv[gsum];
-                b[yi]=dv[bsum];
-
-                if (y == 0) {
-
-                    vmin[x] = Math.min(x + radius + 1,wm);
-                    vmax[x] = Math.max(x - radius, 0);
-
-                }
-
-                p1 = pix[yw + vmin[x]];
-                p2 = pix[yw + vmax[x]];
-
-                rsum += ((p1 & 0xff0000) - (p2 & 0xff0000)) >> 16;
-                gsum += ((p1 & 0x00ff00) - (p2 & 0x00ff00)) >> 8;
-                bsum += (p1 & 0x0000ff) - (p2 & 0x0000ff);
-                yi++;
-
-            }
-
-            yw += w;
-
-        }
-
-        for (x = 0; x < w; x++) {
-
-            rsum = gsum = bsum = 0;
-            yp =- radius * w;
-            for (i =- radius; i <= radius; i++) {
-
-                yi = Math.max(0, yp) + x;
-                rsum += r[yi];
-                gsum += g[yi];
-                bsum +=b [yi];
-                yp += w;
-
-            }
-
-            yi=x;
-            for (y = 0; y < h; y++) {
-
-                pix[yi] = 0xff000000 | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
-                if (x == 0){
-
-                    vmin[y] = Math.min(y + radius + 1,hm) * w;
-                    vmax[y] = Math.max(y - radius, 0) * w;
-
-                }
-
-                p1 = x + vmin[y];
-                p2 = x + vmax[y];
-
-                rsum += r[p1] -r[p2];
-                gsum += g[p1] -g[p2];
-                bsum += b[p1] -b[p2];
-
-                yi+=w;
-
-            }
-        }
-
-        bitmap.setPixels(pix, 0, w, 0, 0, w, h);
-
     }
 }
+
