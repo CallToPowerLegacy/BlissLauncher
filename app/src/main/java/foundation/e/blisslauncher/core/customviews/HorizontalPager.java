@@ -23,12 +23,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.R;
 import foundation.e.blisslauncher.features.launcher.DetectSwipeGestureListener;
 import foundation.e.blisslauncher.features.launcher.LauncherActivity;
 import foundation.e.blisslauncher.features.launcher.OnSwipeDownListener;
 
-public class HorizontalPager extends ViewGroup implements Insettable{
+public class HorizontalPager extends ViewGroup implements Insettable {
     private static final String TAG = "HorizontalPager";
     private static final int INVALID_SCREEN = -1;
     public static final int SPEC_UNDEFINED = -1;
@@ -63,6 +64,7 @@ public class HorizontalPager extends ViewGroup implements Insettable{
     private boolean mIsUiCreated;
     private GestureDetectorCompat gestureDetectorCompat;
     private WindowInsets insets;
+    private float mLastMotionRawY;
 
     public HorizontalPager(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -276,6 +278,9 @@ public class HorizontalPager extends ViewGroup implements Insettable{
         final float x = ev.getX();
         final float y = ev.getY();
 
+        mLastMotionRawY = ev.getRawY();
+
+
         switch (action) {
             case MotionEvent.ACTION_MOVE:
                 /*
@@ -329,7 +334,7 @@ public class HorizontalPager extends ViewGroup implements Insettable{
 
         if (xMoved || yMoved) {
 
-            if (yMoved && (y - mLastMotionY) > 0 && yDiff > xDiff && currentPage != 0) {
+            if (yMoved && (y - mLastMotionY) > 0 && yDiff > xDiff && inThresholdRegion() && currentPage != 0) {
                 mTouchState = TOUCH_STATE_VERTICAL_SCROLLING;
                 ((OnSwipeDownListener) getContext()).onSwipeStart();
             } else if (xMoved && yDiff < xDiff) {
@@ -349,6 +354,10 @@ public class HorizontalPager extends ViewGroup implements Insettable{
                 }
             }
         }
+    }
+
+    private boolean inThresholdRegion() {
+        return (mLastMotionRawY / BlissLauncher.getApplication(getContext()).getDeviceProfile().availableHeightPx) > (float) 1 / 5;
     }
 
     void enableChildrenCache() {
@@ -539,13 +548,14 @@ public class HorizontalPager extends ViewGroup implements Insettable{
         setLayoutParams(lp);
         updateInsetsForChildren();
         this.insets = insets;
+        postInvalidate();
     }
 
     private void updateInsetsForChildren() {
         int childCount = getChildCount();
-        for (int index = 0; index < childCount; ++index){
+        for (int index = 0; index < childCount; ++index) {
             View child = getChildAt(index);
-            if(child instanceof Insettable) {
+            if (child instanceof Insettable) {
                 Log.d(TAG, "child is instance of insettable");
                 ((Insettable) child).setInsets(insets);
             }

@@ -229,6 +229,12 @@ public class Utilities {
         return defaultValue;
     }
 
-
-
+    /**
+     * Ensures that a value is within given bounds. Specifically:
+     * If value is less than lowerBound, return lowerBound; else if value is greater than upperBound,
+     * return upperBound; else return value unchanged.
+     */
+    public static int boundToRange(int value, int lowerBound, int upperBound) {
+        return Math.max(lowerBound, Math.min(value, upperBound));
+    }
 }
