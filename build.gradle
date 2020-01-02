@@ -1,4 +1,5 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+import foundation.e.blisslauncher.buildsrc.Libs
 
 buildscript {
     ext.kotlin_version = '1.3.61'
@@ -10,14 +11,21 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.3'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.6'
+        classpath Libs.androidGradlePlugin
+
+        classpath Libs.Kotlin.gradlePlugin
+        classpath Libs.Kotlin.extensions
+
+        classpath Libs.Google.fabricPlugin
+        classpath Libs.Google.gmsGoogleServices
+
+        classpath Libs.dexcountGradlePlugin
     }
 }
 
 plugins {
     id "com.diffplug.gradle.spotless" version "3.14.0"
+    id 'com.github.ben-manes.versions' version "0.25.0"
 }
 
 allprojects {
@@ -36,25 +44,14 @@ subprojects {
             target '**/*.java'
             removeUnusedImports() // removes any unused imports
         }
+        kotlin {
+            target "**/*.kt"
+            ktlint()
+        }
+        kotlinGradle {
+            // same as kotlin, but for .gradle.kts files (defaults to '*.gradle.kts')
+            target '*.gradle.kts', 'additionalScripts/*.gradle.kts'
+            ktlint()
+        }
     }
-}
-
-ext {
-    compileSdkVersion = 27
-    minSdkVersion = 24
-    targetSdkVersion = 27
-    sourceCompatibilityVersion = '1.7'
-    targetCompatibilityVersion = '1.7'
-    supportLibraryVersion = '27.1.1'
-    junitVersion = '4.12'
-    mockitoVersion = '2.16.0'
-    hamcrestVersion = '1.3'
-    daggerVersion = '2.15'
-    archVersion = '1.1.0'
-    rxJavaVersion = '2.1.10'
-    rxAndroidVersion = '2.0.2'
-    rxRelayVersion = '2.0.0'
-    robolectricVersion = '3.7.1'
-    espressoVersion = '3.0.1'
-    runnerRulesVersion = '1.0.0'
 }

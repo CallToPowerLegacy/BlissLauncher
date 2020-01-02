@@ -1,6 +1,6 @@
 package foundation.e.blisslauncher.core.database.converters;
 
-import android.arch.persistence.room.TypeConverter;
+import androidx.room.TypeConverter;
 
 public class CharSequenceConverter {
 
@@ -10,7 +10,7 @@ public class CharSequenceConverter {
     }
 
     @TypeConverter
-    public static CharSequence toCharSequence(String value){
+    public static CharSequence toCharSequence(String value) {
         return value;
     }
 }

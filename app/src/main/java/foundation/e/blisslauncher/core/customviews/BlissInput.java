@@ -4,7 +4,9 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.DragEvent;
 
-public class BlissInput extends android.support.v7.widget.AppCompatEditText {
+import androidx.appcompat.widget.AppCompatEditText;
+
+public class BlissInput extends AppCompatEditText {
     public BlissInput(Context context) {
         super(context);
     }

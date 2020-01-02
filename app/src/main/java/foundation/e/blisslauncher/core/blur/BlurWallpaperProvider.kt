@@ -9,18 +9,18 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.support.v4.app.ActivityCompat
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import foundation.e.blisslauncher.core.Utilities
 import foundation.e.blisslauncher.core.runOnMainThread
 import foundation.e.blisslauncher.core.safeForEach
 import foundation.e.blisslauncher.core.utils.SingletonHolder
 import foundation.e.blisslauncher.core.utils.ensureOnMainThread
 import foundation.e.blisslauncher.core.utils.useApplicationContext
-import java.util.*
+import java.util.ArrayList
 import kotlin.math.max
 
 class BlurWallpaperProvider(val context: Context) {
@@ -115,12 +115,12 @@ class BlurWallpaperProvider(val context: Context) {
         }
         wallpaper = scaleAndCropToScreenSize(wallpaper)
         wallpaper = applyVibrancy(wallpaper)
-        applyTask = wallpaperFilter.apply(wallpaper).setCallback {result, error ->
-            if(error == null) {
+        applyTask = wallpaperFilter.apply(wallpaper).setCallback { result, error ->
+            if (error == null) {
                 this@BlurWallpaperProvider.wallpaper = result
                 runOnMainThread(::notifyWallpaperChanged)
                 wallpaper.recycle()
-            }else {
+            } else {
                 if (error is OutOfMemoryError) {
                     runOnMainThread {
                         Toast.makeText(context, "Failed", Toast.LENGTH_LONG).show()
@@ -136,7 +136,6 @@ class BlurWallpaperProvider(val context: Context) {
             updateWallpaper()
         }
     }
-
 
     private fun notifyWallpaperChanged() {
         listeners.forEach(Listener::onWallpaperChanged)

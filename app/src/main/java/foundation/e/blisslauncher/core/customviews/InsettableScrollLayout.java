@@ -1,11 +1,12 @@
 package foundation.e.blisslauncher.core.customviews;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.WindowInsets;
 import android.widget.ScrollView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class InsettableScrollLayout extends ScrollView implements Insettable {
 
