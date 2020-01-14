@@ -9,46 +9,61 @@
         android:label="@string/permlab_install_shortcut"
         android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
         android:protectionLevel="dangerous" />
+
     <permission
         android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT"
         android:description="@string/permdesc_uninstall_shortcut"
         android:label="@string/permlab_uninstall_shortcut"
         android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
-        android:protectionLevel="dangerous" /> <!-- General -->
+        android:protectionLevel="dangerous" />
+
+    <!-- General permissions BEGIN-->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.BIND_APPWIDGET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER_HINTS" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission
+        android:name="android.permission.BIND_APPWIDGET"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- General permissions END-->
+
+    <!-- LineageOS specific permissions BEGIN -->
     <uses-permission android:name="lineageos.permission.ACCESS_WEATHER_MANAGER" />
     <uses-permission android:name="lineageos.permission.READ_WEATHER" />
+    <!-- LineageOS specific permissions END -->
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.SET_WALLPAPER_HINTS"/>
     <application
         android:name=".BlissLauncher"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:hardwareAccelerated="true"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+
+        <!--
+        Main launcher activity. When extending only change the name, and keep all the
+        attributes and intent filters the same
+        -->
         <activity
             android:name=".features.launcher.LauncherActivity"
             android:clearTaskOnLaunch="true"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
             android:launchMode="singleTask"
             android:resumeWhilePausing="true"
             android:screenOrientation="nosensor"
             android:stateNotNeeded="true"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
             android:theme="@style/HomeScreenTheme"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
@@ -56,48 +71,9 @@
 
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.MONKEY" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".features.notification.NotificationService"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
-        <activity
-            android:name=".features.weather.WeatherPreferences"
-            android:theme="@style/AppTheme"></activity>
-        <activity
-            android:name=".features.weather.PermissionRequestActivity"
-            android:excludeFromRecents="true"
-            android:exported="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
-        <service android:name=".features.weather.WeatherUpdateService" />
-        <service android:name=".features.weather.DeviceStatusService" />
-        <service android:name=".features.weather.WeatherSourceListenerService" />
-
-        <receiver android:name="core.broadcast.PackageAddedRemovedHandler" /> <!-- Intent received used to install shortcuts from other applications -->
-        <receiver
-            android:name=".features.shortcuts.InstallShortcutReceiver"
-            android:enabled="true"
-            android:permission="com.android.launcher.permission.INSTALL_SHORTCUT">
-            <intent-filter>
-                <action android:name="com.android.launcher.action.INSTALL_SHORTCUT" />
-            </intent-filter>
-        </receiver> <!-- Intent received used to uninstall shortcuts from other applications -->
-        <receiver
-            android:name=".features.shortcuts.UninstallShortcutReceiver"
-            android:enabled="true"
-            android:permission="com.android.launcher.permission.UNINSTALL_SHORTCUT">
-            <intent-filter>
-                <action android:name="com.android.launcher.action.UNINSTALL_SHORTCUT" />
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name=".features.shortcuts.AddItemActivity"
@@ -109,12 +85,25 @@
                 <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".features.weather.WeatherPreferences"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".features.weather.PermissionRequestActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <activity
             android:name=".features.widgets.WidgetsActivity"
             android:autoRemoveFromRecents="true"
             android:excludeFromRecents="true"
             android:label="Widgets"
             android:theme="@style/AppTheme" />
+
         <activity
             android:name=".features.widgets.WidgetPicker"
             android:autoRemoveFromRecents="true"
@@ -123,6 +112,60 @@
             android:finishOnCloseSystemDialogs="true"
             android:label="Choose widget"
             android:theme="@style/WidgetPickerDialog" />
-    </application>
 
+        <service
+            android:name=".features.notification.NotificationService"
+            android:enabled="true"
+            android:label="@string/icon_badging_service_title"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".features.weather.WeatherUpdateService" />
+        <service android:name=".features.weather.DeviceStatusService" />
+        <service android:name=".features.weather.WeatherSourceListenerService" />
+
+
+        <!-- Intent received used to install shortcuts from other applications -->
+        <receiver
+            android:name=".features.shortcuts.InstallShortcutReceiver"
+            android:enabled="true"
+            android:permission="com.android.launcher.permission.INSTALL_SHORTCUT">
+            <intent-filter>
+                <action android:name="com.android.launcher.action.INSTALL_SHORTCUT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Intent received used to uninstall shortcuts from other applications -->
+        <receiver
+            android:name=".features.shortcuts.UninstallShortcutReceiver"
+            android:enabled="true"
+            android:permission="com.android.launcher.permission.UNINSTALL_SHORTCUT">
+            <intent-filter>
+                <action android:name="com.android.launcher.action.UNINSTALL_SHORTCUT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Intent received when a session is committed -->
+        <!--<receiver android:name="com.android.launcher3.SessionCommitReceiver">
+            <intent-filter>
+                <action android:name="android.content.pm.action.SESSION_COMMITTED" />
+            </intent-filter>
+        </receiver>
+
+        &lt;!&ndash; Intent received used to initialize a restored widget &ndash;&gt;
+        <receiver android:name="com.android.launcher3.AppWidgetsRestoredReceiver">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_HOST_RESTORED" />
+            </intent-filter>
+        </receiver>-->
+
+        <receiver android:name="core.broadcast.PackageAddedRemovedHandler" />
+
+        <meta-data
+            android:name="android.nfc.disable_beam_default"
+            android:value="true" />
+    </application>
 </manifest>

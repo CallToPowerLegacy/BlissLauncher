@@ -168,5 +168,6 @@
     <string name="activity_not_found">App isn\'t installed</string>
 
     <string name="default_scroll_format">Page %1$d of %2$d</string>
+    <string name="icon_badging_service_title">Show notification dots</string>
 
 </resources>
