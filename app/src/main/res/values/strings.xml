@@ -167,4 +167,6 @@
     <string name="tap_to_setup_usageaccess">Tap to setup App Suggestions</string>
     <string name="activity_not_found">App isn\'t installed</string>
 
+    <string name="default_scroll_format">Page %1$d of %2$d</string>
+
 </resources>

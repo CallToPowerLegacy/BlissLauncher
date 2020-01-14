@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -27,6 +28,7 @@ public class DeviceProfile {
 
     public static Path path;
     private final float widthCm;
+    private final float ratio;
     private int statusBarHeight;
     public int cellHeightWithoutPaddingPx;
     public int hotseatCellHeightWithoutPaddingPx;
@@ -157,6 +159,7 @@ public class DeviceProfile {
 
         widthPx = realSize.x;
         double x = widthPx / dm.xdpi;
+        ratio = dm.densityDpi / dm.xdpi;
         widthCm = (float) (x * 2.540001f);
         heightPx = realSize.y;
 
@@ -231,7 +234,15 @@ public class DeviceProfile {
             iconSizePx = 213;
         }*/
 
+        float a = 1.578f;
+        float b = 1.23f;
+
+        Log.i(TAG, "updateIconSize: " + (int) a + " " + (int) b);
+
         iconSizePx = (int) (widthPx / widthCm);
+        if (ratio >= 1) {
+            iconSizePx = iconSizePx * (int) ratio;
+        }
 
         iconTextSizePx = (int) (Utilities.pxFromSp(12, dm) * scale);
         iconDrawablePaddingPx = (availableWidthPx - iconSizePx * 4) / 5;

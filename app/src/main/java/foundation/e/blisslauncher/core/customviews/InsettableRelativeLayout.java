@@ -8,19 +8,23 @@ import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.RelativeLayout;
 
+import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.R;
 
 public class InsettableRelativeLayout extends RelativeLayout {
 
+    private final Context mContext;
     protected WindowInsets mInsets;
 
 
     public InsettableRelativeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mContext = context;
     }
 
     @Override
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
+        BlissLauncher.getApplication(mContext).resetDeviceProfile();
         updateChildInsets(insets);
         mInsets = new WindowInsets(insets);
         return insets;

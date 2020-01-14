@@ -54,6 +54,10 @@ public class BlissLauncher extends Application {
         return deviceProfile;
     }
 
+    public void resetDeviceProfile() {
+        deviceProfile = new DeviceProfile(this);
+    }
+
     public IconsHandler getIconsHandler() {
         if (iconsPackHandler == null) {
             iconsPackHandler = new IconsHandler(this);
