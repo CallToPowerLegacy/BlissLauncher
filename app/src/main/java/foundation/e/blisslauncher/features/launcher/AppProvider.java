@@ -80,6 +80,7 @@ public class AppProvider {
 
     private static final String MICROG_PACKAGE = "com.google.android.gms";
     private static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
+    private static final String PDF_VIEWER_PACKAGE = "com.gsnathan.pdfviewer";
     private static final String OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
     private static final String LIBREOFFICE_PACKAGE = "org.documentfoundation.libreoffice";
 
@@ -90,6 +91,7 @@ public class AppProvider {
     static {
         DISABLED_PACKAGES.add(MICROG_PACKAGE);
         DISABLED_PACKAGES.add(MUPDF_PACKAGE);
+        DISABLED_PACKAGES.add(PDF_VIEWER_PACKAGE);
         DISABLED_PACKAGES.add(OPENKEYCHAIN_PACKAGE);
         DISABLED_PACKAGES.add(LIBREOFFICE_PACKAGE);
     }
