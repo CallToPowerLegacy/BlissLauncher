@@ -5,7 +5,6 @@ import android.os.Looper
 
 val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
-
 fun runOnMainThread(r: () -> Unit) {
     runOnThread(mainHandler, r)
 }

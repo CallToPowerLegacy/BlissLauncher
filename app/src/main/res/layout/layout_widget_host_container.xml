@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
-    <ImageView android:layout_width="match_parent"
-               android:layout_height="match_parent"
-               android:id="@+id/border"
-               android:layout_gravity="center"
-               android:src="@drawable/widget_resize_frame"/>
+    <ImageView
+        android:id="@+id/border"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:src="@drawable/widget_resize_frame" />
 
-    <ImageView android:id="@+id/topHandle"
-               android:layout_width="30dp"
-               android:layout_height="30dp"
-               android:layout_gravity="center_horizontal|top"
-               android:src="@drawable/widget_resize_thumb_handle"/>
+    <ImageView
+        android:id="@+id/topHandle"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center_horizontal|top"
+        android:src="@drawable/widget_resize_thumb_handle" />
 
-    <ImageView android:id="@+id/bottomHandle"
-               android:layout_width="16dp"
-               android:layout_height="16dp"
-               android:layout_gravity="center_horizontal|bottom"
-               android:src="@drawable/widget_resize_thumb_handle"/>
+    <ImageView
+        android:id="@+id/bottomHandle"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="center_horizontal|bottom"
+        android:src="@drawable/widget_resize_thumb_handle" />
 
 </FrameLayout>

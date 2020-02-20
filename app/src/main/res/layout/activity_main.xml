@@ -4,8 +4,8 @@
     android:id="@+id/workspace"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="false"
     android:clipChildren="false"
+    android:clipToPadding="false"
     tools:context="features.launcher.LauncherActivity">
 
     <foundation.e.blisslauncher.core.customviews.BlurBackgroundView
@@ -45,7 +45,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clickable="true"
-        android:visibility="gone">
+        android:visibility="gone"
+        android:focusable="true">
 
         <foundation.e.blisslauncher.core.customviews.BlissInput
             android:id="@+id/folder_title"
@@ -71,7 +72,7 @@
             android:background="@drawable/folder_window"
             android:orientation="vertical">
 
-            <android.support.v4.view.ViewPager
+            <androidx.viewpager.widget.ViewPager
                 android:id="@+id/folder_apps"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />

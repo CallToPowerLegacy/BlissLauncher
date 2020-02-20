@@ -9,9 +9,6 @@ import foundation.e.blisslauncher.core.IconsHandler;
 import foundation.e.blisslauncher.core.blur.BlurWallpaperProvider;
 import foundation.e.blisslauncher.core.customviews.WidgetHost;
 import foundation.e.blisslauncher.features.launcher.AppProvider;
-import io.github.inflationx.calligraphy3.CalligraphyConfig;
-import io.github.inflationx.calligraphy3.CalligraphyInterceptor;
-import io.github.inflationx.viewpump.ViewPump;
 
 public class BlissLauncher extends Application {
     private IconsHandler iconsPackHandler;
@@ -25,15 +22,6 @@ public class BlissLauncher extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        ViewPump.init(ViewPump.builder()
-                .addInterceptor(new CalligraphyInterceptor(
-                        new CalligraphyConfig.Builder()
-                                .setDefaultFontPath("Roboto-Regular.ttf")
-                                .setFontAttrId(R.attr.fontPath)
-                                .build()))
-                .build());
-
         sAppWidgetManager = AppWidgetManager.getInstance(getApplicationContext());
         sAppWidgetHost = new WidgetHost(getApplicationContext(),
                 R.id.APPWIDGET_HOST_ID);

@@ -1,2 +1,3 @@
 include ':app'
-include ':hoko-blur'
+include ':data'
+include ':domain'

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<foundation.e.blisslauncher.core.customviews.BlissFrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<foundation.e.blisslauncher.core.customviews.BlissFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -26,19 +25,19 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:adjustViewBounds="true"
-                android:scaleType="fitCenter"/>
+                android:scaleType="fitCenter" />
 
             <foundation.e.blisslauncher.core.customviews.CustomAnalogClock
                 android:id="@+id/icon_clock"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <include
                 android:id="@+id/icon_calendar"
                 layout="@layout/calendar_icon"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
         </foundation.e.blisslauncher.core.customviews.SquareFrameLayout>
 
@@ -52,7 +51,7 @@
             android:gravity="center"
             android:maxLines="1"
             android:textColor="@color/app_label_color"
-            android:textSize="@dimen/labelSize"/>
+            android:textSize="@dimen/labelSize" />
 
     </LinearLayout>
 

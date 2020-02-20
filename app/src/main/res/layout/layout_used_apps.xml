@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="4dp"
     android:animateLayoutChanges="true"
     android:orientation="vertical">
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -14,12 +14,14 @@
         android:padding="8dp"
         android:text="@string/app_suggestion"
         android:textColor="#88FFFFFF"
-        android:textSize="16sp"/>
+        android:textSize="16sp" />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="96dp"
-        android:background="@drawable/item_widget_bottom_round_corner">
+        android:background="@drawable/item_widget_bottom_round_corner"
+        android:minHeight="96dp">
+
         <GridLayout
             android:id="@+id/suggestedAppGrid"
             android:layout_width="match_parent"
@@ -27,15 +29,16 @@
             android:layout_gravity="center"
             android:columnCount="@integer/col_count"
             android:gravity="center"
-            android:rowCount="1"/>
+            android:rowCount="1" />
+
         <TextView
             android:id="@+id/openUsageAccessSettings"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/tap_to_setup_usageaccess"
             android:textColor="@color/transparent_white"
-            android:textSize="16sp"
-            android:text="@string/tap_to_setup_usageaccess"/>
+            android:textSize="16sp" />
     </FrameLayout>
 </LinearLayout>

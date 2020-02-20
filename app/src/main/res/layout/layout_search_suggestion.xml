@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:hint="@string/search"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:maxLines="1"/>
+            android:maxLines="1" />
 
         <ImageView
             android:id="@+id/clearSuggestionImageView"
@@ -32,19 +32,19 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_cancel_white_24dp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
     </RelativeLayout>
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/suggestionRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:paddingStart="4dp"
-        android:paddingEnd="4dp"/>
+        android:paddingEnd="4dp" />
 
     <include
         android:id="@+id/used_apps_layout"
-        layout="@layout/layout_used_apps"/>
+        layout="@layout/layout_used_apps" />
 
 </LinearLayout>
