@@ -22,4 +22,5 @@
     <string name="search">Rechercher</string>
     <string name="app_name">BlissLauncher</string>
     <string name="weather_14">Légères averses de neige</string>
+    <string name="weather_15">Rafales de neige</string>
 </resources>
