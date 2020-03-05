@@ -1,2 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="weather_13">Averses de neige</string>
+    <string name="weather_12">Averses</string>
+    <string name="weather_11">Averses</string>
+    <string name="weather_10">Pluie verglaçante</string>
+    <string name="weather_9">Bruine</string>
+    <string name="weather_8">Bruine verglaçante</string>
+    <string name="weather_7">Neige et neige fondue mélangées</string>
+    <string name="weather_6">Pluie et neige fondue</string>
+    <string name="weather_5">Pluie et neige mêlées</string>
+    <string name="weather_4">Orages</string>
+    <string name="weather_3">Orages violents</string>
+    <string name="weather_2">Ouragan</string>
+    <string name="weather_1">Tempête tropicale</string>
+    <string name="weather_0">Tornade</string>
+    <string name="cancel">Annuler</string>
+    <string name="unknown">Inconnu</string>
+    <string name="explanation_access_to_appusage_is_not_enabled">Activer l\'accès aux application pour pouvoir afficher les suggestions d\'application.</string>
+    <string name="app_suggestion">Suggestions d\'application</string>
+    <string name="untitled">Sans titre</string>
+    <string name="search">Rechercher</string>
+    <string name="app_name">BlissLauncher</string>
+</resources>
