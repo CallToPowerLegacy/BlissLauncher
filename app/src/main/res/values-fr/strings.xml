@@ -123,4 +123,8 @@
     <string name="weather_18">Beau temps</string>
     <string name="weather_19">Poussières</string>
     <string name="weather_17">Grêle</string>
+    <string name="icon_badging_service_title">Afficher les bulles de notification</string>
+    <string name="default_scroll_format">Page %1$d sur %2$d</string>
+    <string name="activity_not_found">L\'app n\'est pas installée</string>
+    <string name="tap_to_setup_usageaccess">Appuyer pour configurer les suggestions d\'applications</string>
 </resources>
