@@ -23,4 +23,5 @@
     <string name="app_name">BlissLauncher</string>
     <string name="weather_14">Légères averses de neige</string>
     <string name="weather_15">Rafales de neige</string>
+    <string name="weather_16">Neige</string>
 </resources>
