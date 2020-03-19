@@ -301,7 +301,8 @@ public class AppProvider {
                 ApplicationItem applicationItem = mApplicationItems.get(databaseItem.id);
                 if (applicationItem == null) {
                     UserHandle userHandle = new UserHandle();
-                    if (isAppOnSdcard(databaseItem.packageName, userHandle) || !isSdCardReady) {
+                    if ((isAppOnSdcard(databaseItem.packageName, userHandle) || !isSdCardReady
+                    ) && !DISABLED_PACKAGES.contains(databaseItem.packageName)) {
                         Log.d(TAG, "Missing package: " + databaseItem.packageName);
                         Log.d(TAG, "Is App on Sdcard " + isAppOnSdcard(databaseItem.packageName, userHandle));
                         Log.d(TAG, "Is Sdcard ready " + isSdCardReady);
