@@ -38,15 +38,6 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.os.UserManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -70,7 +61,17 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jakewharton.rxbinding2.widget.RxTextView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
+import com.jakewharton.rxbinding3.widget.RxTextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -139,7 +140,6 @@ import foundation.e.blisslauncher.features.weather.WeatherUtils;
 import foundation.e.blisslauncher.features.widgets.WidgetManager;
 import foundation.e.blisslauncher.features.widgets.WidgetViewBuilder;
 import foundation.e.blisslauncher.features.widgets.WidgetsActivity;
-import io.github.inflationx.viewpump.ViewPumpContextWrapper;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -381,10 +381,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private void prepareBroadcastReceivers() {
         timeChangedReceiver = TimeChangeBroadcastReceiver.register(this);
         managedProfileReceiver = ManagedProfileBroadcastReceiver.register(this);
-    }
-
-    protected void attachBaseContext(Context context) {
-        super.attachBaseContext(ViewPumpContextWrapper.wrap(context));
     }
 
     public CompositeDisposable getCompositeDisposable() {

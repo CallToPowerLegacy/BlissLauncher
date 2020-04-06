@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
@@ -17,13 +16,13 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:layout_toStartOf="@+id/weather_setting_imageview"
             android:padding="8dp"
             android:text="@string/weather"
             android:textAllCaps="true"
-            android:layout_centerVertical="true"
             android:textColor="#88FFFFFF"
-            android:textSize="16sp"/>
+            android:textSize="16sp" />
 
         <ImageView
             android:id="@+id/weather_setting_imageview"
@@ -32,12 +31,14 @@
             android:layout_alignParentEnd="true"
             android:contentDescription="@string/weather_setting"
             android:padding="8dp"
-            android:src="@drawable/ic_settings_white_24dp"/>
+            android:src="@drawable/ic_settings_white_24dp" />
     </RelativeLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/item_widget_bottom_round_corner">
+
         <TextView
             android:id="@+id/weather_setup_textview"
             android:layout_width="match_parent"
@@ -47,7 +48,8 @@
             android:text="@string/weather_tap_to_setup"
             android:textColor="@color/transparent_white"
             android:textSize="16sp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
+
         <LinearLayout
             android:id="@+id/weather_panel"
             android:layout_width="match_parent"
@@ -58,10 +60,10 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="16dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp">
 
                 <ImageView
                     android:id="@+id/weather_image"
@@ -71,15 +73,16 @@
                     android:layout_alignParentTop="true"
                     android:layout_centerVertical="true"
                     android:contentDescription="@string/weather_condition_image"
-                    android:src="@drawable/weather_color_32"/>
+                    android:src="@drawable/weather_color_32" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:layout_marginEnd="8dp"
                     android:layout_marginStart="16dp"
-                    android:layout_toEndOf="@+id/weather_image"
+                    android:layout_marginEnd="8dp"
                     android:layout_toStartOf="@+id/weather_temperature_linearlayout"
+                    android:layout_toEndOf="@+id/weather_image"
                     android:orientation="vertical">
 
                     <TextView
@@ -91,7 +94,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:maxLines="2"
                         android:textColor="@color/white"
-                        android:textSize="18sp"/>
+                        android:textSize="18sp" />
 
                     <TextView
                         android:id="@+id/weather_condition"
@@ -99,7 +102,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:textColor="@color/transparent_white"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/weather_chance_rain"
@@ -107,8 +110,9 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:textColor="@color/transparent_white"
-                        android:textSize="14sp"/>
+                        android:textSize="14sp" />
                 </LinearLayout>
+
                 <LinearLayout
                     android:id="@+id/weather_temperature_linearlayout"
                     android:layout_width="wrap_content"
@@ -116,6 +120,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:orientation="vertical">
+
                     <TextView
                         android:id="@+id/weather_current_temperature"
                         android:layout_width="wrap_content"
@@ -124,33 +129,34 @@
                         android:fontFamily="sans-serif-light"
                         android:gravity="end"
                         android:textColor="@color/white"
-                        android:textSize="32sp"/>
+                        android:textSize="32sp" />
 
                     <TextView
                         android:id="@+id/weather_low_high"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="end"
-                        android:textColor="@color/white"/>
+                        android:textColor="@color/white" />
                 </LinearLayout>
             </RelativeLayout>
 
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fadingEdgeLength="12dp"
-                android:requiresFadingEdge="horizontal"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="16dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"
+                android:fadingEdgeLength="12dp"
+                android:requiresFadingEdge="horizontal"
                 android:scrollbars="none">
+
                 <LinearLayout
                     android:id="@+id/forecast_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:orientation="horizontal"/>
+                    android:orientation="horizontal" />
             </HorizontalScrollView>
 
         </LinearLayout>

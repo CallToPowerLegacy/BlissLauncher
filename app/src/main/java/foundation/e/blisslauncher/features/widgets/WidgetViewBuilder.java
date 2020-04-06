@@ -4,9 +4,10 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.R;

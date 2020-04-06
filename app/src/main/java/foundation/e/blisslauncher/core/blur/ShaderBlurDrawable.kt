@@ -40,14 +40,13 @@ class ShaderBlurDrawable internal constructor(private val blurWallpaperProvider:
 
     var noRadius = true
 
-
     override fun draw(canvas: Canvas) = draw(canvas, noRadius)
 
     fun draw(canvas: Canvas, noRadius: Boolean = false) {
         if (blurAlpha == 0) return
         blurBitmap = blurWallpaperProvider.wallpaper
 
-        if(blurBitmap == null) {
+        if (blurBitmap == null) {
             blurBitmap = blurWallpaperProvider.placeholder
         }
         blurBitmap =

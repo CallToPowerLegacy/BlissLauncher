@@ -1,9 +1,10 @@
 package foundation.e.blisslauncher.core.customviews;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
+
+import androidx.annotation.Nullable;
 
 import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.DeviceProfile;
