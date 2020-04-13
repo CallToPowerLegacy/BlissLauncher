@@ -55,7 +55,7 @@
     <string name="weather_retrieve_location_dialog_title">Impossible de trouver l\'emplacement !</string>
     <string name="weather_use_metric">Utiliser le système métrique (°C)</string>
     <string name="weather_refresh_interval">Intervalle de mise à jour</string>
-    <string name="weather_show_timestamp_title">Afficher l\'heure</string>
+    <string name="weather_show_timestamp_title">Afficher l\'horodatage</string>
     <string name="weather_show_location_title">Montrer l\'emplacement</string>
     <string name="weather_custom_location_title">Emplacement</string>
     <string name="weather_custom_location_hint">Ville, État/Pays</string>
