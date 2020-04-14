@@ -203,6 +203,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private boolean allAppsDisplayed;
     private boolean forceRefreshSuggestedApps = false;
 
+
     private List<UsageStats> mUsageStats;
     private FrameLayout swipeSearchContainer;
     private InsettableRelativeLayout workspace;
@@ -3129,12 +3130,16 @@ public class LauncherActivity extends AppCompatActivity implements
     public void onSwipeStart() {
         swipeSearchContainer.setTranslationY(
                 BlissLauncher.getApplication(this).getDeviceProfile().availableHeightPx);
-        swipeSearchContainer.setVisibility(VISIBLE);
+        swipeSearchContainer.setVisibility(GONE);
         showSwipeSearch = false;
     }
 
     @Override
     public void onSwipe(int position) {
+        if ((longPressed && !mLongClickStartsDrag) || (!longPressed && isWobbling)){
+            return;
+        }
+        swipeSearchContainer.setVisibility(VISIBLE);
         float translateBy = position * 1.25f;
         if (translateBy <= swipeSearchContainer.getHeight()) {
             swipeSearchContainer.setTranslationY(-swipeSearchContainer.getHeight() + translateBy);
