@@ -64,6 +64,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.view.GestureDetectorCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -242,6 +243,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private int moveTo;
     private Configuration oldConfig;
     private WallpaperChangeReceiver wallpaperChangeReceiver;
+    private GestureDetectorCompat mDetector;
 
     public static LauncherActivity getLauncher(Context context) {
         if (context instanceof LauncherActivity) {
@@ -1691,7 +1693,8 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (!mLongClickStartsDrag) {
                         iconPressedAt = System.currentTimeMillis();
                     }
-                } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                }
+                else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
                     if (longPressed || (!mLongClickStartsDrag
                             && (System.currentTimeMillis() - iconPressedAt) > 150)) {
                         longPressed = false;
@@ -1706,10 +1709,17 @@ public class LauncherActivity extends AppCompatActivity implements
                             parentPage = -99;
                         }
                         iconView.clearAnimation();
-                        iconView.setVisibility(View.INVISIBLE);
+                        movingApp.setVisibility(View.INVISIBLE);
                         dragDropEnabled = true;
-                        return true;
                     }
+                } else if(event.getAction() == MotionEvent.ACTION_UP) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if(movingApp != null && movingApp.getVisibility() != VISIBLE) {
+                            movingApp.setVisibility(VISIBLE);
+                            movingApp.invalidate();
+                        }
+                    });
+                    return false;
                 }
                 return false;
             }
@@ -1882,7 +1892,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 }
             }
         } else {
-            blissFrameLayout.setAnimation(null);
+            blissFrameLayout.clearAnimation();
             new Handler(Looper.getMainLooper()).post(
                     () -> removeUninstallIcon(blissFrameLayout));
         }
@@ -1961,7 +1971,7 @@ public class LauncherActivity extends AppCompatActivity implements
         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
             activeFolder.items.remove(shortcutItem);
             mFolderAppsViewPager.getAdapter().notifyDataSetChanged();
-            blissFrameLayout.setAnimation(null);
+            blissFrameLayout.clearAnimation();
             ((ViewGroup) blissFrameLayout.getParent()).removeView(blissFrameLayout);
             if (activeFolder.items.size() == 0) {
                 ((ViewGroup) activeFolderView.getParent()).removeView
@@ -1981,7 +1991,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     addAppToGrid(gridLayout, view,
                             gridLayout.indexOfChild(activeFolderView));
                 }
-                activeFolderView.setAnimation(null);
+                activeFolderView.clearAnimation();
                 ((ViewGroup) activeFolderView.getParent()).removeView(
                         activeFolderView);
                 hideFolderWindowContainer();
@@ -1992,7 +2002,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 hideFolderWindowContainer();
             }
         } else {
-            blissFrameLayout.setAnimation(null);
+            blissFrameLayout.clearAnimation();
             ((ViewGroup) blissFrameLayout.getParent()).removeView(blissFrameLayout);
         }
     }
@@ -2016,7 +2026,8 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                }
+                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
                     if (getAppDetails(movingApp).container != Constants.CONTAINER_DESKTOP
@@ -2033,6 +2044,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     cY = mDock.getY() + dragEvent.getY() - dragShadowBuilder.yOffset;
 
                     int index = getIndex(mDock, cX, cY);
+
                     // If hovering over self, ignore drag/drop
                     if (index == mDock.indexOfChild(movingApp)) {
                         discardCollidingApp();
@@ -2040,14 +2052,12 @@ public class LauncherActivity extends AppCompatActivity implements
                     }
 
                     // If hovering over an empty location, ignore drag/drop
+                    // If hovering over another app icon either move it
+                    // Or create a folder depending on time and distance
                     if (index == EMPTY_LOCATION_DRAG) {
                         discardCollidingApp();
                     }
-
-                    // If hovering over another app icon
-                    // either move it or create a folder
-                    // depending on time and distance
-                    if (index != EMPTY_LOCATION_DRAG) {
+                    else {
                         BlissFrameLayout latestCollidingApp =
                                 (BlissFrameLayout) mDock.getChildAt(index);
                         if (collidingApp != latestCollidingApp) {
@@ -2087,7 +2097,8 @@ public class LauncherActivity extends AppCompatActivity implements
                         mDockReorderAlarm.setAlarm(REORDER_TIMEOUT);
                     }
                     return true;
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                }
+                else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupDockReorder(true);
                     cleanupReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
@@ -2149,13 +2160,13 @@ public class LauncherActivity extends AppCompatActivity implements
 
             @Override
             public boolean onDrag(View view, DragEvent dragEvent) {
-
                 if (dragEvent.getAction() == DragEvent.ACTION_DRAG_STARTED) {
                     isDragging = true;
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                }
+                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                     cY = mHorizontalPager.getY() + dragEvent.getY()
                             - dragShadowBuilder.yOffset;
@@ -2218,12 +2229,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         // If hovering over an empty location, ignore drag/drop
                         if (index == EMPTY_LOCATION_DRAG) {
                             discardCollidingApp();
-                        }
-
-                        // If hovering over another app icon
-                        // either move it or create a folder
-                        // depending on time and distance
-                        if (index != EMPTY_LOCATION_DRAG) {
+                        } else {
                             View latestCollidingApp = getGridFromPage(page).getChildAt(index);
                             if (collidingApp != latestCollidingApp) {
                                 if (collidingApp != null) {
@@ -2264,7 +2270,8 @@ public class LauncherActivity extends AppCompatActivity implements
                             mReorderAlarm.setAlarm(REORDER_TIMEOUT);
                         }
                     }
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                }
+                else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupReorder(true);
                     cleanupDockReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
@@ -2278,6 +2285,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                     addAppToGrid(gridLayout, movingApp);
                                 }
                             }
+
                             movingApp.setVisibility(View.VISIBLE);
                             makeAppWobble(movingApp, true, gridLayout.indexOfChild(movingApp));
                         } else {
@@ -2288,7 +2296,8 @@ public class LauncherActivity extends AppCompatActivity implements
                             }
                             folderInterest = false;
                         }
-                    } else {
+                    }
+                    else {
                         cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                         cY = mHorizontalPager.getY() + dragEvent.getY()
                                 - dragShadowBuilder.yOffset;
@@ -2312,14 +2321,14 @@ public class LauncherActivity extends AppCompatActivity implements
                                             currentItem)).indexOfChild(movingApp));
                         }
                     }
-                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                }
+                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
                     if (isDragging) {
                         isDragging = false;
                     }
 
-                    if (movingApp.getVisibility() != VISIBLE) {
-                        movingApp.setVisibility(View.VISIBLE);
-                    }
+                    cleanupReorder(true);
+                    cleanupDockReorder(true);
 
                     if (!dragEvent.getResult()) {
                         if (mFolderWindowContainer.getVisibility() == View.VISIBLE) {
@@ -2335,6 +2344,11 @@ public class LauncherActivity extends AppCompatActivity implements
                             makeAppWobble(movingApp, true, mDock.indexOfChild(movingApp));
                         }
                     }
+
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        movingApp.setVisibility(VISIBLE);
+                        movingApp = null;
+                    });
 
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
@@ -2417,7 +2431,7 @@ public class LauncherActivity extends AppCompatActivity implements
                 } else {
                     GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
                     int index = gridLayout.indexOfChild(activeFolderView);
-                    activeFolderView.setAnimation(null);
+                    activeFolderView.clearAnimation();
                     removeUninstallIcon(activeFolderView);
                     gridLayout.removeView(activeFolderView);
                     addAppToGrid(gridLayout, view, index);
@@ -2436,7 +2450,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     BlissFrameLayout view = prepareLauncherItem(item);
                     if (folderFromDock) {
                         int index = mDock.indexOfChild(activeFolderView);
-                        activeFolderView.setAnimation(null);
+                        activeFolderView.clearAnimation();
                         removeUninstallIcon(activeFolderView);
                         mDock.removeView(activeFolderView);
                         addAppToDock(view, index);
@@ -2444,7 +2458,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     } else {
                         GridLayout gridLayout = pages.get(getCurrentAppsPageNumber());
                         int index = gridLayout.indexOfChild(activeFolderView);
-                        activeFolderView.setAnimation(null);
+                        activeFolderView.clearAnimation();
                         removeUninstallIcon(activeFolderView);
                         gridLayout.removeView(activeFolderView);
                         addAppToGrid(gridLayout, view, index);
@@ -2491,7 +2505,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createOrUpdateFolder(boolean fromDock) {
         int index;
 
-        collidingApp.setAnimation(null);
+        collidingApp.clearAnimation();
 
         if (fromDock) {
             index = mDock.indexOfChild(collidingApp);
