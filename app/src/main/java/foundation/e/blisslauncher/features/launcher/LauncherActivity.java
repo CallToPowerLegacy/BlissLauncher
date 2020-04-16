@@ -1693,8 +1693,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (!mLongClickStartsDrag) {
                         iconPressedAt = System.currentTimeMillis();
                     }
-                }
-                else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
                     if (longPressed || (!mLongClickStartsDrag
                             && (System.currentTimeMillis() - iconPressedAt) > 150)) {
                         longPressed = false;
@@ -1712,9 +1711,9 @@ public class LauncherActivity extends AppCompatActivity implements
                         movingApp.setVisibility(View.INVISIBLE);
                         dragDropEnabled = true;
                     }
-                } else if(event.getAction() == MotionEvent.ACTION_UP) {
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     new Handler(Looper.getMainLooper()).post(() -> {
-                        if(movingApp != null && movingApp.getVisibility() != VISIBLE) {
+                        if (movingApp != null && movingApp.getVisibility() != VISIBLE) {
                             movingApp.setVisibility(VISIBLE);
                             movingApp.invalidate();
                         }
@@ -2026,8 +2025,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                }
-                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     // Don't offer rearrange functionality when app is being dragged
                     // out of folder window
                     if (getAppDetails(movingApp).container != Constants.CONTAINER_DESKTOP
@@ -2056,8 +2054,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     // Or create a folder depending on time and distance
                     if (index == EMPTY_LOCATION_DRAG) {
                         discardCollidingApp();
-                    }
-                    else {
+                    } else {
                         BlissFrameLayout latestCollidingApp =
                                 (BlissFrameLayout) mDock.getChildAt(index);
                         if (collidingApp != latestCollidingApp) {
@@ -2097,8 +2094,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         mDockReorderAlarm.setAlarm(REORDER_TIMEOUT);
                     }
                     return true;
-                }
-                else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupDockReorder(true);
                     cleanupReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
@@ -2165,8 +2161,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     if (mWobblingCountDownTimer != null) {
                         mWobblingCountDownTimer.cancel();
                     }
-                }
-                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_LOCATION) {
                     cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                     cY = mHorizontalPager.getY() + dragEvent.getY()
                             - dragShadowBuilder.yOffset;
@@ -2270,8 +2265,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             mReorderAlarm.setAlarm(REORDER_TIMEOUT);
                         }
                     }
-                }
-                else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DROP) {
                     cleanupReorder(true);
                     cleanupDockReorder(true);
                     if (mFolderWindowContainer.getVisibility() != View.VISIBLE) {
@@ -2296,8 +2290,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             }
                             folderInterest = false;
                         }
-                    }
-                    else {
+                    } else {
                         cX = dragEvent.getX() - dragShadowBuilder.xOffset;
                         cY = mHorizontalPager.getY() + dragEvent.getY()
                                 - dragShadowBuilder.yOffset;
@@ -2316,13 +2309,15 @@ public class LauncherActivity extends AppCompatActivity implements
                         } else {
                             movingApp.setVisibility(View.VISIBLE);
                             int currentItem = mFolderAppsViewPager.getCurrentItem();
-                            makeAppWobble(movingApp, true,
-                                    ((GridLayout) mFolderAppsViewPager.getChildAt(
-                                            currentItem)).indexOfChild(movingApp));
+                            GridLayout gridLayout = (GridLayout) mFolderAppsViewPager.getChildAt(
+                                    currentItem);
+                            if (gridLayout != null) {
+                                makeAppWobble(movingApp, true,
+                                        gridLayout.indexOfChild(movingApp));
+                            }
                         }
                     }
-                }
-                else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
+                } else if (dragEvent.getAction() == DragEvent.ACTION_DRAG_ENDED) {
                     if (isDragging) {
                         isDragging = false;
                     }
@@ -3150,7 +3145,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
     @Override
     public void onSwipe(int position) {
-        if ((longPressed && !mLongClickStartsDrag) || (!longPressed && isWobbling)){
+        if ((longPressed && !mLongClickStartsDrag) || (!longPressed && isWobbling)) {
             return;
         }
         swipeSearchContainer.setVisibility(VISIBLE);
