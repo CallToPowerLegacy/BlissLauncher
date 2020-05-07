@@ -110,7 +110,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:finishOnCloseSystemDialogs="true"
-            android:label="Choose widget"
+            android:label="@string/choose_widget"
             android:theme="@style/WidgetPickerDialog" />
 
         <service

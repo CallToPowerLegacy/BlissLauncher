@@ -46,7 +46,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/btn_rounded_corner"
                 android:fontFamily="sans-serif-medium"
-                android:text="Edit" />
+                android:text="@string/edit" />
         </LinearLayout>
     </foundation.e.blisslauncher.core.customviews.InsettableScrollLayout>
 
