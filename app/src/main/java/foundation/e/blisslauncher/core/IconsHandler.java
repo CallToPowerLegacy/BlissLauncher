@@ -175,7 +175,8 @@ public class IconsHandler {
 
         // Search first in cache
         Drawable systemIcon = cacheGetDrawable(key);
-        if (systemIcon != null) {
+        if (systemIcon != null
+                && !activityInfo.getApplicationInfo().packageName.equalsIgnoreCase("com.app.restclient")) {
             return systemIcon;
         }
 
@@ -184,14 +185,16 @@ public class IconsHandler {
             systemIcon = new AdaptiveIconDrawableCompat(
                     ((AdaptiveIconDrawable) systemIcon).getBackground(),
                     ((AdaptiveIconDrawable) systemIcon).getForeground());
+            return systemIcon;
         } else {
+            // Icon is not adaptive, try to load using reflection.
             Drawable adaptiveIcon = new AdaptiveIconProvider().load(ctx,
                     componentName.getPackageName());
             if (adaptiveIcon != null) {
                 systemIcon = adaptiveIcon;
             } else {
-                systemIcon = graphicsUtil.convertToRoundedCorner(ctx,
-                        graphicsUtil.addBackground(systemIcon, false));
+                // Failed to load adaptive icon, Generate an adaptive icon from app default icon.
+                systemIcon = new AdaptiveIconGenerator(ctx, getDefaultAppDrawable(activityInfo, userHandle)).getResult();
             }
         }
 
@@ -317,8 +320,7 @@ public class IconsHandler {
     }
 
     public Drawable convertIcon(Drawable icon) {
-        return graphicsUtil.convertToRoundedCorner(ctx,
-                graphicsUtil.addBackground(icon, false));
+        return new AdaptiveIconGenerator(ctx, icon).getResult();
     }
 
     /**

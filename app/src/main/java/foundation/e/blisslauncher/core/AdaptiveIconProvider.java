@@ -32,6 +32,7 @@ public class AdaptiveIconProvider {
                     "Loader.with(Context) must be called before loading an icon.");
         }
 
+
         PackageManager packageManager = context.getPackageManager();
         Drawable background = null, foreground = null;
 
@@ -53,15 +54,20 @@ public class AdaptiveIconProvider {
                 while ((eventType = manifestParser.nextToken()) != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && manifestParser.getName().equals(
                             matcher)) {
+                        Log.d(TAG, "Manifest Parser Count: " + manifestParser.getAttributeCount());
+
                         for (int i = 0; i < manifestParser.getAttributeCount(); i++) {
+                            Log.d(TAG, "Icon parser: " + manifestParser.getAttributeName(i));
                             if (manifestParser.getAttributeName(i).equalsIgnoreCase("icon")) {
                                 iconId = Integer.parseInt(
                                         manifestParser.getAttributeValue(i).substring(1));
+                                Log.d(TAG, "Iconid:" + iconId);
                                 break;
                             }
                         }
                         if (iconId != 0) {
                             iconName = resources.getResourceName(iconId);
+                            Log.d("AdaptiveIcon", "Iconname: " + iconName);
                             if (iconName.contains("/")) {
                                 iconName = iconName.split("/")[1];
                             }
@@ -77,13 +83,18 @@ public class AdaptiveIconProvider {
 
             XmlResourceParser parser = null;
             if (iconId != 0) {
-                parser = resources.getXml(iconId);
+                try {
+                    parser = resources.getXml(iconId);
+                } catch (Resources.NotFoundException e) {
+                    e.printStackTrace();
+                    parser = null;
+                }
             }
 
-            for (int dir = 0; dir < IC_DIRS.length && parser == null; dir++) {
+            /*for (int dir = 0; dir < IC_DIRS.length && parser == null; dir++) {
                 for (int config = 0; config < IC_CONFIGS.length && parser == null; config++) {
-                    for (String name : iconName != null && !iconName.equals("ic_launcher")
-                            ? new String[]{iconName, "ic_launcher"} : new String[]{"ic_launcher"}) {
+                    for (String name : (iconName != null && !iconName.equals("ic_launcher"))
+                            ? new String[]{iconName, "ic_launcher", "ic_launcher_round"} : new String[]{"ic_launcher", "ic_launcher_round"}) {
                         try {
                             String path = "res/" + IC_DIRS[dir] + IC_CONFIGS[config] + "/" + name
                                     + ".xml";
@@ -91,7 +102,6 @@ public class AdaptiveIconProvider {
                             parser = assetManager.openXmlResourceParser(path);
                         } catch (Exception e) {
                             e.printStackTrace();
-                            continue;
                         }
 
                         if (parser != null) {
@@ -99,7 +109,7 @@ public class AdaptiveIconProvider {
                         }
                     }
                 }
-            }
+            }*/
 
             int backgroundRes = -1, foregroundRes = -1;
             if (parser != null) {
@@ -146,10 +156,13 @@ public class AdaptiveIconProvider {
             }
 
             if (backgroundRes != -1) {
+                Log.d(TAG, "BackgroundRes: " + backgroundRes);
+                Log.d(TAG, "BackgroundResName: " + resources.getResourceName(backgroundRes));
                 try {
                     background = ResourcesCompat.getDrawable(resources, backgroundRes, theme);
                 } catch (Resources.NotFoundException e) {
-                    try {
+                    e.printStackTrace();
+                    /*try {
                         background = ResourcesCompat.getDrawable(resources,
                                 resources.getIdentifier("ic_launcher_background", "mipmap",
                                         packageName), theme);
@@ -160,7 +173,7 @@ public class AdaptiveIconProvider {
                                             packageName), theme);
                         } catch (Resources.NotFoundException ignored) {
                         }
-                    }
+                    }*/
                 }
             }
 
@@ -168,7 +181,8 @@ public class AdaptiveIconProvider {
                 try {
                     foreground = ResourcesCompat.getDrawable(resources, foregroundRes, theme);
                 } catch (Resources.NotFoundException e) {
-                    try {
+                    e.printStackTrace();
+                    /*try {
                         foreground = ResourcesCompat.getDrawable(resources,
                                 resources.getIdentifier("ic_launcher_foreground", "mipmap",
                                         packageName), theme);
@@ -179,7 +193,7 @@ public class AdaptiveIconProvider {
                                             packageName), theme);
                         } catch (Resources.NotFoundException ignored) {
                         }
-                    }
+                    }*/
                 }
             }
         } catch (Exception e) {

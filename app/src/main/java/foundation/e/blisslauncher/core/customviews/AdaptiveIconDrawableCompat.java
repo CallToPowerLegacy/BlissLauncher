@@ -153,7 +153,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         mTransparentRegion = new Region();
     }
 
-    @SuppressLint("PrivateApi")
+    @SuppressLint({"PrivateApi", "DiscouragedPrivateApi"})
     private void initReflections() {
         try {
             Class<?> pathParser = getClass().getClassLoader().loadClass("android.util.PathParser");
