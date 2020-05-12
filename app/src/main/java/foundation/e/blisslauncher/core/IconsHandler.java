@@ -175,8 +175,7 @@ public class IconsHandler {
 
         // Search first in cache
         Drawable systemIcon = cacheGetDrawable(key);
-        if (systemIcon != null
-                && !activityInfo.getApplicationInfo().packageName.equalsIgnoreCase("com.app.restclient")) {
+        if (systemIcon != null) {
             return systemIcon;
         }
 

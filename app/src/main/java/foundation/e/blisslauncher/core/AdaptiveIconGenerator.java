@@ -39,6 +39,7 @@ public class AdaptiveIconGenerator {
     private boolean ranLoop;
     private boolean shouldWrap;
     private int backgroundColor = Color.WHITE;
+    private boolean useWhiteBackground = true;
     private boolean isFullBleed;
     private boolean noMixinNeeded;
     private boolean fullBleedChecked;
@@ -163,6 +164,15 @@ public class AdaptiveIconGenerator {
 
         // return early if a mix-in isnt needed
         noMixinNeeded = !isFullBleed && !isBackgroundWhite && almostSquarish && transparentScore <= noMixinScore;
+
+        // Currently, it's set to true so a white background is used for all the icons.
+        if(useWhiteBackground) {
+            //backgroundColor = Color.WHITE;
+            backgroundColor = Color.WHITE & 0x80FFFFFF;
+            onExitLoop();
+            return;
+        }
+
         if (isFullBleed || noMixinNeeded) {
             backgroundColor = bestRGB;
             onExitLoop();
