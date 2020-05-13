@@ -52,16 +52,18 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         }
         ShortcutItem shortcutItem = createShortcutItem(data, context);
         EventRelay.getInstance().push(new ShortcutAddEvent(shortcutItem));
-        context.startActivity(new Intent(Intent.ACTION_MAIN)
+        /*context.startActivity(new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)
                 .setPackage(context.getPackageName())
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));*/
     }
 
     public static void queueShortcut(ShortcutInfoCompat info, Context context) {
+        Log.d(TAG, "queueShortcut() called with: info = [" + info + "], context = [" + context + "]");
         UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);
         ShortcutItem shortcutItem = new ShortcutItem();
         shortcutItem.id = info.getId();
+        Log.i(TAG, "queueShortcut: "+ shortcutItem.id);
         shortcutItem.user = new UserHandle(userManager.getSerialNumberForUser(info.getUserHandle()),
                 info.getUserHandle());
         shortcutItem.packageName = info.getPackage();
@@ -73,10 +75,10 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
                 icon);
         shortcutItem.launchIntent = info.makeIntent();
         EventRelay.getInstance().push(new ShortcutAddEvent(shortcutItem));
-        context.startActivity(new Intent(Intent.ACTION_MAIN)
+        /*context.startActivity(new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)
                 .setPackage(context.getPackageName())
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));*/
     }
 
     private static ShortcutItem createShortcutItem(Intent data, Context context) {

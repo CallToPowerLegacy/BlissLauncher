@@ -506,7 +506,9 @@ public class AppProvider {
     }
 
     public void clear() {
-        sInstance = null;
+        this.sInstance = null;
+        mLauncherItems = new ArrayList<>();
+        mAppsRepository.updateAppsRelay(Collections.emptyList());
     }
 
     public synchronized boolean isRunning() {

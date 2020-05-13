@@ -1,14 +1,15 @@
 package foundation.e.blisslauncher.core.executors;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class AppExecutors {
     private static final AppExecutors ourInstance = new AppExecutors();
-    private Executor diskExecutor;
-    private Executor appExecutor;
+    private ExecutorService diskExecutor;
+    private ExecutorService appExecutor;
     private Executor searchExecutor;
-    private Executor shortcutExecutor;
+    private ExecutorService shortcutExecutor;
 
     public static AppExecutors getInstance() {
         return ourInstance;
@@ -20,15 +21,15 @@ public class AppExecutors {
         shortcutExecutor = Executors.newSingleThreadExecutor();
     }
 
-    public Executor diskIO(){
+    public ExecutorService diskIO(){
         return diskExecutor;
     }
 
-    public Executor appIO(){
+    public ExecutorService appIO(){
         return appExecutor;
     }
 
-    public Executor shortcutIO() {
+    public ExecutorService shortcutIO() {
         return shortcutExecutor;
     }
 }
