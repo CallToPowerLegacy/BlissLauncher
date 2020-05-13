@@ -16,19 +16,21 @@ public class AddItemActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        LauncherApps launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
-        LauncherApps.PinItemRequest request = launcherApps.getPinItemRequest(getIntent());
-        if (request == null) {
-            finish();
-            return;
+        if (getIntent() != null && getIntent().getAction().equalsIgnoreCase(LauncherApps.ACTION_CONFIRM_PIN_SHORTCUT)) {
+            LauncherApps launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            LauncherApps.PinItemRequest request = launcherApps.getPinItemRequest(getIntent());
+            if (request == null) {
+                finish();
+                return;
+            }
+
+            if (request.getRequestType() == LauncherApps.PinItemRequest.REQUEST_TYPE_SHORTCUT) {
+                InstallShortcutReceiver.queueShortcut(
+                        new ShortcutInfoCompat(request.getShortcutInfo()), this.getApplicationContext());
+                request.accept();
+                finish();
+            }
         }
 
-        if (request.getRequestType() == LauncherApps.PinItemRequest.REQUEST_TYPE_SHORTCUT) {
-            InstallShortcutReceiver.queueShortcut(
-                    new ShortcutInfoCompat(request.getShortcutInfo()), this);
-            request.accept();
-            finish();
-            return;
-        }
     }
 }

@@ -152,7 +152,6 @@ public class HorizontalPager extends ViewGroup implements Insettable {
     @Override
     protected void dispatchDraw(Canvas canvas) {
 
-        Log.d(TAG, "dispatchDraw() called with: canvas = [" + canvas + "]");
         final long drawingTime = getDrawingTime();
         // todo be smarter about which children need drawing
         final int count = getChildCount();

@@ -58,10 +58,6 @@ public class BlissLauncher extends Application {
         iconsPackHandler = new IconsHandler(this);
     }
 
-    public void initAppProvider() {
-        connectAppProvider();
-    }
-
     private void connectAppProvider() {
         mAppProvider = AppProvider.getInstance(this);
     }

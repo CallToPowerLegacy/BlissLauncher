@@ -127,6 +127,7 @@ import foundation.e.blisslauncher.core.utils.UserHandle;
 import foundation.e.blisslauncher.features.notification.NotificationRepository;
 import foundation.e.blisslauncher.features.notification.NotificationService;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
+import foundation.e.blisslauncher.features.shortcuts.ShortcutKey;
 import foundation.e.blisslauncher.features.suggestions.AutoCompleteAdapter;
 import foundation.e.blisslauncher.features.suggestions.SearchSuggestionUtil;
 import foundation.e.blisslauncher.features.suggestions.SuggestionProvider;
@@ -267,6 +268,8 @@ public class LauncherActivity extends AppCompatActivity implements
         mLauncherView = LayoutInflater.from(this).inflate(
                 foundation.e.blisslauncher.R.layout.activity_main, null);
 
+        //BlissLauncher.getApplication(LauncherActivity.this).getAppProvider().reload();
+
         setContentView(mLauncherView);
         setupViews();
 
@@ -356,14 +359,14 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createOrUpdateIconGrid() {
         getCompositeDisposable().add(
                 AppsRepository.getAppsRepository().getAppsRelay()
-                        .distinct()
+                        .distinctUntilChanged()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeWith(new DisposableObserver<List<LauncherItem>>() {
                             @Override
                             public void onNext(List<LauncherItem> launcherItems) {
                                 if (launcherItems == null || launcherItems.size() <= 0) {
                                     BlissLauncher.getApplication(LauncherActivity.this).getAppProvider().reload();
-                                } else if (!allAppsDisplayed) {
+                                } else if(!allAppsDisplayed) {
                                     showApps(launcherItems);
                                 }
                             }
@@ -498,7 +501,7 @@ public class LauncherActivity extends AppCompatActivity implements
         ApplicationItem applicationItem = AppUtils.createAppItem(this, appAddEvent.getPackageName(),
                 appAddEvent.getUserHandle());
         addLauncherItem(applicationItem);
-        DatabaseManager.getManager(this).saveLayouts(pages, mDock);
+        //DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         if (moveTo != -1) {
             mHorizontalPager.setCurrentPage(moveTo);
             moveTo = -1;
@@ -953,7 +956,6 @@ public class LauncherActivity extends AppCompatActivity implements
         if (isWobbling)
             handleWobbling(false);
         createUI(launcherItems);
-        subscribeToEvents();
         isUiDone = true;
         createPageChangeListener();
         createFolderTitleListener();
@@ -962,9 +964,11 @@ public class LauncherActivity extends AppCompatActivity implements
         createIndicator();
         createOrUpdateBadgeCount();
         allAppsDisplayed = true;
+        subscribeToEvents();
     }
 
     private void subscribeToEvents() {
+        Log.d(TAG, "subscribeToEvents() called");
         events = EventRelay.getInstance();
         events.subscribe(new EventsObserverImpl(this));
     }
@@ -1242,7 +1246,7 @@ public class LauncherActivity extends AppCompatActivity implements
         currentPageNumber = 0;
 
         mHorizontalPager.setUiCreated(true);
-        DatabaseManager.getManager(this).saveLayouts(pages, mDock);
+        //DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         mDock.setEnabled(true);
         setUpSwipeSearchContainer();
     }
@@ -1629,6 +1633,7 @@ public class LauncherActivity extends AppCompatActivity implements
         } else {
             page.addView(view, index);
         }
+        //DatabaseManager.getManager(this).saveLayouts(pages, mDock);
     }
 
     /**
@@ -1956,6 +1961,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     startActivity(i);
                 }
             } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
+                DeepShortcutManager.getInstance(this).unpinShortcut(ShortcutKey.fromItem((ShortcutItem) launcherItem));
                 removeShortcutView((ShortcutItem) launcherItem, blissFrameLayout);
             }
         });
@@ -2922,7 +2928,6 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-
         final boolean alreadyOnHome = hasWindowFocus() &&
                 ((intent.getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
                         != Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);

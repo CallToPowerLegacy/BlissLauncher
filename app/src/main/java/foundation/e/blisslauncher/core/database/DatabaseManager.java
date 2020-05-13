@@ -1,7 +1,6 @@
 package foundation.e.blisslauncher.core.database;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.GridLayout;
 
 import java.util.ArrayList;
@@ -18,6 +17,8 @@ import io.reactivex.Single;
 public class DatabaseManager {
 
     private AppExecutors mAppExecutors;
+
+    private static final String TAG = "DatabaseManager";
 
     private static volatile DatabaseManager INSTANCE;
     private Context mContext;
@@ -44,7 +45,9 @@ public class DatabaseManager {
     }
 
     public void saveLayouts(List<GridLayout> pages, GridLayout dock) {
-        mAppExecutors.diskIO().execute(() -> saveLauncherItems(pages, dock));
+        List<GridLayout> tempPages = pages;
+        GridLayout tempDock = dock;
+        mAppExecutors.diskIO().execute(() -> saveLauncherItems(tempPages, tempDock));
     }
 
     private void saveLauncherItems(final List<GridLayout> pages, final GridLayout dock) {
@@ -99,7 +102,6 @@ public class DatabaseManager {
                 }
             }
         }
-        Log.i("Database", "saveLauncherItems: "+items.size());
         LauncherDB.getDatabase(mContext).launcherDao().insertAll(items);
     }
 
