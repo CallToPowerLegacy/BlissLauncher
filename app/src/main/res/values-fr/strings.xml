@@ -127,4 +127,7 @@
     <string name="default_scroll_format">Page %1$d sur %2$d</string>
     <string name="activity_not_found">L\'application n\'est pas installée</string>
     <string name="tap_to_setup_usageaccess">Appuyer pour configurer les suggestions d\'applications</string>
+    <string name="edit">Modifier</string>
+    <string name="add_widget">Ajouter un widget</string>
+    <string name="choose_widget">Choisissez un widget</string>
 </resources>
