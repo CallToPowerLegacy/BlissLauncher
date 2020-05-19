@@ -30,7 +30,7 @@ public class QwantProvider implements SuggestionProvider {
                 }))
                 .filter(qwantResult -> qwantResult.getStatus().equals("success"))
                 .flatMapIterable(qwantResult -> qwantResult.getData().getItems())
-                .take(5)
+                .take(3)
                 .map(QwantItem::getValue)
                 .toList()
                 .map(suggestions -> {

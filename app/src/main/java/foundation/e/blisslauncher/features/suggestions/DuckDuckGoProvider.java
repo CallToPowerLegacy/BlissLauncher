@@ -31,7 +31,7 @@ public class DuckDuckGoProvider implements SuggestionProvider {
                 }))
                 .onErrorReturn(throwable -> new ArrayList<>())
                 .flatMapIterable(duckDuckGoResults -> duckDuckGoResults)
-                .take(5)
+                .take(3)
                 .map(DuckDuckGoResult::getPhrase)
                 .toList()
                 .map(suggestions -> {
