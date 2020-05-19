@@ -2532,7 +2532,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     index);
         } else {
             FolderItem folder = new FolderItem();
-            folder.title = "Untitled";
+            folder.title = getString(R.string.untitled);
             folder.id = String.valueOf(System.currentTimeMillis());
             folder.items = new ArrayList<>();
             app1.container = Long.parseLong(folder.id);
