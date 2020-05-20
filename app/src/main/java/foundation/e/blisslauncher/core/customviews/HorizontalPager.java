@@ -543,6 +543,7 @@ public class HorizontalPager extends ViewGroup implements Insettable {
 
     @Override
     public void setInsets(WindowInsets insets) {
+        if(insets == null) return;
         InsettableRelativeLayout.LayoutParams lp = (InsettableRelativeLayout.LayoutParams) getLayoutParams();
         lp.topMargin = insets.getSystemWindowInsetTop();
         setLayoutParams(lp);

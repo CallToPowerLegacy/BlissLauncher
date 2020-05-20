@@ -73,7 +73,8 @@ class DockGridLayout @JvmOverloads constructor(
         }
     }
 
-    override fun setInsets(insets: WindowInsets) {
+    override fun setInsets(insets: WindowInsets?) {
+        if (insets == null) return
         val deviceProfile = BlissLauncher.getApplication(mContext).deviceProfile
         val lp =
             layoutParams as InsettableRelativeLayout.LayoutParams

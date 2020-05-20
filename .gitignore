@@ -43,6 +43,9 @@ build/
 .idea/tasks.xml
 .idea/modules.xml
 .idea/assetWizardSettings.xml
+.idea/markdown-navigator*
+projectFilesBackup/
+
 gradle.xml
 
 .classpath

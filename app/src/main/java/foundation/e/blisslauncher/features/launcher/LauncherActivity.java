@@ -9,7 +9,6 @@ import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.WallpaperManager;
 import android.app.usage.UsageStats;
 import android.appwidget.AppWidgetManager;
@@ -40,7 +39,6 @@ import android.os.UserManager;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -77,6 +75,7 @@ import com.jakewharton.rxbinding3.widget.RxTextView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -245,6 +244,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private Configuration oldConfig;
     private WallpaperChangeReceiver wallpaperChangeReceiver;
     private GestureDetectorCompat mDetector;
+    private AlertDialog enableLocationDialog;
 
     public static LauncherActivity getLauncher(Context context) {
         if (context instanceof LauncherActivity) {
@@ -358,15 +358,18 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void createOrUpdateIconGrid() {
         getCompositeDisposable().add(
-                AppsRepository.getAppsRepository().getAppsRelay()
+                BlissLauncher.getApplication(this)
+                        .getAppProvider()
+                        .getAppsRepository()
+                        .getAppsRelay()
                         .distinctUntilChanged()
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeWith(new DisposableObserver<List<LauncherItem>>() {
                             @Override
                             public void onNext(List<LauncherItem> launcherItems) {
                                 if (launcherItems == null || launcherItems.size() <= 0) {
-                                    BlissLauncher.getApplication(LauncherActivity.this).getAppProvider().reload();
-                                } else if(!allAppsDisplayed) {
+                                    BlissLauncher.getApplication(LauncherActivity.this).getAppProvider().reload(true);
+                                } else if (!allAppsDisplayed) {
                                     showApps(launcherItems);
                                 }
                             }
@@ -476,19 +479,36 @@ public class LauncherActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        // Unregister active receivers
         TimeChangeBroadcastReceiver.unregister(this, timeChangedReceiver);
         ManagedProfileBroadcastReceiver.unregister(this, managedProfileReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
+
+        // Dispose CompositeDisposable
         getCompositeDisposable().dispose();
-        events.unsubscribe();
+
+        // Unsubscribe to events
+        if (events != null) {
+            events.unsubscribe();
+        }
+
+        // Dismiss Dialog if currently visible to prevent view leakage.
+        if (enableLocationDialog != null && enableLocationDialog.isShowing()) {
+            enableLocationDialog.dismiss();
+        }
+
+        // Clear AppProvider
         BlissLauncher.getApplication(this).getAppProvider().clear();
+
+        // Handover to android system.
+        super.onDestroy();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-        Log.d(TAG, "onConfigurationChanged() called with: newConfig = [" + newConfig + "]");
         int diff = newConfig.diff(oldConfig);
+
+        // Don't consider any other config changes as of now.
         if ((diff & (CONFIG_ORIENTATION | CONFIG_SCREEN_SIZE)) != 0) {
             recreate();
         }
@@ -968,7 +988,6 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void subscribeToEvents() {
-        Log.d(TAG, "subscribeToEvents() called");
         events = EventRelay.getInstance();
         events.subscribe(new EventsObserverImpl(this));
     }
@@ -1279,7 +1298,6 @@ public class LauncherActivity extends AppCompatActivity implements
             }
             return false;
         });
-        scrollView.post(() -> scrollView.setInsets(workspace.getRootWindowInsets()));
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
 
@@ -1469,7 +1487,6 @@ public class LauncherActivity extends AppCompatActivity implements
         } else if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Storage permission granted");
                 BlurWallpaperProvider.Companion.getInstance(getApplicationContext()).updateAsync();
             }
         }
@@ -1492,8 +1509,6 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void showLocationEnableDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        final Dialog dialog;
-
         // Build and show the dialog
         builder.setTitle(R.string.weather_retrieve_location_dialog_title);
         builder.setMessage(R.string.weather_retrieve_location_dialog_message);
@@ -1506,8 +1521,8 @@ public class LauncherActivity extends AppCompatActivity implements
                     startActivityForResult(intent, REQUEST_LOCATION_SOURCE_SETTING);
                 });
         builder.setNegativeButton(R.string.cancel, null);
-        dialog = builder.create();
-        dialog.show();
+        enableLocationDialog = builder.create();
+        enableLocationDialog.show();
     }
 
     @Override
@@ -3314,6 +3329,11 @@ public class LauncherActivity extends AppCompatActivity implements
             set.start();
             currentAnimator = set;
         }
+    }
+
+    public void forceReload() {
+        allAppsDisplayed = false;
+        BlissLauncher.getApplication(this).getAppProvider().getAppsRepository().updateAppsRelay(Collections.emptyList());
     }
 
     /**

@@ -50,8 +50,9 @@ class ShaderBlurDrawable internal constructor(private val blurWallpaperProvider:
             blurBitmap = blurWallpaperProvider.placeholder
         }
         blurBitmap =
-            if (blurBitmap!!.height > (blurBounds.bottom.toInt() - blurBounds.top.toInt())) {
-
+            if (blurBitmap!!.height >= blurBounds.bottom &&
+                blurBitmap!!.width >= blurBounds.right
+            ) {
                 Bitmap.createBitmap(
                     blurBitmap!!,
                     blurBounds.left.toInt(), blurBounds.top.toInt(),
@@ -91,8 +92,11 @@ class ShaderBlurDrawable internal constructor(private val blurWallpaperProvider:
 
         blurPath.reset()
         blurPath.addRect(
-            0f, 0f,
-            blurBounds.right - blurBounds.left, blurBounds.bottom - blurBounds.top, Path.Direction.CW
+            0f,
+            0f,
+            blurBounds.right - blurBounds.left,
+            blurBounds.bottom - blurBounds.top,
+            Path.Direction.CW
         )
     }
 
