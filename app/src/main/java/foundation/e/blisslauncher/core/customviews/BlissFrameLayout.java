@@ -237,7 +237,7 @@ public class BlissFrameLayout extends FrameLayout {
 
             CalendarIcon calendarIcon = new CalendarIcon(monthTextView, dateTextView);
             calendarIcon.monthTextView.setText(
-                    Utilities.convertMonthToString(Calendar.getInstance().get(Calendar.MONTH)));
+                    Utilities.convertMonthToString());
             calendarIcon.dayTextView.setText(
                     String.valueOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH)));
         } else {
