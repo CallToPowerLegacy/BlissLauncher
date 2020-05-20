@@ -173,5 +173,6 @@
     <string name="choose_widget">Choose widget</string>
     <string name="add_widget">Add Widget</string>
     <string name="edit">Edit</string>
+    <string name="widgets">Widgets</string>
 
 </resources>
