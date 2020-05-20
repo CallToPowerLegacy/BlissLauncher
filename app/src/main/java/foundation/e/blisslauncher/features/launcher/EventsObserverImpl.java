@@ -4,7 +4,6 @@ import android.util.Log;
 
 import java.util.Calendar;
 
-import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.core.events.AppAddEvent;
 import foundation.e.blisslauncher.core.events.AppChangeEvent;
 import foundation.e.blisslauncher.core.events.AppRemoveEvent;
@@ -44,7 +43,7 @@ public class EventsObserverImpl implements EventRelay.EventsObserver<Event> {
                 launcherActivity.updateAllCalendarIcons(Calendar.getInstance());
                 break;
             case ForceReloadEvent.TYPE:
-                BlissLauncher.getApplication(launcherActivity).getAppProvider().reload();
+                launcherActivity.forceReload();
                 break;
         }
     }

@@ -103,8 +103,11 @@ public class AppProvider {
     private boolean mStopped;
     private boolean isSdCardReady;
 
+    private AppsRepository appsRepository;
+
     private AppProvider(Context context) {
         this.mContext = context;
+        this.appsRepository = AppsRepository.getAppsRepository();
         isLoading = false;
         initialise();
     }
@@ -202,7 +205,7 @@ public class AppProvider {
             synchronized (AppProvider.class) {
                 if (sInstance == null) {
                     sInstance = new AppProvider(context);
-                    sInstance.reload();
+                    sInstance.reload(true);
                 }
             }
         }
@@ -213,12 +216,12 @@ public class AppProvider {
         return mContext;
     }
 
-    public synchronized void reload() {
+    public synchronized void reload(boolean force) {
         Log.d(TAG, "reload() called");
 
         isSdCardReady = Utilities.isBootCompleted();
 
-        if (mLauncherItems != null && mLauncherItems.size() > 0) {
+        if (!force && mLauncherItems != null && mLauncherItems.size() > 0) {
             mAppsRepository.updateAppsRelay(mLauncherItems);
         }
 
@@ -460,7 +463,6 @@ public class AppProvider {
     }
 
     private List<LauncherItem> prepareDefaultLauncherItems() {
-        Log.d(TAG, "prepareDefaultLauncherItems() called " + mApplicationItems.size());
         List<LauncherItem> mLauncherItems = new ArrayList<>();
         List<LauncherItem> pinnedItems = new ArrayList<>();
         PackageManager pm = mContext.getPackageManager();
@@ -501,8 +503,11 @@ public class AppProvider {
         });
 
         mLauncherItems.addAll(pinnedItems);
-        Log.i(TAG, "prepareDefaultLauncherItems: " + mLauncherItems.size());
         return mLauncherItems;
+    }
+
+    public AppsRepository getAppsRepository() {
+        return appsRepository;
     }
 
     public void clear() {

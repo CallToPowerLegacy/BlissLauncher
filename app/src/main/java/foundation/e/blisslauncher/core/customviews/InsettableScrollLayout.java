@@ -24,6 +24,7 @@ public class InsettableScrollLayout extends ScrollView implements Insettable {
 
     @Override
     public void setInsets(WindowInsets insets) {
+        if(insets == null) return;
         int top = getPaddingTop();
         int left = getPaddingLeft();
         int right = getPaddingRight();
