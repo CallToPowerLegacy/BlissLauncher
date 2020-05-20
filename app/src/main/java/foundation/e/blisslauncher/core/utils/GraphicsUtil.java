@@ -198,8 +198,6 @@ public class GraphicsUtil {
                 if (Color.alpha(bitmap.getPixel(x, y)) == 255) {
                     int color = bitmap.getPixel(x, y);
                     colors.put(color, (colors.containsKey(color) ? colors.get(color) : 0) + 1);
-                } else if ((Color.alpha(bitmap.getPixel(x, y)) < 0xF9)) {
-                    count++;
                 }
             }
         }

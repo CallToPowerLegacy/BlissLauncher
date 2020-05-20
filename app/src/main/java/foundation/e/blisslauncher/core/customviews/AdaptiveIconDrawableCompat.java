@@ -153,7 +153,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         mTransparentRegion = new Region();
     }
 
-    @SuppressLint("PrivateApi")
+    @SuppressLint({"PrivateApi", "DiscouragedPrivateApi"})
     private void initReflections() {
         try {
             Class<?> pathParser = getClass().getClassLoader().loadClass("android.util.PathParser");
@@ -366,7 +366,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         // mMaskBitmap bound [0, w] x [0, h]
         mCanvas.setBitmap(mMaskBitmap);
         mPaint.setShader(null);
-        mPaint.setColor(0xFFFFFFFF);
+        mPaint.setColor(Color.WHITE);
         mCanvas.drawPath(mMask, mPaint);
 
         // mMask bound [left, top, right, bottom]
@@ -385,7 +385,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
         }
         if (mLayersShader == null) {
             mCanvas.setBitmap(mLayersBitmap);
-            mCanvas.drawColor(Color.BLACK);
+            //mCanvas.drawColor(Color.BLACK);
             for (int i = 0; i < LayerState.N_CHILDREN; i++) {
                 if (mLayerState.mChildren[i] == null) {
                     continue;
@@ -396,33 +396,12 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
                 }
             }
             mLayersShader = new BitmapShader(mLayersBitmap, TileMode.CLAMP, TileMode.CLAMP);
-            if (mUseMyUglyWorkaround) {
-                // TODO: remove this ugly and slow code
-                if (mMaskBitmap != null) {
-                    int width = mLayersBitmap.getWidth();
-                    int height = mLayersBitmap.getHeight();
-                    int[] colors = new int[width * height];
-                    int[] alphas = new int[width * height];
-                    mLayersBitmap.getPixels(colors, 0, width, 0, 0, width, height);
-                    mMaskBitmap.getPixels(alphas, 0, width, 0, 0, width, height);
-                    int color, alpha, index;
-                    for (int i = 0; i < width; i++) {
-                        for (int j = 0; j < height; j++) {
-                            index = i * height + j;
-                            color = colors[index];
-                            alpha = alphas[index];
-                            colors[index] = color & 0x00FFFFFF | alpha & 0xFF000000;
-                        }
-                    }
-                    mLayersBitmap.setPixels(colors, 0, width, 0, 0, width, height);
-                }
-            } else {
-                mPaint.setShader(mLayersShader);
-            }
+            mPaint.setShader(mLayersShader);
         }
         if (mMaskBitmap != null) {
             Rect bounds = getBounds();
-            canvas.drawBitmap(mUseMyUglyWorkaround ? mLayersBitmap : mMaskBitmap, bounds.left,
+            //mPaint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
+            canvas.drawBitmap(mMaskBitmap, bounds.left,
                     bounds.top, mPaint);
         }
     }
