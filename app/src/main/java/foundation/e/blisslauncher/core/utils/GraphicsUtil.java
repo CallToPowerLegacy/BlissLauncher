@@ -49,7 +49,7 @@ public class GraphicsUtil {
      * However, if more than 4 drawables are provided, only the first 4 are used.
      */
     public Drawable generateFolderIcon(Context context, Drawable... sources) {
-        int width = sources[0].getIntrinsicWidth();
+        int width = appIconWidth;
         int height = width; // Square icons
 
         Log.i(TAG, "generateFolderIcon: " + width + "*" + height);
@@ -118,8 +118,7 @@ public class GraphicsUtil {
                     true);
             return bitmap;
         }
-
-        if (bitmap.getWidth() > appIconWidth) {
+        if (bitmap.getWidth() >= appIconWidth) {
             bitmap = Bitmap.createScaledBitmap(bitmap, appIconWidth,
                     (appIconWidth * bitmap.getHeight() / bitmap.getWidth()),
                     true);
