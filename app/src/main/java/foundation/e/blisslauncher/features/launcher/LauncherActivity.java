@@ -410,7 +410,7 @@ public class LauncherActivity extends AppCompatActivity implements
 
     private void updateCalendarIcon(CalendarIcon calendarIcon, Calendar calendar) {
         calendarIcon.monthTextView.setText(
-                Utilities.convertMonthToString(calendar.get(Calendar.MONTH)));
+                Utilities.convertMonthToString());
         calendarIcon.dayTextView.setText(
                 String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
     }
