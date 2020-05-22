@@ -130,4 +130,5 @@
     <string name="edit">Modifier</string>
     <string name="add_widget">Ajouter un widget</string>
     <string name="choose_widget">Choisissez un widget</string>
+    <string name="widgets">Widgets</string>
 </resources>
