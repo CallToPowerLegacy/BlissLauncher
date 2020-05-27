@@ -19,4 +19,6 @@
     <color name="list_selector_focused">#cc33b5e5</color>
     <color name="list_selector_activated">#4d33b5e5</color>
     <color name="white">#FFFFFF</color>
+    <color name="color_blue">#0088ED</color>
+
 </resources>

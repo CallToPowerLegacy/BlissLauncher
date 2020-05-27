@@ -169,5 +169,6 @@
 
     <string name="default_scroll_format">Page %1$d of %2$d</string>
     <string name="icon_badging_service_title">Show notification dots</string>
-
+    <string name="uninstall_shortcut_dialog">Do you want to uninstall this shortcut?</string>
+    <string name="ok">ok</string>
 </resources>

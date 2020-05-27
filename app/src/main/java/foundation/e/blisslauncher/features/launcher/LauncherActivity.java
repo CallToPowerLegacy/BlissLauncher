@@ -19,6 +19,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
@@ -41,6 +42,7 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -1956,7 +1958,25 @@ public class LauncherActivity extends AppCompatActivity implements
                     startActivity(i);
                 }
             } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
-                removeShortcutView((ShortcutItem) launcherItem, blissFrameLayout);
+                AlertDialog dialog =new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom))
+                        .setTitle(launcherItem.title)
+                        .setMessage(R.string.uninstall_shortcut_dialog)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                removeShortcutView((ShortcutItem) launcherItem, blissFrameLayout);
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, null)
+                        .setIcon(launcherItem.icon)
+                        .create();
+                dialog.setOnShowListener( new DialogInterface.OnShowListener() {
+                    @Override
+                    public void onShow(DialogInterface arg0) {
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.color_blue));
+                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.color_blue));
+                    }
+                });
+                dialog.show();
             }
         });
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
