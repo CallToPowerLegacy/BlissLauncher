@@ -174,5 +174,6 @@
     <string name="add_widget">Add Widget</string>
     <string name="edit">Edit</string>
     <string name="widgets">Widgets</string>
-
+    <string name="uninstall_shortcut_dialog">Do you want to uninstall this shortcut?</string>
+    <string name="ok">ok</string>
 </resources>
