@@ -131,4 +131,5 @@
     <string name="add_widget">Ajouter un widget</string>
     <string name="choose_widget">Choisissez un widget</string>
     <string name="widgets">Widgets</string>
+    <string name="uninstall_shortcut_dialog">Voulez-vous supprimer ce raccourci \?</string>
 </resources>
