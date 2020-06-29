@@ -39,6 +39,7 @@ import android.os.UserManager;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
 import android.view.Gravity;
@@ -1977,12 +1978,16 @@ public class LauncherActivity extends AppCompatActivity implements
                     startActivity(i);
                 }
             } else if (launcherItem.itemType == Constants.ITEM_TYPE_SHORTCUT) {
-                AlertDialog dialog =new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom))
+                AlertDialog dialog = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom))
                         .setTitle(launcherItem.title)
                         .setMessage(R.string.uninstall_shortcut_dialog)
                         .setPositiveButton(R.string.ok, (dialog1, which) -> {
-                            DeepShortcutManager.getInstance(this).unpinShortcut(ShortcutKey.fromItem((ShortcutItem) launcherItem));
-                            removeShortcutView((ShortcutItem) launcherItem, blissFrameLayout);
+                            ShortcutItem shortcut = (ShortcutItem) launcherItem;
+                            DeepShortcutManager.getInstance(this).unpinShortcut(ShortcutKey.fromItem(shortcut));
+                            if (DeepShortcutManager.getInstance(this).wasLastCallSuccess()) {
+                                deleteShortcutFromProvider(shortcut.id);
+                                removeShortcutView(shortcut, blissFrameLayout);
+                            }
                         })
                         .setNegativeButton(R.string.cancel, null)
                         .setIcon(launcherItem.icon)
@@ -1998,6 +2003,12 @@ public class LauncherActivity extends AppCompatActivity implements
                 size + 2 * rightPadding, size + 2 * topPadding);
         layoutParams.gravity = Gravity.END | Gravity.TOP;
         blissFrameLayout.addView(imageView, layoutParams);
+    }
+
+    private void deleteShortcutFromProvider(String id) {
+        ContentResolver resolver = getContentResolver();
+        int count = resolver.delete(Uri.parse("content://foundation.e.pwaplayer.provider/pwa"), null, new String[]{id});
+        Log.d("LauncherActivity", "Items deleted from pwa provider: " + count);
     }
 
     private void removeShortcutView(ShortcutItem shortcutItem, BlissFrameLayout blissFrameLayout) {

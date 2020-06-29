@@ -43,6 +43,8 @@
     <uses-permission android:name="lineageos.permission.READ_WEATHER" />
     <!-- LineageOS specific permissions END -->
 
+    <uses-permission android:name="foundation.e.pwaplayer.provider.READ_WRITE"/>
+
     <application
         android:name=".BlissLauncher"
         android:hardwareAccelerated="true"
