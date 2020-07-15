@@ -126,4 +126,9 @@
     <string name="untitled">Senza titolo</string>
     <string name="search">Cerca</string>
     <string name="edit">Modifica</string>
+    <string name="ok">ok</string>
+    <string name="uninstall_shortcut_dialog">Vuoi disabilitare questa scorciatoia\?</string>
+    <string name="widgets">Widget</string>
+    <string name="add_widget">Aggiungi widget</string>
+    <string name="choose_widget">Scegli widget</string>
 </resources>
