@@ -57,8 +57,8 @@
     <string name="weather_43">Hevige Sneeuw</string>
     <string name="weather_42">Verspreide Sneeuwbuien</string>
     <string name="weather_41">Hevige Sneeuw</string>
-    <string name="weather_40">" Verspreide Regenbuien"</string>
-    <string name="weather_39">" Verspreide Onweersbuien"</string>
+    <string name="weather_40">Verspreide Regenbuien</string>
+    <string name="weather_39">Verspreide Onweersbuien</string>
     <string name="weather_38">Verspreide Onweersbuien</string>
     <string name="weather_37">Plaatselijke Onweersbuien</string>
     <string name="weather_36">Warm</string>
@@ -95,4 +95,6 @@
     <string name="app_suggestion">APP SUGGESTIES</string>
     <string name="search">Zoeken</string>
     <string name="app_name">Bliss Launcher</string>
+    <string name="explanation_access_to_appusage_is_not_enabled">Geef toegang tot app gebruik om app suggesties te tonen.</string>
+    <string name="edit">Bewerken</string>
 </resources>
