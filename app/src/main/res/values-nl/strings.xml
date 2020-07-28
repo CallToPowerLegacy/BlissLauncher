@@ -21,7 +21,7 @@
     <string name="weather_custom_location_title">Locatie</string>
     <string name="weather_custom_location_hint">Stad, Land</string>
     <string name="weather_custom_location_dialog_title">Geef locatie</string>
-    <string name="weather_geolocated">Gelokaliseerd via netwerk</string>
+    <string name="weather_geolocated">Geolocatie via netwerk</string>
     <string name="weather_source_title">Weeraanbieder</string>
     <string name="weather_enabled">Ingeschakeld</string>
     <string name="display_category">Weergave</string>
@@ -48,7 +48,7 @@
     <string name="weather_E">O</string>
     <string name="weather_NE">NO</string>
     <string name="weather_N">N</string>
-    <string name="weather_mph">m/pu</string>
+    <string name="weather_mph">m/u</string>
     <string name="weather_kph">km/u</string>
     <string name="weather_47">Plaatselijke Onweersbuien</string>
     <string name="weather_46">Sneeuwbuien</string>
@@ -97,4 +97,17 @@
     <string name="app_name">Bliss Launcher</string>
     <string name="explanation_access_to_appusage_is_not_enabled">Geef toegang tot app gebruik om app suggesties te tonen.</string>
     <string name="edit">Bewerken</string>
+    <string name="weather_alternate_icons_summary">Selecteer om de standaard (Color) en de afwisselende (Witte) icoontjes om te wisselen</string>
+    <string name="weather_alternate_icons_title">Gebruik kleur icoontjes</string>
+    <string name="weather_use_custom_location">Gebruik aangepaste locatie</string>
+    <string name="weather_enable">Toon weer</string>
+    <string name="weather_refresh_manual">Handmatig</string>
+    <string name="weather_30">Gedeeltelijk bewolkt</string>
+    <string name="weather_29">Gedeeltelijk bewolkt</string>
+    <string name="weather_22">Rokerig</string>
+    <string name="weather_10">Hagel</string>
+    <string name="weather_7">Sneeuw en ijzel</string>
+    <string name="weather_6">Regen en ijzel</string>
+    <string name="weather_5">Natte sneeuw</string>
+    <string name="untitled">Geen titel</string>
 </resources>
