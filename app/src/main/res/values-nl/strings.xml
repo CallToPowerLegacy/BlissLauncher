@@ -125,10 +125,10 @@
     <string name="permlab_uninstall_shortcut">verwijder snelkoppelingen</string>
     <string name="permlab_install_shortcut">installeer snelkoppelingen</string>
     <string name="weather_setting">Icoon weer instellingen</string>
-    <string name="weather_tap_to_setup">Tik om de weer app in te stellen.</string>
+    <string name="weather_tap_to_setup">Tik om de weer app in te stellen</string>
     <string name="weather">Weer</string>
-    <string name="icon_set_selection_get_more">Verkrijg meer...</string>
+    <string name="icon_set_selection_get_more">Verkrijg meer…</string>
     <string name="weather_icons_monochrome">Zwart-wit</string>
-    <string name="weather_show_when_minimized_summary">"Toon weer informatie overzicht wanneer de widget geminimaliseerd is "</string>
+    <string name="weather_show_when_minimized_summary">Toon weer informatie overzicht wanneer de widget geminimaliseerd is</string>
     <string name="weather_show_when_minimized_title">Toon wanneer geminimaliseerd</string>
 </resources>
