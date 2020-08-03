@@ -26,4 +26,13 @@
     <string name="weather_5">Euria eta elurra</string>
     <string name="weather_4">Ekaitz elektrikoak</string>
     <string name="weather_3">Ekaitz elektriko larriak</string>
+    <string name="weather_32">Eguzkitsu</string>
+    <string name="weather_31">Oskarbi</string>
+    <string name="weather_26">Lainotsua</string>
+    <string name="weather_20">Lainotsua</string>
+    <string name="weather_25">Hotza</string>
+    <string name="weather_24">Haizetsua</string>
+    <string name="weather_23">Ekaiztsua</string>
+    <string name="weather_22">Ketsua</string>
+    <string name="weather_21">Behe-lainoa</string>
 </resources>
