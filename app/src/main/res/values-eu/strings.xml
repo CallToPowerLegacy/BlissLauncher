@@ -2,11 +2,28 @@
 <resources>
     <string name="weather_2">Urakana</string>
     <string name="weather_1">Ekaitz tropikala</string>
-    <string name="weather_0">Tornado</string>
+    <string name="weather_0">Tornadoa</string>
     <string name="cancel">Utzi</string>
     <string name="unknown">Ezezaguna</string>
     <string name="app_suggestion">APLIKAZIOEN IRADOKIZUNAK</string>
     <string name="untitled">Izengabea</string>
     <string name="search">Bilatu</string>
     <string name="app_name">Bliss abiarazlea</string>
+    <string name="weather_19">Hautsa</string>
+    <string name="weather_18">Elurbustia</string>
+    <string name="weather_17">Kazkabarra</string>
+    <string name="weather_16">Elurra</string>
+    <string name="weather_15">Elur-boladak</string>
+    <string name="weather_14">Elur zaparrada arinak</string>
+    <string name="weather_8">Lanbro oso hotza</string>
+    <string name="weather_10">Euri oso hotza</string>
+    <string name="weather_13">Elur zaparradak</string>
+    <string name="weather_12">Zaparradak</string>
+    <string name="weather_11">Zaparradak</string>
+    <string name="weather_9">Lanbroa</string>
+    <string name="weather_7">Elurra eta elurbustia</string>
+    <string name="weather_6">Euria eta elurbustia</string>
+    <string name="weather_5">Euria eta elurra</string>
+    <string name="weather_4">Ekaitz elektrikoak</string>
+    <string name="weather_3">Ekaitz elektriko larriak</string>
 </resources>
