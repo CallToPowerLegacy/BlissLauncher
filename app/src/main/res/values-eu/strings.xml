@@ -1,2 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="weather_2">Urakana</string>
+    <string name="weather_1">Ekaitz tropikala</string>
+    <string name="weather_0">Tornado</string>
+    <string name="cancel">Utzi</string>
+    <string name="unknown">Ezezaguna</string>
+    <string name="app_suggestion">APLIKAZIOEN IRADOKIZUNAK</string>
+    <string name="untitled">Izengabea</string>
+    <string name="search">Bilatu</string>
+    <string name="app_name">Bliss abiarazlea</string>
+</resources>
