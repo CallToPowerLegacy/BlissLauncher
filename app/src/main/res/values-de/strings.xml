@@ -128,4 +128,5 @@
     <string name="search">Suche</string>
     <string name="app_name">Bliss Starter</string>
     <string name="edit">Bearbeiten</string>
+    <string name="choose_widget">Widget auswählen</string>
 </resources>
