@@ -35,4 +35,5 @@
     <string name="weather_23">Ekaiztsua</string>
     <string name="weather_22">Ketsua</string>
     <string name="weather_21">Behe-lainoa</string>
+    <string name="action_add_to_workspace">Gehitu hasierako pantailan</string>
 </resources>
