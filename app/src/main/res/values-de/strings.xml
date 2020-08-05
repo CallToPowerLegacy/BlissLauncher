@@ -58,10 +58,10 @@
     <string name="weather_refresh_manual">Manuell</string>
     <string name="weather_tap_to_select_source">Auswahl antippen</string>
     <string name="weather_source_not_selected">Keine Quelle für Wetterdaten ausgewählt</string>
-    <string name="weather_cannot_reach_provider">%s derzeit nicht erreichbar</string>
+    <string name="weather_cannot_reach_provider">%s momentan nicht erreichbar</string>
     <string name="weather_last_sync_just_now">Gerade eben</string>
     <string name="weather_refreshing">Wird aktualisiert</string>
-    <string name="weather_tap_to_refresh">Zur Aktualisierung tippen</string>
+    <string name="weather_tap_to_refresh">Tippen um zu aktualisieren</string>
     <string name="weather_no_data">Keine Daten</string>
     <string name="weather_NW">NW</string>
     <string name="weather_W">W</string>
@@ -93,7 +93,7 @@
     <string name="weather_30">Teilweise bewölkt</string>
     <string name="weather_29">Teilweise Bewölkt</string>
     <string name="weather_28">Überwiegend Bewölkt</string>
-    <string name="weather_27">Überwiegend Bewölkt</string>
+    <string name="weather_27">Großteils Bewölkt</string>
     <string name="weather_26">Bewölkt</string>
     <string name="weather_25">Kalt</string>
     <string name="weather_24">Windig</string>
