@@ -42,7 +42,7 @@
     <string name="weather_custom_location_hint">Stadt, Bundesland/Land</string>
     <string name="weather_custom_location_dialog_title">Standort eingeben</string>
     <string name="weather_geolocated">Standortbestimmung durch Netzwerk</string>
-    <string name="weather_use_custom_location">benutzerdefinierten Standort verwenden</string>
+    <string name="weather_use_custom_location">Benutzerdefinierten Standort verwenden</string>
     <string name="weather_source_title">Quelle für Wetterdaten</string>
     <string name="weather_enable">Wetter anzeigen</string>
     <string name="weather_enabled">Aktiviert</string>
