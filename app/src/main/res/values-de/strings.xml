@@ -34,7 +34,7 @@
 \n
 \nStandort zum Betreiben des Wetter-Widget freigeben.</string>
     <string name="weather_retrieve_location_dialog_title">Standortbestimmung nicht möglich!</string>
-    <string name="weather_use_metric">Metrische Einheiten verwenden (°C)</string>
+    <string name="weather_use_metric">Metrische Einheiten verwenden (C°)</string>
     <string name="weather_refresh_interval">Aktualisierungsintervall</string>
     <string name="weather_show_timestamp_title">Zeitstempel anzeigen</string>
     <string name="weather_show_location_title">Standort anzeigen</string>
