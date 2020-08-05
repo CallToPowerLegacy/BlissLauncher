@@ -124,7 +124,7 @@
     <string name="unknown">Unbekannt</string>
     <string name="explanation_access_to_appusage_is_not_enabled">Aktiviere den Zugriff auf Apps, um App-Vorschläge anzuzeigen.</string>
     <string name="app_suggestion">APP VORSCHLÄGE</string>
-    <string name="untitled">Unbenannt</string>
+    <string name="untitled">Unbetitelt</string>
     <string name="search">Suche</string>
     <string name="app_name">Bliss Starter</string>
     <string name="edit">Bearbeiten</string>
@@ -132,4 +132,5 @@
     <string name="add_widget">Widget hinzufügen</string>
     <string name="widgets">Widgets</string>
     <string name="uninstall_shortcut_dialog">Möchten Sie diese Verknüpfung deinstallieren\?</string>
+    <string name="ok">Ok</string>
 </resources>
