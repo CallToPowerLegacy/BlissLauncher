@@ -131,4 +131,5 @@
     <string name="choose_widget">Widget auswählen</string>
     <string name="add_widget">Widget hinzufügen</string>
     <string name="widgets">Widgets</string>
+    <string name="uninstall_shortcut_dialog">Möchten Sie diese Verknüpfung deinstallieren\?</string>
 </resources>
