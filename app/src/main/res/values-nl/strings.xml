@@ -132,4 +132,5 @@
     <string name="weather_show_when_minimized_summary">Toon weer informatie overzicht wanneer de widget geminimaliseerd is</string>
     <string name="weather_show_when_minimized_title">Toon wanneer geminimaliseerd</string>
     <string name="weather_15">Sneeuwstorm</string>
+    <string name="icon_badging_service_title">Toon meldingspunten</string>
 </resources>
