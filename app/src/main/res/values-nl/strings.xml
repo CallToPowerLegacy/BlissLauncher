@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="icon_set">Icoon set afbeelding</string>
+    <string name="icon_set">Set icoon afbeelding</string>
     <string name="weather_condition_image">Weer toestand afbeelding</string>
     <string name="dummy_weather_temp_min_max">42° / 28°</string>
     <string name="dummy_weather_temp">36°</string>
