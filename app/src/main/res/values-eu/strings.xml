@@ -98,4 +98,39 @@
     <string name="weather_29">Ostarte izartsua</string>
     <string name="weather">Eguraldia</string>
     <string name="explanation_access_to_appusage_is_not_enabled">Gaitu aplikazioen erabilerara sarbidea aplikazioak iradokitzeko.</string>
+    <string name="ok">ados</string>
+    <string name="uninstall_shortcut_dialog">Lasterbide hau ezabatu nahi duzu\?</string>
+    <string name="widgets">Widgetak</string>
+    <string name="edit">Editatu</string>
+    <string name="add_widget">Gehitu widgeta</string>
+    <string name="choose_widget">Hautatu widgeta</string>
+    <string name="icon_badging_service_title">Erakutsi jakinarazpen puntuak</string>
+    <string name="default_scroll_format">%1$d/%2$d orria</string>
+    <string name="activity_not_found">Aplikazioa ez dago instalaturik</string>
+    <string name="tap_to_setup_usageaccess">Sakatu Iradokitako aplikazioak konfiguratzeko</string>
+    <string name="place_automatically">Gehitu automatikoki</string>
+    <string name="permdesc_uninstall_shortcut">Aplikazio bati lasterbideak ezabatzea baimentzen dio, erabiltzailearen parte-hartzerik gabe.</string>
+    <string name="permdesc_install_shortcut">Aplikazio bati lasterbideak gehitzea baimentzen dio, erabiltzailearen parte-hartzerik gabe.</string>
+    <string name="permlab_uninstall_shortcut">desinstalatu lasterbideak</string>
+    <string name="permlab_install_shortcut">instalatu lasterbideak</string>
+    <string name="icon_set">Ikono sorten irudia</string>
+    <string name="weather_condition_image">Iragarpenaren baldintza irudia</string>
+    <string name="weather_setting">Iragarpenaren ezarpen ikonoa</string>
+    <string name="dummy_weather_temp_min_max">42°C / 28°C</string>
+    <string name="dummy_weather_temp">36°C</string>
+    <string name="weather_tap_to_setup">Sakatu iragarpena konfiguratzeko</string>
+    <string name="icon_set_selection_get_more">Lortu gehiago…</string>
+    <string name="weather_icons_monochrome">Kolorebakarra</string>
+    <string name="weather_icons_standard">Koloretsua</string>
+    <string name="weather_icon_set_title">Ikono sortak</string>
+    <string name="weather_select_location">Hautatu kokalekua</string>
+    <string name="weather_show_when_minimized_summary">Erakutsi informazio meteorologiko laburbildua widgeta minimizatuta dagoenean</string>
+    <string name="weather_show_when_minimized_title">Erakutsi minimizatzean</string>
+    <string name="weather_alternate_icons_summary">Hautatu ikono lehenetsien (koloretsuak) eta ordezkoen (zuriak) artean aldatzeko</string>
+    <string name="weather_alternate_icons_title">Erabili ikono koloretsuak</string>
+    <string name="weather_progress_title">Kokalekua egiaztatzen</string>
+    <string name="weather_invert_lowhigh">Alderantzikatu tenperatu baxuak/altuak</string>
+    <string name="weather_retrieve_location_dialog_message">Sare bidezko geokokapena desgaituta dago.
+\n
+\nGaitu kokapena Iragarpen widgetan erabiltzeko.</string>
 </resources>
