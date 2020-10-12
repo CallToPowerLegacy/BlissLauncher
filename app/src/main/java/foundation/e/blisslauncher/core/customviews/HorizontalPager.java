@@ -563,6 +563,16 @@ public class HorizontalPager extends ViewGroup implements Insettable {
         }
     }
 
+    @Override
+    public void onViewAdded(View child) {
+        super.onViewAdded(child);
+        Log.d(TAG, "onViewAdded() called with: child = [" + child + "]");
+        if (child instanceof Insettable) {
+            Log.d(TAG, "child is instance of insettable");
+            ((Insettable) child).setInsets(insets);
+        }
+    }
+
     public static class SavedState extends BaseSavedState {
         int currentScreen = -1;
 
