@@ -101,6 +101,7 @@ import foundation.e.blisslauncher.core.customviews.BlissFrameLayout;
 import foundation.e.blisslauncher.core.customviews.BlissInput;
 import foundation.e.blisslauncher.core.customviews.DockGridLayout;
 import foundation.e.blisslauncher.core.customviews.HorizontalPager;
+import foundation.e.blisslauncher.core.customviews.InsettableFrameLayout;
 import foundation.e.blisslauncher.core.customviews.InsettableRelativeLayout;
 import foundation.e.blisslauncher.core.customviews.InsettableScrollLayout;
 import foundation.e.blisslauncher.core.customviews.PageIndicatorLinearLayout;
@@ -1284,7 +1285,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void createWidgetsPage() {
-        widgetsPage = (FrameLayout) getLayoutInflater().inflate(R.layout.widgets_page,
+        widgetsPage = (InsettableFrameLayout) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
         widgetContainer = widgetsPage.findViewById(R.id.widget_container);
         /*widgetsPage.setPadding(0,
