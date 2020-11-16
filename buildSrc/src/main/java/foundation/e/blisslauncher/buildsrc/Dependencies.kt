@@ -1,9 +1,9 @@
 package foundation.e.blisslauncher.buildsrc
 
 object Versions {
-    const val compile_sdk = 28
+    const val compile_sdk = 29
     const val min_sdk = 24
-    const val target_sdk = 28
+    const val target_sdk = 29
     const val android_gradle_plugin = "3.5.0"
     const val dexcount_gradle_plugin = "0.8.6"
     const val kotlin = "1.3.41"

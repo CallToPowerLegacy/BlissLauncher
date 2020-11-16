@@ -205,7 +205,7 @@ class PageIndicatorDots(context: Context?, attrs: AttributeSet?, defStyleAttr: I
     } // Dot is leaving the left circle.
 
     // dot is capturing the right circle.
-    private val activeRect: RectF?
+    private val activeRect: RectF
         get() {
             val startCircle: Float = mCurrentPosition
             var delta = mCurrentPosition - startCircle
