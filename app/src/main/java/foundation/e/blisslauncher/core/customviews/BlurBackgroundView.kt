@@ -20,14 +20,14 @@ class BlurBackgroundView(context: Context, attrs: AttributeSet?) : View(context,
 
     private val blurDrawableCallback by lazy {
         object : Drawable.Callback {
-            override fun unscheduleDrawable(who: Drawable?, what: Runnable?) {
+            override fun unscheduleDrawable(who: Drawable, what: Runnable) {
             }
 
-            override fun invalidateDrawable(who: Drawable?) {
+            override fun invalidateDrawable(who: Drawable) {
                 runOnMainThread { invalidate() }
             }
 
-            override fun scheduleDrawable(who: Drawable?, what: Runnable?, `when`: Long) {
+            override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long) {
             }
         }
     }
