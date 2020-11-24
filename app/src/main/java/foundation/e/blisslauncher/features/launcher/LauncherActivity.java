@@ -42,11 +42,14 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
@@ -86,7 +89,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import foundation.e.blisslauncher.BlissLauncher;
-import foundation.e.blisslauncher.BuildConfig;
 import foundation.e.blisslauncher.R;
 import foundation.e.blisslauncher.core.Alarm;
 import foundation.e.blisslauncher.core.DeviceProfile;
@@ -126,6 +128,8 @@ import foundation.e.blisslauncher.core.utils.Constants;
 import foundation.e.blisslauncher.core.utils.GraphicsUtil;
 import foundation.e.blisslauncher.core.utils.ListUtil;
 import foundation.e.blisslauncher.core.utils.UserHandle;
+import foundation.e.blisslauncher.features.accessibility.AccessibilityUtils;
+import foundation.e.blisslauncher.features.accessibility.LockAccessibilityService;
 import foundation.e.blisslauncher.features.notification.NotificationRepository;
 import foundation.e.blisslauncher.features.notification.NotificationService;
 import foundation.e.blisslauncher.features.shortcuts.DeepShortcutManager;
@@ -135,12 +139,6 @@ import foundation.e.blisslauncher.features.suggestions.SearchSuggestionUtil;
 import foundation.e.blisslauncher.features.suggestions.SuggestionProvider;
 import foundation.e.blisslauncher.features.suggestions.SuggestionsResult;
 import foundation.e.blisslauncher.features.usagestats.AppUsageStats;
-import foundation.e.blisslauncher.features.weather.DeviceStatusService;
-import foundation.e.blisslauncher.features.weather.ForecastBuilder;
-import foundation.e.blisslauncher.features.weather.WeatherPreferences;
-import foundation.e.blisslauncher.features.weather.WeatherSourceListenerService;
-import foundation.e.blisslauncher.features.weather.WeatherUpdateService;
-import foundation.e.blisslauncher.features.weather.WeatherUtils;
 import foundation.e.blisslauncher.features.widgets.WidgetManager;
 import foundation.e.blisslauncher.features.widgets.WidgetViewBuilder;
 import foundation.e.blisslauncher.features.widgets.WidgetsActivity;
@@ -202,8 +200,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private boolean mLongClickStartsDrag = true;
     private boolean isDragging;
     private BlissDragShadowBuilder dragShadowBuilder;
-    private View mWeatherPanel;
-    private View mWeatherSetupTextView;
     private boolean allAppsDisplayed;
     private boolean forceRefreshSuggestedApps = false;
 
@@ -213,14 +209,6 @@ public class LauncherActivity extends AppCompatActivity implements
     private InsettableRelativeLayout workspace;
     private View blurLayer; // Blur layer for folders and search container.
 
-    private BroadcastReceiver mWeatherReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (!intent.getBooleanExtra(WeatherUpdateService.EXTRA_UPDATE_CANCELLED, false)) {
-                updateWeatherPanel();
-            }
-        }
-    };
     private FolderItem activeFolder;
     private BlissFrameLayout activeFolderView;
     private int activeDot;
@@ -286,7 +274,7 @@ public class LauncherActivity extends AppCompatActivity implements
             String setting = "enabled_notification_listeners";
             String permissionString = Settings.Secure.getString(cr, setting);
             if (permissionString == null || !permissionString.contains(getPackageName())) {
-                if (BuildConfig.DEBUG) {
+                if (Constants.DEBUG) {
                     startActivity(
                             new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 } else if (!Preferences.shouldAskForNotificationAccess(this)) {
@@ -426,10 +414,6 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if (mWeatherPanel != null) {
-            updateWeatherPanel();
-        }
-
         if (widgetsPage != null) {
             refreshSuggestedApps(widgetsPage, forceRefreshSuggestedApps);
         }
@@ -485,7 +469,6 @@ public class LauncherActivity extends AppCompatActivity implements
         // Unregister active receivers
         TimeChangeBroadcastReceiver.unregister(this, timeChangedReceiver);
         ManagedProfileBroadcastReceiver.unregister(this, managedProfileReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mWeatherReceiver);
 
         // Dispose CompositeDisposable
         getCompositeDisposable().dispose();
@@ -983,6 +966,7 @@ public class LauncherActivity extends AppCompatActivity implements
         createPageChangeListener();
         createFolderTitleListener();
         createDragListener();
+        createDoubleTapToSleepListener();
         createWidgetsPage();
         createIndicator();
         createOrUpdateBadgeCount();
@@ -1167,12 +1151,6 @@ public class LauncherActivity extends AppCompatActivity implements
                         mIndicator.animate().alpha(0).setDuration(100).withEndAction(
                                 () -> mIndicator.setVisibility(GONE));
                         refreshSuggestedApps(widgetsPage, forceRefreshSuggestedApps);
-                        if (Preferences.weatherRefreshIntervalInMs(LauncherActivity.this) == 0) {
-                            Intent intent = new Intent(LauncherActivity.this,
-                                    WeatherUpdateService.class);
-                            intent.setAction(WeatherUpdateService.ACTION_FORCE_UPDATE);
-                            startService(intent);
-                        }
                     } else {
                         mIndicator.setVisibility(View.VISIBLE);
                         mDock.setVisibility(View.VISIBLE);
@@ -1395,54 +1373,6 @@ public class LauncherActivity extends AppCompatActivity implements
         findViewById(R.id.edit_widgets_button).setOnClickListener(
                 view -> startActivity(new Intent(this, WidgetsActivity.class)));
 
-        // Prepare weather widget view
-        // [[BEGIN]]
-        findViewById(R.id.weather_setting_imageview).setOnClickListener(
-                v -> startActivity(new Intent(this, WeatherPreferences.class)));
-
-        mWeatherSetupTextView = findViewById(R.id.weather_setup_textview);
-        mWeatherPanel = findViewById(R.id.weather_panel);
-        mWeatherPanel.setOnClickListener(v -> {
-            Intent launchIntent = getPackageManager().getLaunchIntentForPackage(
-                    "foundation.e.weather");
-            if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(launchIntent);
-            }
-        });
-        updateWeatherPanel();
-
-        if (WeatherUtils.isWeatherServiceAvailable(
-                this)) {
-            startService(new Intent(this, WeatherSourceListenerService.class));
-            startService(new Intent(this, DeviceStatusService.class));
-        }
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(mWeatherReceiver, new IntentFilter(
-                WeatherUpdateService.ACTION_UPDATE_FINISHED));
-
-        if (!Preferences.useCustomWeatherLocation(this)) {
-            if (!WeatherPreferences.hasLocationPermission(this)) {
-                String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
-                requestPermissions(permissions,
-                        WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE);
-            } else {
-                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-                        && Preferences.getEnableLocation(this)) {
-                    showLocationEnableDialog();
-                    Preferences.setEnableLocation(this);
-                } else {
-                    startService(new Intent(this, WeatherUpdateService.class)
-                            .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
-                }
-            }
-        } else {
-            startService(new Intent(this, WeatherUpdateService.class)
-                    .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
-        }
-        // [[END]]
-
         int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
         Arrays.sort(widgetIds);
         for (int id : widgetIds) {
@@ -1473,21 +1403,7 @@ public class LauncherActivity extends AppCompatActivity implements
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == WeatherPreferences.LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // We only get here if user tried to enable the preference,
-                // hence safe to turn it on after permission is granted
-                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                    showLocationEnableDialog();
-                    Preferences.setEnableLocation(this);
-                } else {
-                    startService(new Intent(this, WeatherUpdateService.class)
-                            .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
-                }
-            }
-        } else if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
+        if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 BlurWallpaperProvider.Companion.getInstance(getApplicationContext()).updateAsync();
@@ -1495,53 +1411,9 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
-    private void updateWeatherPanel() {
-        if (Preferences.getCachedWeatherInfo(this) == null) {
-            mWeatherSetupTextView.setVisibility(VISIBLE);
-            mWeatherPanel.setVisibility(GONE);
-            mWeatherSetupTextView.setOnClickListener(
-                    v -> startActivity(
-                            new Intent(LauncherActivity.this, WeatherPreferences.class)));
-            return;
-        }
-        mWeatherSetupTextView.setVisibility(GONE);
-        mWeatherPanel.setVisibility(VISIBLE);
-        ForecastBuilder.buildLargePanel(this, mWeatherPanel,
-                Preferences.getCachedWeatherInfo(this));
-    }
-
-    private void showLocationEnableDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        // Build and show the dialog
-        builder.setTitle(R.string.weather_retrieve_location_dialog_title);
-        builder.setMessage(R.string.weather_retrieve_location_dialog_message);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.weather_retrieve_location_dialog_enable_button,
-                (dialog1, whichButton) -> {
-                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    intent.setFlags(
-                            Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivityForResult(intent, REQUEST_LOCATION_SOURCE_SETTING);
-                });
-        builder.setNegativeButton(R.string.cancel, null);
-        enableLocationDialog = builder.create();
-        enableLocationDialog.show();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_LOCATION_SOURCE_SETTING) {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (!lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                Toast.makeText(this, "Set custom location in weather settings.",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                startService(new Intent(this, WeatherUpdateService.class)
-                        .setAction(WeatherUpdateService.ACTION_FORCE_UPDATE));
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private ObservableSource<SuggestionsResult> searchForQuery(
@@ -2426,6 +2298,47 @@ public class LauncherActivity extends AppCompatActivity implements
 
                 return true;
             }
+        });
+    }
+
+    /**
+     * Creates a "double tap on sleep" listener (via Accessibility) and binds it to the main screen
+     * If the Accessibility manager is not activated, request activation
+     */
+    private void createDoubleTapToSleepListener() {
+        mHorizontalPager.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gestureDetector.onTouchEvent(event);
+                return false;
+            }
+
+            private GestureDetector gestureDetector = new GestureDetector(getApplicationContext(), new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onDoubleTap(MotionEvent e) {
+                    Log.d(TAG, "onDoubleTap");
+
+                    AccessibilityManager manager = (AccessibilityManager) mHorizontalPager.getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+                    if (manager.isEnabled() && AccessibilityUtils.getInstance().isAccessibilitySettingsOn(getPackageName(), mHorizontalPager.getContext())) {
+                        Log.d(TAG, "Accessibility Manager enabled");
+                        AccessibilityEvent event = AccessibilityEvent.obtain();
+                        event.setEventType(AccessibilityEvent.TYPE_ANNOUNCEMENT);
+                        event.setClassName(getClass().getName());
+                        event.getText().add(LockAccessibilityService.CUSTOM_DOUBLE_TAP_EVENT);
+
+                        event.setSource(mHorizontalPager);
+                        manager.sendAccessibilityEvent(event);
+                    } else {
+                        Log.d(TAG, "Accessibility Manager not enabled");
+                        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        Toast.makeText(getApplicationContext(), "Please enable this app in the accessibility settings to enable double tap to sleep", Toast.LENGTH_LONG).show();
+                    }
+
+                    return super.onDoubleTap(e);
+                }
+            });
         });
     }
 

@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="foundation.e.blisslauncher">
-    <uses-permission android:name="lineageos.permission.ACCESS_WEATHER_MANAGER"/>
-    <uses-permission android:name="lineageos.permission.READ_WEATHER"/>
 </manifest>

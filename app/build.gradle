@@ -18,7 +18,7 @@ android {
         minSdkVersion Versions.min_sdk
         targetSdkVersion Versions.target_sdk
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100
-        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+        versionName "${versionMajor}.${versionMinor}.${versionPatch} (CTP edition)"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         renderscriptTargetApi 28
@@ -151,5 +151,3 @@ dependencies {
     androidTestImplementation Libs.AndroidX.Test.rules
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 }
-
-apply plugin: 'com.getkeepsafe.dexcount'

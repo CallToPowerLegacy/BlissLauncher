@@ -38,11 +38,6 @@
         tools:ignore="ProtectedPermissions" />
     <!-- General permissions END-->
 
-    <!-- LineageOS specific permissions BEGIN -->
-    <uses-permission android:name="lineageos.permission.ACCESS_WEATHER_MANAGER" />
-    <uses-permission android:name="lineageos.permission.READ_WEATHER" />
-    <!-- LineageOS specific permissions END -->
-
     <uses-permission android:name="foundation.e.pwaplayer.provider.READ_WRITE"/>
 
     <application
@@ -89,17 +84,6 @@
         </activity>
 
         <activity
-            android:name=".features.weather.WeatherPreferences"
-            android:theme="@style/AppTheme" />
-
-        <activity
-            android:name=".features.weather.PermissionRequestActivity"
-            android:excludeFromRecents="true"
-            android:exported="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
-        <activity
             android:name=".features.widgets.WidgetsActivity"
             android:autoRemoveFromRecents="true"
             android:excludeFromRecents="true"
@@ -125,9 +109,17 @@
             </intent-filter>
         </service>
 
-        <service android:name=".features.weather.WeatherUpdateService" />
-        <service android:name=".features.weather.DeviceStatusService" />
-        <service android:name=".features.weather.WeatherSourceListenerService" />
+        <service
+            android:name=".features.accessibility.LockAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
 
 
         <!-- Intent received used to install shortcuts from other applications -->
