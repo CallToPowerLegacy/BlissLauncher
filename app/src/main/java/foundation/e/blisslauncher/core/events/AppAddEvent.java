@@ -22,4 +22,12 @@ public class AppAddEvent extends Event{
     public UserHandle getUserHandle() {
         return userHandle;
     }
+
+    @Override
+    public String toString() {
+        return "AppAddEvent{" +
+                "packageName='" + packageName + '\'' +
+                ", userHandle=" + userHandle +
+                '}';
+    }
 }
