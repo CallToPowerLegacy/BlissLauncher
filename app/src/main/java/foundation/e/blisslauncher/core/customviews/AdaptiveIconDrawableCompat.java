@@ -786,7 +786,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
 
     @Override
     public int getIntrinsicWidth() {
-        return (int) (getMaxIntrinsicWidth() * DEFAULT_VIEW_PORT_SCALE);
+        return (int) (getMaxIntrinsicWidth() * 1f);
     }
 
     private int getMaxIntrinsicWidth() {
@@ -806,7 +806,7 @@ public class AdaptiveIconDrawableCompat extends Drawable implements Drawable.Cal
 
     @Override
     public int getIntrinsicHeight() {
-        return (int) (getMaxIntrinsicHeight() * DEFAULT_VIEW_PORT_SCALE);
+        return (int) (getMaxIntrinsicHeight() * 1f);
     }
 
     private int getMaxIntrinsicHeight() {

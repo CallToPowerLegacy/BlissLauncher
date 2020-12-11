@@ -503,10 +503,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     public void onAppAddEvent(AppAddEvent appAddEvent) {
-        moveTo = -1;
-        ApplicationItem applicationItem = AppUtils.createAppItem(this, appAddEvent.getPackageName(),
-                appAddEvent.getUserHandle());
-        addLauncherItem(applicationItem);
+        updateOrAddApp(appAddEvent.getPackageName(),appAddEvent.getUserHandle());
         //DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         if (moveTo != -1) {
             mHorizontalPager.setCurrentPage(moveTo);
@@ -521,7 +518,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     public void onAppChangeEvent(AppChangeEvent appChangeEvent) {
-        updateApp(appChangeEvent.getPackageName(), appChangeEvent.getUserHandle());
+        updateOrAddApp(appChangeEvent.getPackageName(), appChangeEvent.getUserHandle());
         DatabaseManager.getManager(this).saveLayouts(pages, mDock);
     }
 
@@ -541,6 +538,7 @@ public class LauncherActivity extends AppCompatActivity implements
             return;
         }
         if (launcherItem != null) {
+
             BlissFrameLayout view = prepareLauncherItem(launcherItem);
 
             int current = 0;
@@ -843,7 +841,7 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
-    private void updateApp(String packageName, UserHandle userHandle) {
+    private void updateOrAddApp(String packageName, UserHandle userHandle) {
         handleWobbling(false);
         ApplicationItem updatedAppItem = AppUtils.createAppItem(this, packageName, userHandle);
         if (updatedAppItem == null) {
@@ -935,6 +933,7 @@ public class LauncherActivity extends AppCompatActivity implements
                                         existingAppItem);
                                 gridLayout.removeViewAt(j);
                                 addAppToGrid(gridLayout, blissFrameLayout, j);
+                                moveTo = i + 1;
                                 return;
                             }
                         }
@@ -947,6 +946,7 @@ public class LauncherActivity extends AppCompatActivity implements
                             BlissFrameLayout blissFrameLayout = prepareLauncherItem(updatedAppItem);
                             gridLayout.removeViewAt(j);
                             addAppToGrid(gridLayout, blissFrameLayout, j);
+                            moveTo = i + 1;
                             return;
                         }
                     }
