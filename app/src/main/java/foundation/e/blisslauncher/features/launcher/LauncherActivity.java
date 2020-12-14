@@ -520,7 +520,7 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     public void onAppAddEvent(AppAddEvent appAddEvent) {
-        updateOrAddApp(appAddEvent.getPackageName(),appAddEvent.getUserHandle());
+        updateOrAddApp(appAddEvent.getPackageName(), appAddEvent.getUserHandle());
         //DatabaseManager.getManager(this).saveLayouts(pages, mDock);
         if (moveTo != -1) {
             mHorizontalPager.setCurrentPage(moveTo);
@@ -1984,11 +1984,18 @@ public class LauncherActivity extends AppCompatActivity implements
                         .setMessage(R.string.uninstall_shortcut_dialog)
                         .setPositiveButton(R.string.ok, (dialog1, which) -> {
                             ShortcutItem shortcut = (ShortcutItem) launcherItem;
-                            DeepShortcutManager.getInstance(this).unpinShortcut(ShortcutKey.fromItem(shortcut));
-                            if (DeepShortcutManager.getInstance(this).wasLastCallSuccess()) {
+                            if (shortcut.packageName != null) {
+                                DeepShortcutManager.getInstance(this).unpinShortcut(ShortcutKey.fromItem(shortcut));
+                                if (DeepShortcutManager.getInstance(this).wasLastCallSuccess()) {
+                                    deleteShortcutFromProvider(shortcut.id);
+                                    removeShortcutView(shortcut, blissFrameLayout);
+                                }
+                            } else {
+                                // Null package name generally comes for nougat shortcuts so don't unpin here, just directly delete it.
                                 deleteShortcutFromProvider(shortcut.id);
                                 removeShortcutView(shortcut, blissFrameLayout);
                             }
+
                         })
                         .setNegativeButton(R.string.cancel, null)
                         .setIcon(launcherItem.icon)
