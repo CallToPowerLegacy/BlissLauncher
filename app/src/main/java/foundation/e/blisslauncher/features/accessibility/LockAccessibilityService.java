@@ -7,6 +7,8 @@ import android.view.accessibility.AccessibilityEvent;
 
 import androidx.room.util.StringUtil;
 
+import java.util.Objects;
+
 public class LockAccessibilityService extends AccessibilityService {
 
     public static final String CUSTOM_DOUBLE_TAP_EVENT = "DOUBLE_TAPPED";
@@ -29,6 +31,7 @@ public class LockAccessibilityService extends AccessibilityService {
         Log.d(TAG, "onAccessibilityEvent");
         boolean containsCustomDoubleTapEvent =
                 event.getText().stream()
+                        .filter(Objects::nonNull)
                         .filter(cs -> cs.equals(CUSTOM_DOUBLE_TAP_EVENT))
                         .findAny()
                         .isPresent();
