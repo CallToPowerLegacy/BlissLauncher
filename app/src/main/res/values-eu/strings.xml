@@ -37,7 +37,7 @@
     <string name="weather_21">Behe-lainoa</string>
     <string name="action_add_to_workspace">Gehitu hasierako pantailan</string>
     <string name="weather_retrieve_location_dialog_enable_button">Gaitu</string>
-    <string name="weather_retrieve_location_dialog_title">Ezin da kokapena berreskuratu!</string>
+    <string name="weather_retrieve_location_dialog_title">Ezin da kokalekua berreskuratu!</string>
     <string name="weather_use_metric">Erabili zentigraduak (ºC)</string>
     <string name="weather_refresh_interval">Eguneratze-tartea</string>
     <string name="weather_show_timestamp_title">Erakutsi denbora-zigilua</string>
@@ -46,7 +46,7 @@
     <string name="weather_custom_location_hint">Hiria, herrialdea</string>
     <string name="weather_custom_location_dialog_title">Sartu kokalekua</string>
     <string name="weather_geolocated">Sarea erabiliz geokokatua</string>
-    <string name="weather_use_custom_location">Erabili kokapen pertsonalizatua</string>
+    <string name="weather_use_custom_location">Erabili kokaleku pertsonalizatua</string>
     <string name="weather_source_title">Iragarpen-iturria</string>
     <string name="weather_category">Iragarpen-panela</string>
     <string name="weather_enable">Erakutsi iragarpena</string>
