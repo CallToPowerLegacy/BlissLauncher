@@ -60,7 +60,7 @@
     <string name="weather_cannot_reach_provider">%s momentan nicht erreichbar</string>
     <string name="weather_last_sync_just_now">Gerade eben</string>
     <string name="weather_refreshing">Wird aktualisiert</string>
-    <string name="weather_tap_to_refresh">Tippen um zu aktualisieren</string>
+    <string name="weather_tap_to_refresh">Zum Aktualisieren tippen</string>
     <string name="weather_no_data">Keine Daten</string>
     <string name="weather_NW">NW</string>
     <string name="weather_W">W</string>
@@ -131,6 +131,6 @@
     <string name="choose_widget">Widget auswählen</string>
     <string name="add_widget">Widget hinzufügen</string>
     <string name="widgets">Widgets</string>
-    <string name="uninstall_shortcut_dialog">Möchten Sie diese Verknüpfung deinstallieren\?</string>
+    <string name="uninstall_shortcut_dialog">Wollen Sie diese Verknüpfung entfernen\?</string>
     <string name="ok">Ok</string>
 </resources>
