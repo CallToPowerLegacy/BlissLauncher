@@ -70,7 +70,7 @@
     <string name="weather_E">O</string>
     <string name="weather_NE">NO</string>
     <string name="weather_N">N</string>
-    <string name="weather_mph">mi/h</string>
+    <string name="weather_mph">mph</string>
     <string name="weather_kph">km/h</string>
     <string name="weather_47">Vereinzelte Gewitterschauer</string>
     <string name="weather_46">Schneeschauer</string>
@@ -124,7 +124,7 @@
     <string name="unknown">Unbekannt</string>
     <string name="explanation_access_to_appusage_is_not_enabled">Aktiviere den Zugriff auf Apps, um App-Vorschläge anzuzeigen.</string>
     <string name="app_suggestion">APP VORSCHLÄGE</string>
-    <string name="untitled">Unbetitelt</string>
+    <string name="untitled">ohne Namen</string>
     <string name="search">Suche</string>
     <string name="app_name">Bliss Starter</string>
     <string name="edit">Bearbeiten</string>
