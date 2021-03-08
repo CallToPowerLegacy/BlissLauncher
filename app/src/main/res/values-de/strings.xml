@@ -92,7 +92,7 @@
     <string name="weather_30">Teilweise bewölkt</string>
     <string name="weather_29">Teilweise Bewölkt</string>
     <string name="weather_28">Überwiegend Bewölkt</string>
-    <string name="weather_27">Großteils Bewölkt</string>
+    <string name="weather_27">Überwiegend Bewölkt</string>
     <string name="weather_26">Bewölkt</string>
     <string name="weather_25">Kalt</string>
     <string name="weather_24">Windig</string>
@@ -111,13 +111,13 @@
     <string name="weather_11">Regenschauer</string>
     <string name="weather_10">Gefrierender Regen</string>
     <string name="weather_9">Nieselregen</string>
-    <string name="weather_8">Gefrierender Niesel</string>
+    <string name="weather_8">Gefrierender Nieselregen</string>
     <string name="weather_7">Schnee und Graupelschauer</string>
     <string name="weather_6">Regen und Graupelschauer</string>
     <string name="weather_5">Schneeregen</string>
     <string name="weather_4">Gewitter</string>
     <string name="weather_3">Heftige Gewitter</string>
-    <string name="weather_2">Orkan</string>
+    <string name="weather_2">Wirbelsturm</string>
     <string name="weather_1">Tropengewitter</string>
     <string name="weather_0">Tornado</string>
     <string name="cancel">Abbrechen</string>
