@@ -1094,6 +1094,7 @@ public class LauncherActivity extends AppCompatActivity implements
             if (!hasFocus) {
                 hideKeyboard(v);
             }
+            mFolderTitleInput.setCursorVisible(true);
         });
         mFolderTitleInput.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
