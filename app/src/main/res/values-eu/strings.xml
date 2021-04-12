@@ -39,7 +39,7 @@
     <string name="weather_retrieve_location_dialog_enable_button">Gaitu</string>
     <string name="weather_retrieve_location_dialog_title">Ezin da kokalekua berreskuratu!</string>
     <string name="weather_use_metric">Erabili zentigraduak (ºC)</string>
-    <string name="weather_refresh_interval">Eguneratze-tartea</string>
+    <string name="weather_refresh_interval">Eguneratze-bitartea</string>
     <string name="weather_show_timestamp_title">Erakutsi denbora-zigilua</string>
     <string name="weather_show_location_title">Erakutsi kokalekua</string>
     <string name="weather_custom_location_title">Kokalekua</string>
