@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="ok">ок</string>
+    <string name="ok">Ок</string>
     <string name="uninstall_shortcut_dialog">Вы хотите удалить этот ярлык\?</string>
     <string name="widgets">Виджеты</string>
     <string name="edit">Редактировать</string>
@@ -123,7 +123,7 @@
     <string name="weather_refresh_manual">Вручную</string>
     <string name="weather_tap_to_select_source">Нажми, чтобы выбрать один</string>
     <string name="weather_source_not_selected">Не выбран источник погоды</string>
-    <string name="weather_cannot_reach_provider">Не могу связаться с % s в данный момент</string>
+    <string name="weather_cannot_reach_provider">Не могу связаться с %s в данный момент</string>
     <string name="weather_last_sync_just_now">Прямо сейчас</string>
     <string name="weather_refreshing">Обновление</string>
     <string name="weather_tap_to_refresh">Нажмите, чтобы обновить</string>
