@@ -34,7 +34,9 @@
     <string name="weather_progress_title">Sto verificando la posizione</string>
     <string name="weather_invert_lowhigh">Inverti le temperature basse/alte</string>
     <string name="weather_retrieve_location_dialog_enable_button">Abilita</string>
-    <string name="weather_retrieve_location_dialog_message">Consenti al widget Tempo di localizzarti.</string>
+    <string name="weather_retrieve_location_dialog_message">La geolocalizzazione via rete è disabilitata.
+\n
+\nAbilita la posizione per lavorare con il widget Meteo.</string>
     <string name="weather_retrieve_location_dialog_title">Non riesco a recuperare la posizione!</string>
     <string name="weather_use_metric">(°C) su scala decimale</string>
     <string name="weather_refresh_interval">Intervallo di aggiornamento</string>
