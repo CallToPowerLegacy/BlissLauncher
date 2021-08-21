@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="ok">Ок</string>
+    <string name="ok">ок</string>
     <string name="uninstall_shortcut_dialog">Вы хотите удалить этот ярлык\?</string>
     <string name="widgets">Виджеты</string>
     <string name="edit">Редактировать</string>
