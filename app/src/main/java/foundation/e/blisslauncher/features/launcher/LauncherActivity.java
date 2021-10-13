@@ -1172,12 +1172,16 @@ public class LauncherActivity extends AppCompatActivity implements
         AppUsageStats appUsageStats = new AppUsageStats(this);
         List<UsageStats> usageStats = appUsageStats.getUsageStats();
         if (usageStats.size() > 0) {
-            openUsageAccessSettingsTv.setVisibility(GONE);
-            suggestedAppsGridLayout.setVisibility(VISIBLE);
+            if (openUsageAccessSettingsTv != null) {
+                openUsageAccessSettingsTv.setVisibility(GONE);
+            }
+            if (suggestedAppsGridLayout != null) {
+                suggestedAppsGridLayout.setVisibility(VISIBLE);
+            }
 
             // Check if usage stats have been changed or not to avoid unnecessary flickering
-            if (forceRefresh || mUsageStats == null || mUsageStats.size() != usageStats.size()
-                    || !ListUtil.areEqualLists(mUsageStats, usageStats)) {
+            if ((forceRefresh || mUsageStats == null || mUsageStats.size() != usageStats.size()
+                    || !ListUtil.areEqualLists(mUsageStats, usageStats)) && suggestedAppsGridLayout != null) {
                 mUsageStats = usageStats;
                 if (suggestedAppsGridLayout.getChildCount() > 0) {
                     suggestedAppsGridLayout.removeAllViews();
@@ -1194,8 +1198,12 @@ public class LauncherActivity extends AppCompatActivity implements
                 }
             }
         } else {
-            openUsageAccessSettingsTv.setVisibility(VISIBLE);
-            suggestedAppsGridLayout.setVisibility(GONE);
+            if (openUsageAccessSettingsTv != null) {
+                openUsageAccessSettingsTv.setVisibility(VISIBLE);
+            }
+            if (suggestedAppsGridLayout != null) {
+                suggestedAppsGridLayout.setVisibility(GONE);
+            }
         }
     }
 
@@ -1266,7 +1274,7 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createWidgetsPage() {
         widgetsPage = (InsettableFrameLayout) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
-        widgetContainer = widgetsPage.findViewById(R.id.widget_container);
+        // widgetContainer = widgetsPage.findViewById(R.id.widget_container);
         /*widgetsPage.setPadding(0,
                 (int) (Utilities.pxFromDp(8, this)),
                 0, 0);*/
@@ -1283,29 +1291,33 @@ public class LauncherActivity extends AppCompatActivity implements
         currentPageNumber = 1;
         mHorizontalPager.setCurrentPage(currentPageNumber);
 
-        widgetsPage.findViewById(R.id.used_apps_layout).setClipToOutline(true);
+        // widgetsPage.findViewById(R.id.used_apps_layout).setClipToOutline(true);
 
         // Prepare app suggestions view
         // [[BEGIN]]
+        /*
         widgetsPage.findViewById(R.id.openUsageAccessSettings).setOnClickListener(
                 view -> startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)));
+         */
 
         // divided by 2 because of left and right padding.
+        /*
         int padding =
                 (int) (mDeviceProfile.availableWidthPx / 2 - Utilities.pxFromDp(8, this)
                         - 2
                         * mDeviceProfile.cellWidthPx);
         widgetsPage.findViewById(R.id.suggestedAppGrid).setPadding(padding, 0, padding, 0);
+         */
         // [[END]]
 
         // Prepare search suggestion view
         // [[BEGIN]]
+        /*
         ImageView clearSuggestions = widgetsPage.findViewById(R.id.clearSuggestionImageView);
         clearSuggestions.setOnClickListener(v -> {
             mSearchInput.setText("");
             mSearchInput.clearFocus();
         });
-
         mSearchInput = widgetsPage.findViewById(R.id.search_input);
         mSearchInput.addTextChangedListener(new TextWatcher() {
             @Override
@@ -1369,6 +1381,7 @@ public class LauncherActivity extends AppCompatActivity implements
             return false;
         });
         // [[END]]
+         */
 
         // Prepare edit widgets button
         findViewById(R.id.edit_widgets_button).setOnClickListener(

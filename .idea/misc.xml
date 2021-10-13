@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="app/src/main/res/layout/app_view.xml" value="0.34010416666666665" />
+        <entry key="app/src/main/res/layout/item_suggestion.xml" value="0.34010416666666665" />
+        <entry key="app/src/main/res/layout/layout_used_apps.xml" value="0.34010416666666665" />
+        <entry key="app/src/main/res/layout/widgets_page.xml" value="0.34010416666666665" />
+      </map>
+    </option>
+  </component>
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK" />
 </project>
