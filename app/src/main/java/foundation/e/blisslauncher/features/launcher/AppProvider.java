@@ -80,7 +80,7 @@ public class AppProvider {
 
     private static final String MICROG_PACKAGE = "com.google.android.gms";
     private static final String MUPDF_PACKAGE = "com.artifex.mupdf.mini.app";
-    private static final String PDF_VIEWER_PACKAGE = "com.gsnathan.pdfviewer";
+    private static final String PDF_VIEWER_PACKAGE = "foundation.e.pdfviewer";
     private static final String OPENKEYCHAIN_PACKAGE = "org.sufficientlysecure.keychain";
     private static final String LIBREOFFICE_PACKAGE = "org.documentfoundation.libreoffice";
 
