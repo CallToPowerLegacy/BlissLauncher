@@ -23,7 +23,7 @@
 
             <!--
             <include layout="@layout/layout_search_suggestion" />
-
+            -->
             <FrameLayout
                 android:id="@+id/drag_layer"
                 android:layout_width="match_parent"
@@ -35,7 +35,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
             </FrameLayout>
-            -->
 
             <Button
                 android:id="@+id/edit_widgets_button"
