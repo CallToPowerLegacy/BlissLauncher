@@ -445,8 +445,7 @@ public class LauncherActivity extends AppCompatActivity implements
         }
     }
 
-    private void addWidgetToContainer(
-            RoundedWidgetView widgetView) {
+    private void addWidgetToContainer(RoundedWidgetView widgetView) {
         widgetView.setPadding(0, 0, 0, 0);
         widgetContainer.addView(widgetView);
     }
@@ -1274,10 +1273,8 @@ public class LauncherActivity extends AppCompatActivity implements
     private void createWidgetsPage() {
         widgetsPage = (InsettableFrameLayout) getLayoutInflater().inflate(R.layout.widgets_page,
                 mHorizontalPager, false);
-        // widgetContainer = widgetsPage.findViewById(R.id.widget_container);
-        /*widgetsPage.setPadding(0,
-                (int) (Utilities.pxFromDp(8, this)),
-                0, 0);*/
+        widgetContainer = widgetsPage.findViewById(R.id.widget_container);
+        widgetsPage.setPadding(0, (int) (Utilities.pxFromDp(8, this)), 0, 0);
         mHorizontalPager.addView(widgetsPage, 0);
         widgetsPage.setOnDragListener(null);
         InsettableScrollLayout scrollView = widgetsPage.findViewById(R.id.widgets_scroll_container);
