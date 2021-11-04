@@ -1,6 +1,7 @@
 package foundation.e.blisslauncher.core.migrate;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 import foundation.e.blisslauncher.core.Preferences;
 import foundation.e.blisslauncher.core.database.DatabaseManager;
+import foundation.e.blisslauncher.core.database.LauncherDB;
 
 public class Migration {
 
@@ -31,6 +33,20 @@ public class Migration {
                 }
             }
         }
+
+        if (Build.VERSION.SDK_INT > 28) {
+            String oldComponent = "com.android.dialer/com.android.dialer.app.DialtactsActivity";
+            String newComponent = "com.android.dialer/com.android.dialer.main.impl.MainActivity";
+            String dialerComponent = LauncherDB.getDatabase(context).launcherDao().getComponentName("com.android.dialer");
+
+            if (dialerComponent != null && dialerComponent.equals(oldComponent)) {
+                Log.d(TAG, "migrateSafely: Migrating dialer component!");
+                DatabaseManager.getManager(context).migrateComponent(
+                        oldComponent, newComponent
+                );
+            }
+        }
+
         String migrationInfo = instance.readJSONFromAsset(context);
         CurrentMigration currentMigration = new Gson().fromJson(migrationInfo,
                 CurrentMigration.class);
