@@ -20,6 +20,9 @@ public interface LauncherDao {
     @Query("SELECT * FROM launcher_items ORDER BY container, screen_id, cell")
     List<LauncherItem> getAllItems();
 
+    @Query("SELECT item_id FROM launcher_items WHERE package = :packageName")
+    String getComponentName(String packageName);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<LauncherItem> launcherItems);
 
