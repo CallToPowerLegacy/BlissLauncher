@@ -69,4 +69,19 @@
     <string name="cancel">Cancelar</string>
     <string name="search">Búsqueda</string>
     <string name="app_name">Bliss, nuestro lanzador</string>
+    <string name="general_category">General</string>
+    <string name="weather_S">S</string>
+    <string name="weather_SE">SE</string>
+    <string name="weather_E">E</string>
+    <string name="weather_NE">NE</string>
+    <string name="weather_N">N</string>
+    <string name="weather_mph">mi/h</string>
+    <string name="weather_kph">km/h</string>
+    <string name="weather_32">Soleado</string>
+    <string name="weather_31">Despejado</string>
+    <string name="weather_11">Chubascos</string>
+    <string name="unknown">Desconocido</string>
+    <string name="explanation_access_to_appusage_is_not_enabled">Active acceso al uso de aplicaciones para poder mostrar sugerencias.</string>
+    <string name="app_suggestion">SUGERENCIAS</string>
+    <string name="untitled">Sin título</string>
 </resources>
