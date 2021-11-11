@@ -86,4 +86,13 @@
     <string name="untitled">Sin título</string>
     <string name="weather_retrieve_location_dialog_title">No se ha podido acceder a la ubicación.</string>
     <string name="weather_custom_location_hint">Ciudad, Estado/País</string>
+    <string name="weather_use_metric">Usar el sistema métrico (°C)</string>
+    <string name="weather_refresh_interval">Intérvalo de actualización</string>
+    <string name="weather_show_timestamp_title">Mostrar marca de tiempo</string>
+    <string name="weather_show_location_title">Mostrar ubicación</string>
+    <string name="weather_custom_location_title">Ubicación</string>
+    <string name="weather_custom_location_dialog_title">Introduzca ubicación</string>
+    <string name="weather_geolocated">Geolocalización por red</string>
+    <string name="weather_use_custom_location">Utilizar ubicación personalizada</string>
+    <string name="weather_7">Nieve y aguanieve mixta</string>
 </resources>
