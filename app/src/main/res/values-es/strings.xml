@@ -84,7 +84,7 @@
     <string name="explanation_access_to_appusage_is_not_enabled">Active acceso al uso de aplicaciones para poder mostrar sugerencias.</string>
     <string name="app_suggestion">SUGERENCIAS</string>
     <string name="untitled">Sin título</string>
-    <string name="weather_retrieve_location_dialog_title">No se ha podido acceder a la ubicación.</string>
+    <string name="weather_retrieve_location_dialog_title">No se pudo acceder la ubicación!</string>
     <string name="weather_custom_location_hint">Ciudad, Estado/País</string>
     <string name="weather_use_metric">Usar el sistema métrico (°C)</string>
     <string name="weather_refresh_interval">Intérvalo de actualización</string>
@@ -96,4 +96,10 @@
     <string name="weather_use_custom_location">Utilizar ubicación personalizada</string>
     <string name="weather_7">Nieve y aguanieve mixta</string>
     <string name="weather_alternate_icons_title">Usar iconos coloreados</string>
+    <string name="weather_progress_title">Verificando la ubicación</string>
+    <string name="weather_invert_lowhigh">Invertir las temperaturas bajas/altas</string>
+    <string name="weather_retrieve_location_dialog_enable_button">Activar</string>
+    <string name="weather_retrieve_location_dialog_message">La geolocalización de la red está desactivada.
+\n
+\nHabilita la localización para que funcione con el widget del tiempo.</string>
 </resources>
