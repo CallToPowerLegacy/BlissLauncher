@@ -129,7 +129,7 @@
     <string name="weather_icons_monochrome">Monocromático</string>
     <string name="weather_icons_standard">Coloreado</string>
     <string name="weather_icon_set_title">Conjunto de íconos</string>
-    <string name="weather_select_location">Selecciona ubicación</string>
+    <string name="weather_select_location">Escoger ubicación</string>
     <string name="weather_show_when_minimized_summary">Mostrar información meteorológica resumida cuando se minimiza el widget</string>
     <string name="weather_show_when_minimized_title">Mostrar al minimizar</string>
     <string name="weather_alternate_icons_summary">Seleccione esta opción para alternar entre los iconos estándar (Color) y los alternativos (Blanco)</string>
