@@ -95,4 +95,5 @@
     <string name="weather_geolocated">Geolocalización por red</string>
     <string name="weather_use_custom_location">Utilizar ubicación personalizada</string>
     <string name="weather_7">Nieve y aguanieve mixta</string>
+    <string name="weather_alternate_icons_title">Usar iconos coloreados</string>
 </resources>
