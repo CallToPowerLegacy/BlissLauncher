@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,15 +36,23 @@ public class Migration {
         }
 
         if (Build.VERSION.SDK_INT > 28) {
-            String oldComponent = "com.android.dialer/com.android.dialer.app.DialtactsActivity";
-            String newComponent = "com.android.dialer/com.android.dialer.main.impl.MainActivity";
-            String dialerComponent = LauncherDB.getDatabase(context).launcherDao().getComponentName("com.android.dialer");
+            List<String> dialerComponentList = Arrays.asList(
+                    "com.android.dialer/com.android.dialer.main.impl.MainActivity",
+                    "com.android.dialer/com.android.dialer.app.DialtactsActivity",
+                    "com.android.dialer/com.android.dialer.DialtactsActivity"
+            );
 
-            if (dialerComponent != null && dialerComponent.equals(oldComponent)) {
+            String currentComponent = dialerComponentList.get(0);
+            String dialerComponent = LauncherDB
+                    .getDatabase(context)
+                    .launcherDao()
+                    .getComponentName("com.android.dialer");
+
+            if (dialerComponent != null && dialerComponentList.contains(dialerComponent) 
+                && !dialerComponent.equals(currentComponent)) {
                 Log.d(TAG, "migrateSafely: Migrating dialer component!");
                 DatabaseManager.getManager(context).migrateComponent(
-                        oldComponent, newComponent
-                );
+                        dialerComponent, currentComponent);
             }
         }
 
