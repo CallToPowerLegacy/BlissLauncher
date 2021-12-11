@@ -10,6 +10,7 @@ import android.util.DisplayMetrics;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,7 +26,7 @@ import foundation.e.blisslauncher.core.customviews.WidgetHost;
 public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnActionClickListener {
 
     private AddedWidgetsAdapter mAddedWidgetsAdapter;
-
+    private RecyclerView mAddedWidgetsRecyclerView;
     private AppWidgetManager mAppWidgetManager;
     private WidgetHost mAppWidgetHost;
 
@@ -40,18 +41,18 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         mAppWidgetManager = BlissLauncher.getApplication(this).getAppWidgetManager();
         mAppWidgetHost = BlissLauncher.getApplication(this).getAppWidgetHost();
 
-        RecyclerView addedWidgets = findViewById(R.id.added_widgets_recycler_view);
-        addedWidgets.setLayoutManager(new LinearLayoutManager(this));
-        addedWidgets.setHasFixedSize(false);
-        addedWidgets.setNestedScrollingEnabled(false);
-        addedWidgets.addItemDecoration(
+        mAddedWidgetsRecyclerView = findViewById(R.id.added_widgets_recycler_view);
+        mAddedWidgetsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mAddedWidgetsRecyclerView.setHasFixedSize(false);
+        mAddedWidgetsRecyclerView.setNestedScrollingEnabled(false);
+        mAddedWidgetsRecyclerView.addItemDecoration(
                 new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         mAddedWidgetsAdapter = new AddedWidgetsAdapter(this, metrics.densityDpi);
-        addedWidgets.setAdapter(mAddedWidgetsAdapter);
+        mAddedWidgetsRecyclerView.setAdapter(mAddedWidgetsAdapter);
 
         refreshRecyclerView();
 
@@ -74,6 +75,9 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
             }
         }
         mAddedWidgetsAdapter.setAppWidgetProviderInfos(widgets);
+
+        new ItemTouchHelper(new WidgetItemTouchHelperCallback(mAddedWidgetsAdapter, widgets))
+                .attachToRecyclerView(mAddedWidgetsRecyclerView);
     }
 
     @Override
