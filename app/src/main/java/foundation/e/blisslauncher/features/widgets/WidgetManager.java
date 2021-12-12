@@ -43,8 +43,6 @@ public class WidgetManager {
                 moveWidgetViews.remove(view);
             if (view.getNewContainerIndex() > index)
                 view.setNewContainerIndex(view.getNewContainerIndex()-1);
-            if (view.getOriginalContainerIndex() > index)
-                view.setOriginalContainerIndex(view.getOriginalContainerIndex()-1);
         }
     }
 
@@ -53,7 +51,11 @@ public class WidgetManager {
     }
 
     public void enqueueMoveWidget(RoundedWidgetView view) {
-        moveWidgetViews.add(view);
+        RoundedWidgetView contained = moveWidgetViews.stream().filter(v -> v.getAppWidgetId() == view.getAppWidgetId()).findFirst().orElse(null);
+        if (contained == null)
+            moveWidgetViews.add(view);
+        else
+            contained.setNewContainerIndex(view.getNewContainerIndex());
     }
 
     public Integer dequeRemoveId() {

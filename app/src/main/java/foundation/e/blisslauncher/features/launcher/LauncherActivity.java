@@ -432,18 +432,12 @@ public class LauncherActivity extends AppCompatActivity implements
 
             RoundedWidgetView widgetView = widgetManager.dequeMoveWidgetView();
             while (widgetView != null) {
-                RoundedWidgetView swapWidget = (RoundedWidgetView) widgetContainer.getChildAt(widgetView.getNewContainerIndex());
                 for (int i = 0; i < widgetContainer.getChildCount(); i++) {
                     if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
                         RoundedWidgetView appWidgetHostView =
                                 (RoundedWidgetView) widgetContainer.getChildAt(i);
-                        if (appWidgetHostView.getAppWidgetId() == swapWidget.getAppWidgetId()) {
+                        if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId()) {
                             widgetContainer.removeViewAt(i);
-                            i--;
-                            DatabaseManager.getManager(this).removeWidget(swapWidget.getAppWidgetId());
-                        } else if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId()) {
-                            widgetContainer.removeViewAt(i);
-                            i--;
                             DatabaseManager.getManager(this).removeWidget(widgetView.getAppWidgetId());
                         }
                     }
@@ -452,11 +446,6 @@ public class LauncherActivity extends AppCompatActivity implements
                     widgetContainer.addView(widgetView, widgetView.getNewContainerIndex());
                 else
                     widgetContainer.addView(widgetView);
-
-                if (widgetView.getOriginalContainerIndex() < widgetContainer.getChildCount())
-                    widgetContainer.addView(swapWidget, widgetView.getOriginalContainerIndex());
-                else
-                    widgetContainer.addView(swapWidget);
 
                 widgetView = widgetManager.dequeMoveWidgetView();
             }

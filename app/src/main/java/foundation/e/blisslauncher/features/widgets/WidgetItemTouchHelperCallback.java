@@ -50,7 +50,6 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
             Widget widget = items.get(toPosition);
             RoundedWidgetView hostView = (RoundedWidgetView) widgetHost.createView(
                     applicationContext, widget.id, widget.info);
-            hostView.setOriginalContainerIndex(fromPosition);
             hostView.setNewContainerIndex(toPosition);
             WidgetManager.getInstance().enqueueMoveWidget(hostView);
             dragFrom = -1;

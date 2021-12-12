@@ -32,7 +32,6 @@ public class RoundedWidgetView extends AppWidgetHostView {
     private boolean mChildrenFocused;
 
     private boolean activated = false;
-    private int originalContainerIndex = -1;
     private int newContainerIndex = -1;
 
     public RoundedWidgetView(Context context) {
@@ -163,12 +162,6 @@ public class RoundedWidgetView extends AppWidgetHostView {
         return activated;
     }
 
-    public int getOriginalContainerIndex() {
-        return originalContainerIndex;
-    }
-    public void setOriginalContainerIndex(int index) {
-        originalContainerIndex = index;
-    }
     public int getNewContainerIndex() {
         return newContainerIndex;
     }
