@@ -46,18 +46,17 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
         if (toPosition < 0)
             toPosition = 0;
 
-        if (reallyMoved(dragFrom, toPosition)) {
-            adapter.notifyItemMoved(viewHolder.getAdapterPosition(), target.getAdapterPosition());
-            adapter.setAppWidgetProviderInfos(items);
+        if (dragFrom != toPosition && reallyMoved(dragFrom, toPosition)) {
             Widget widget = items.get(toPosition);
             RoundedWidgetView hostView = (RoundedWidgetView) widgetHost.createView(
                     applicationContext, widget.id, widget.info);
             hostView.setOriginalContainerIndex(fromPosition);
             hostView.setNewContainerIndex(toPosition);
             WidgetManager.getInstance().enqueueMoveWidget(hostView);
+            dragFrom = -1;
         }
 
-        dragFrom = -1;
+        adapter.notifyItemMoved(fromPosition, toPosition);
         return true;
     }
 
