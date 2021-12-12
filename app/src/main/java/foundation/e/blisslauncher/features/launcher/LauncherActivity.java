@@ -448,8 +448,16 @@ public class LauncherActivity extends AppCompatActivity implements
                         }
                     }
                 }
-                widgetContainer.addView(widgetView, widgetView.getNewContainerIndex());
-                widgetContainer.addView(swapWidget, widgetView.getOriginalContainerIndex());
+                if (widgetView.getNewContainerIndex() < widgetContainer.getChildCount())
+                    widgetContainer.addView(widgetView, widgetView.getNewContainerIndex());
+                else
+                    widgetContainer.addView(widgetView);
+
+                if (widgetView.getOriginalContainerIndex() < widgetContainer.getChildCount())
+                    widgetContainer.addView(swapWidget, widgetView.getOriginalContainerIndex());
+                else
+                    widgetContainer.addView(swapWidget);
+
                 widgetView = widgetManager.dequeMoveWidgetView();
             }
 
@@ -459,19 +467,23 @@ public class LauncherActivity extends AppCompatActivity implements
                 addWidgetToContainer(widgetView);
                 widgetView = widgetManager.dequeAddWidgetView();
             }
-            List<Integer> currentWidgetIds = new ArrayList<>();
-            for (int i = 0; i < widgetContainer.getChildCount(); i++) {
-                if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
-                    currentWidgetIds.add(((RoundedWidgetView) widgetContainer.getChildAt(i)).getAppWidgetId());
-                }
-            }
-            widgetManager.setCurrentWidgetIds(currentWidgetIds);
+            updateCurrentWidgetIds();
         }
     }
 
     private void addWidgetToContainer(RoundedWidgetView widgetView) {
         widgetView.setPadding(0, 0, 0, 0);
         widgetContainer.addView(widgetView);
+    }
+
+    private void updateCurrentWidgetIds() {
+        List<Integer> currentWidgetIds = new ArrayList<>();
+        for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+            if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                currentWidgetIds.add(((RoundedWidgetView) widgetContainer.getChildAt(i)).getAppWidgetId());
+            }
+        }
+        WidgetManager.getInstance().setCurrentWidgetIds(currentWidgetIds);
     }
 
     @Override
@@ -1433,6 +1445,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         }, Throwable::printStackTrace));
             }
         }
+        updateCurrentWidgetIds();
     }
 
     @Override
