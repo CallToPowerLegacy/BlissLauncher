@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import foundation.e.blisslauncher.BlissLauncher;
 import foundation.e.blisslauncher.R;
@@ -65,7 +66,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         List<Widget> widgets = new ArrayList<>();
         int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
         Arrays.sort(widgetIds);
-        if (WidgetManager.getInstance().getCurrentWidgetIds() != null)
+        if (WidgetManager.getInstance().getCurrentWidgetIds().length > 0)
             widgetIds = WidgetManager.getInstance().getCurrentWidgetIds();
 
         for (int id : widgetIds) {
@@ -99,6 +100,10 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         addEmptyData(pickIntent);
         startActivityForResult(pickIntent, REQUEST_PICK_APPWIDGET);
+        List<Integer> currentWidgetIds = Arrays.stream(WidgetManager.getInstance().getCurrentWidgetIds())
+                .boxed().collect(Collectors.toList());
+        currentWidgetIds.add(appWidgetId);
+        WidgetManager.getInstance().setCurrentWidgetIds(currentWidgetIds);
     }
 
     void addEmptyData(Intent pickIntent) {

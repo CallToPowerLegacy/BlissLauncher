@@ -10,7 +10,7 @@ import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
 public class WidgetManager {
     private static final WidgetManager ourInstance = new WidgetManager();
 
-    private int[] currentWidgetIds;
+    private int[] currentWidgetIds = new int[0];
     private Queue<Integer> removeWidgetIds = new LinkedList<>();
     private Queue<RoundedWidgetView> addWidgetViews = new LinkedList<>();
     private Queue<RoundedWidgetView> moveWidgetViews = new LinkedList<>();
