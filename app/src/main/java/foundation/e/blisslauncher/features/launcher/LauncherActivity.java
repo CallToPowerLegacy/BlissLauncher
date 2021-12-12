@@ -13,13 +13,11 @@ import android.app.WallpaperManager;
 import android.app.usage.UsageStats;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -27,7 +25,6 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -37,8 +34,6 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.os.UserManager;
 import android.provider.Settings;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
@@ -68,7 +63,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GestureDetectorCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -436,7 +430,30 @@ public class LauncherActivity extends AppCompatActivity implements
                 id = widgetManager.dequeRemoveId();
             }
 
-            RoundedWidgetView widgetView = widgetManager.dequeAddWidgetView();
+            RoundedWidgetView widgetView = widgetManager.dequeMoveWidgetView();
+            while (widgetView != null) {
+                RoundedWidgetView swapWidget = (RoundedWidgetView) widgetContainer.getChildAt(widgetView.getNewContainerIndex());
+                for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+                    if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                        RoundedWidgetView appWidgetHostView =
+                                (RoundedWidgetView) widgetContainer.getChildAt(i);
+                        if (appWidgetHostView.getAppWidgetId() == swapWidget.getAppWidgetId()) {
+                            widgetContainer.removeViewAt(i);
+                            i--;
+                            DatabaseManager.getManager(this).removeWidget(swapWidget.getAppWidgetId());
+                        } else if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId()) {
+                            widgetContainer.removeViewAt(i);
+                            i--;
+                            DatabaseManager.getManager(this).removeWidget(widgetView.getAppWidgetId());
+                        }
+                    }
+                }
+                widgetContainer.addView(widgetView, widgetView.getNewContainerIndex());
+                widgetContainer.addView(swapWidget, widgetView.getOriginalContainerIndex());
+                widgetView = widgetManager.dequeMoveWidgetView();
+            }
+
+            widgetView = widgetManager.dequeAddWidgetView();
             while (widgetView != null) {
                 widgetView = WidgetViewBuilder.create(this, widgetView);
                 addWidgetToContainer(widgetView);

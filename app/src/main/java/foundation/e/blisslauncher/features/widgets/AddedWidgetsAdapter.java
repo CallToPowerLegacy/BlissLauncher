@@ -45,7 +45,7 @@ public class AddedWidgetsAdapter extends
                     if (position != RecyclerView.NO_POSITION) {
                         Widget widget = mAppWidgetProviderInfos.get(position);
                         mAppWidgetProviderInfos.remove(position);
-                        mOnActionClickListener.removeWidget(widget.id);
+                        mOnActionClickListener.removeWidget(widget.id, position);
                         notifyItemRemoved(position);
                     }
                 });
@@ -84,6 +84,6 @@ public class AddedWidgetsAdapter extends
     }
 
     interface OnActionClickListener {
-        void removeWidget(int id);
+        void removeWidget(int id, int position);
     }
 }

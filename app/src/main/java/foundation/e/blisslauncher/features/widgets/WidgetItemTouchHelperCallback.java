@@ -1,8 +1,6 @@
-/*
-  Credit to Gopal Awasthi
-  https://medium.com/@gopalawasthi383/android-recyclerview-drag-and-drop-a3f227cdb641
- */
 package foundation.e.blisslauncher.features.widgets;
+
+import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -11,14 +9,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Collections;
 import java.util.List;
 
+import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
+import foundation.e.blisslauncher.core.customviews.WidgetHost;
+
 public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
     private int dragFrom = -1;
     private final AddedWidgetsAdapter adapter;
     private final List<Widget> items;
+    private final WidgetHost widgetHost;
+    private final Context applicationContext;
 
-    public WidgetItemTouchHelperCallback(AddedWidgetsAdapter adapter, List<Widget> items) {
+    public WidgetItemTouchHelperCallback(AddedWidgetsAdapter adapter, List<Widget> items, WidgetHost widgetHost, Context applicationContext) {
         this.adapter = adapter;
         this.items = items;
+        this.widgetHost = widgetHost;
+        this.applicationContext = applicationContext;
     }
 
     @Override
@@ -29,7 +34,6 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     @Override
     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-        // get the viewHolder's and target's positions in your adapter data, swap them
         if (viewHolder.getItemViewType() != target.getItemViewType())
             return false;
 
@@ -37,18 +41,23 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
         int toPosition = target.getAdapterPosition();
 
         if (dragFrom == -1)
-            dragFrom =  fromPosition;
+            dragFrom = fromPosition;
 
-        if (dragFrom != -1 && toPosition != -1 && dragFrom != toPosition) {
-            reallyMoved(dragFrom, toPosition);
-            dragFrom = -1;
+        if (toPosition < 0)
+            toPosition = 0;
+
+        if (reallyMoved(dragFrom, toPosition)) {
+            adapter.notifyItemMoved(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+            adapter.setAppWidgetProviderInfos(items);
+            Widget widget = items.get(toPosition);
+            RoundedWidgetView hostView = (RoundedWidgetView) widgetHost.createView(
+                    applicationContext, widget.id, widget.info);
+            hostView.setOriginalContainerIndex(fromPosition);
+            hostView.setNewContainerIndex(toPosition);
+            WidgetManager.getInstance().enqueueMoveWidget(hostView);
         }
 
-        // and notify the adapter that its dataset has changed
-        adapter.notifyItemMoved(viewHolder.getAdapterPosition(), target.getAdapterPosition());
-        //nestedScrollView.requestDisallowInterceptTouchEvent(false);
-        //recyclerView.setNestedScrollingEnabled(false);
-
+        dragFrom = -1;
         return true;
     }
 
@@ -57,13 +66,11 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     }
 
-    private void reallyMoved(int dragFrom, int dragTo) {
-        if (dragFrom <= 0 || dragTo >= items.size())
-            return;
+    private boolean reallyMoved(int dragFrom, int dragTo) {
+        if (dragFrom < 0 || dragTo >= items.size())
+            return false;
 
-        if (dragTo < 1)
-            dragTo = 1;
-
-        Collections.swap(items, dragFrom-1, dragTo-1);
+        Collections.swap(items, dragFrom, dragTo);
+        return true;
     }
 }

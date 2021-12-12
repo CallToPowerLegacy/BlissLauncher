@@ -11,6 +11,7 @@ public class WidgetManager {
 
     private Queue<Integer> removeWidgetIds = new LinkedList<>();
     private Queue<RoundedWidgetView> addWidgetViews = new LinkedList<>();
+    private Queue<RoundedWidgetView> moveWidgetViews = new LinkedList<>();
 
     public static WidgetManager getInstance() {
         return ourInstance;
@@ -33,8 +34,24 @@ public class WidgetManager {
         removeWidgetIds.add(id);
     }
 
+    public void enqueueRemoveId(int id, int index) {
+        enqueueRemoveId(id);
+        for (RoundedWidgetView view : moveWidgetViews) {
+            if (view.getNewContainerIndex() == index)
+                moveWidgetViews.remove(view);
+            if (view.getNewContainerIndex() > index)
+                view.setNewContainerIndex(view.getNewContainerIndex()-1);
+            if (view.getOriginalContainerIndex() > index)
+                view.setOriginalContainerIndex(view.getOriginalContainerIndex()-1);
+        }
+    }
+
     public void enqueueAddWidget(RoundedWidgetView view) {
         addWidgetViews.add(view);
+    }
+
+    public void enqueueMoveWidget(RoundedWidgetView view) {
+        moveWidgetViews.add(view);
     }
 
     public Integer dequeRemoveId() {
@@ -43,5 +60,9 @@ public class WidgetManager {
 
     public RoundedWidgetView dequeAddWidgetView() {
         return addWidgetViews.poll();
+    }
+
+    public RoundedWidgetView dequeMoveWidgetView() {
+        return moveWidgetViews.poll();
     }
 }

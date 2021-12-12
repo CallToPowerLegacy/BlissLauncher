@@ -76,11 +76,17 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         }
         mAddedWidgetsAdapter.setAppWidgetProviderInfos(widgets);
 
-        new ItemTouchHelper(new WidgetItemTouchHelperCallback(mAddedWidgetsAdapter, widgets))
+        //TODO - keep sort order of widgets
+        new ItemTouchHelper(new WidgetItemTouchHelperCallback(mAddedWidgetsAdapter, widgets, mAppWidgetHost, getApplicationContext()))
                 .attachToRecyclerView(mAddedWidgetsRecyclerView);
     }
 
     @Override
+    public void removeWidget(int id, int index) {
+        mAppWidgetHost.deleteAppWidgetId(id);
+        WidgetManager.getInstance().enqueueRemoveId(id, index);
+    }
+
     public void removeWidget(int id) {
         mAppWidgetHost.deleteAppWidgetId(id);
         WidgetManager.getInstance().enqueueRemoveId(id);

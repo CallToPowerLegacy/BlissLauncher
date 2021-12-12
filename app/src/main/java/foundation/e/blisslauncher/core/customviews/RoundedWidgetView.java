@@ -32,6 +32,8 @@ public class RoundedWidgetView extends AppWidgetHostView {
     private boolean mChildrenFocused;
 
     private boolean activated = false;
+    private int originalContainerIndex = -1;
+    private int newContainerIndex = -1;
 
     public RoundedWidgetView(Context context) {
         super(context);
@@ -48,7 +50,6 @@ public class RoundedWidgetView extends AppWidgetHostView {
         stencilPath.reset();
         stencilPath.addRoundRect(0, 0, w, h, cornerRadius, cornerRadius, Path.Direction.CW);
         stencilPath.close();
-
     }
 
     @Override
@@ -160,5 +161,18 @@ public class RoundedWidgetView extends AppWidgetHostView {
 
     public boolean isWidgetActivated() {
         return activated;
+    }
+
+    public int getOriginalContainerIndex() {
+        return originalContainerIndex;
+    }
+    public void setOriginalContainerIndex(int index) {
+        originalContainerIndex = index;
+    }
+    public int getNewContainerIndex() {
+        return newContainerIndex;
+    }
+    public void setNewContainerIndex(int index) {
+        newContainerIndex = index;
     }
 }
