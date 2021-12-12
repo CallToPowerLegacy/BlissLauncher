@@ -459,6 +459,13 @@ public class LauncherActivity extends AppCompatActivity implements
                 addWidgetToContainer(widgetView);
                 widgetView = widgetManager.dequeAddWidgetView();
             }
+            List<Integer> currentWidgetIds = new ArrayList<>();
+            for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+                if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                    currentWidgetIds.add(((RoundedWidgetView) widgetContainer.getChildAt(i)).getAppWidgetId());
+                }
+            }
+            widgetManager.setCurrentWidgetIds(currentWidgetIds);
         }
     }
 

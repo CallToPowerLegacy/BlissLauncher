@@ -65,6 +65,9 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         List<Widget> widgets = new ArrayList<>();
         int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
         Arrays.sort(widgetIds);
+        if (WidgetManager.getInstance().getCurrentWidgetIds() != null)
+            widgetIds = WidgetManager.getInstance().getCurrentWidgetIds();
+
         for (int id : widgetIds) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
             if (appWidgetInfo != null) {
@@ -75,8 +78,6 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
             }
         }
         mAddedWidgetsAdapter.setAppWidgetProviderInfos(widgets);
-
-        //TODO - keep sort order of widgets
         new ItemTouchHelper(new WidgetItemTouchHelperCallback(mAddedWidgetsAdapter, widgets, mAppWidgetHost, getApplicationContext()))
                 .attachToRecyclerView(mAddedWidgetsRecyclerView);
     }
