@@ -2,14 +2,8 @@ package foundation.e.blisslauncher.core;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Locale;
 
 import foundation.e.blisslauncher.core.utils.Constants;
 
