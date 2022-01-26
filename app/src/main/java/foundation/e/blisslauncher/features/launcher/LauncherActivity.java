@@ -441,14 +441,14 @@ public class LauncherActivity extends AppCompatActivity implements
             while (widgetView != null) {
                 for (int i = 0; i < widgetContainer.getChildCount(); i++) {
                     if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
-                        RoundedWidgetView appWidgetHostView =
-                                (RoundedWidgetView) widgetContainer.getChildAt(i);
+                        RoundedWidgetView appWidgetHostView = (RoundedWidgetView) widgetContainer.getChildAt(i);
                         if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId()) {
                             widgetContainer.removeViewAt(i);
+                            addWidgetToContainer(widgetView, widgetView.getNewContainerIndex(), appWidgetHostView.getLayoutParams());
+                            break;
                         }
                     }
                 }
-                addWidgetToContainer(widgetView, widgetView.getNewContainerIndex());
                 widgetView = widgetManager.dequeMoveWidgetView();
             }
             updateCurrentWidgetIds();
@@ -456,9 +456,9 @@ public class LauncherActivity extends AppCompatActivity implements
     }
 
     private void addWidgetToContainer(RoundedWidgetView widgetView) {
-        addWidgetToContainer(widgetView, -1);
+        addWidgetToContainer(widgetView, -1, widgetView.getLayoutParams());
     }
-    private void addWidgetToContainer(RoundedWidgetView widgetView, int index) {
+    private void addWidgetToContainer(RoundedWidgetView widgetView, int index, ViewGroup.LayoutParams layoutParams) {
         for (int i = 0; i < widgetContainer.getChildCount(); i++) {
             if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
                 RoundedWidgetView appWidgetHostView = (RoundedWidgetView) widgetContainer.getChildAt(i);
@@ -466,6 +466,7 @@ public class LauncherActivity extends AppCompatActivity implements
                     return;
             }
         }
+        widgetView.setLayoutParams(layoutParams);
         widgetView.setPadding(0, 0, 0, 0);
         widgetContainer.addView(widgetView, index);
     }
