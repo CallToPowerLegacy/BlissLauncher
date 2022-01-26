@@ -70,7 +70,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
     private void refreshRecyclerView() {
         int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
         Arrays.sort(widgetIds);
-        if (WidgetManager.getInstance().getCurrentWidgetIds().size() == widgetIds.length) {
+        if (WidgetManager.getInstance().getCurrentWidgetIds().size() > 0) {
             widgetIds = WidgetManager.getInstance().getCurrentWidgetIds().stream().mapToInt(i -> i).toArray();
             widgets = new ArrayList<>();
         } else {
