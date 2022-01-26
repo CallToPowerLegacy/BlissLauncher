@@ -13,13 +13,11 @@ import android.app.WallpaperManager;
 import android.app.usage.UsageStats;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -27,7 +25,6 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -37,8 +34,6 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.os.UserManager;
 import android.provider.Settings;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
@@ -68,7 +63,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GestureDetectorCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -442,12 +436,49 @@ public class LauncherActivity extends AppCompatActivity implements
                 addWidgetToContainer(widgetView);
                 widgetView = widgetManager.dequeAddWidgetView();
             }
+
+            widgetView = widgetManager.dequeMoveWidgetView();
+            while (widgetView != null) {
+                for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+                    if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                        RoundedWidgetView appWidgetHostView = (RoundedWidgetView) widgetContainer.getChildAt(i);
+                        if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId()) {
+                            widgetContainer.removeViewAt(i);
+                            addWidgetToContainer(widgetView, widgetView.getNewContainerIndex(), appWidgetHostView.getLayoutParams());
+                            break;
+                        }
+                    }
+                }
+                widgetView = widgetManager.dequeMoveWidgetView();
+            }
+            updateCurrentWidgetIds();
         }
     }
 
     private void addWidgetToContainer(RoundedWidgetView widgetView) {
+        addWidgetToContainer(widgetView, -1, widgetView.getLayoutParams());
+    }
+    private void addWidgetToContainer(RoundedWidgetView widgetView, int index, ViewGroup.LayoutParams layoutParams) {
+        for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+            if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                RoundedWidgetView appWidgetHostView = (RoundedWidgetView) widgetContainer.getChildAt(i);
+                if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId())
+                    return;
+            }
+        }
+        widgetView.setLayoutParams(layoutParams);
         widgetView.setPadding(0, 0, 0, 0);
-        widgetContainer.addView(widgetView);
+        widgetContainer.addView(widgetView, index);
+    }
+
+    private void updateCurrentWidgetIds() {
+        List<Integer> currentWidgetIds = new ArrayList<>();
+        for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+            if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                currentWidgetIds.add(((RoundedWidgetView) widgetContainer.getChildAt(i)).getAppWidgetId());
+            }
+        }
+        WidgetManager.getInstance().setCurrentWidgetIds(currentWidgetIds);
     }
 
     @Override
@@ -1409,6 +1440,7 @@ public class LauncherActivity extends AppCompatActivity implements
                         }, Throwable::printStackTrace));
             }
         }
+        updateCurrentWidgetIds();
     }
 
     @Override

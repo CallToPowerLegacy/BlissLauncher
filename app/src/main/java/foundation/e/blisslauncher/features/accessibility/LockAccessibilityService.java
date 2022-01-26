@@ -5,7 +5,6 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
-import androidx.room.util.StringUtil;
 
 import java.util.Objects;
 
