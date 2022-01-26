@@ -68,6 +68,9 @@ public class AddedWidgetsAdapter extends
         this.mAppWidgetProviderInfos = appWidgetProviderInfos;
         notifyDataSetChanged();
     }
+    public List<Widget> getAppWidgetProviderInfos() {
+        return mAppWidgetProviderInfos;
+    }
 
     public static class WidgetsViewHolder extends RecyclerView.ViewHolder {
 

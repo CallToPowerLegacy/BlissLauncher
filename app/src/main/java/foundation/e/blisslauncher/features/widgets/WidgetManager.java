@@ -1,5 +1,6 @@
 package foundation.e.blisslauncher.features.widgets;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,7 +11,7 @@ import foundation.e.blisslauncher.core.customviews.RoundedWidgetView;
 public class WidgetManager {
     private static final WidgetManager ourInstance = new WidgetManager();
 
-    private int[] currentWidgetIds = new int[0];
+    private List<Integer> currentWidgetIds = new ArrayList<>();
     private Queue<Integer> removeWidgetIds = new LinkedList<>();
     private Queue<RoundedWidgetView> addWidgetViews = new LinkedList<>();
     private Queue<RoundedWidgetView> moveWidgetViews = new LinkedList<>();
@@ -70,14 +71,10 @@ public class WidgetManager {
         return moveWidgetViews.poll();
     }
 
-    public int[] getCurrentWidgetIds() {
+    public List<Integer> getCurrentWidgetIds() {
         return currentWidgetIds;
     }
     public void setCurrentWidgetIds(List<Integer> widgetIds) {
-        int[] newWidgetIds = new int[widgetIds.size()];
-        for (int i = 0; i < widgetIds.size(); i++) {
-            newWidgetIds[i] = widgetIds.get(i);
-        }
-        currentWidgetIds = newWidgetIds;
+        currentWidgetIds = widgetIds;
     }
 }

@@ -430,7 +430,14 @@ public class LauncherActivity extends AppCompatActivity implements
                 id = widgetManager.dequeRemoveId();
             }
 
-            RoundedWidgetView widgetView = widgetManager.dequeMoveWidgetView();
+            RoundedWidgetView widgetView = widgetManager.dequeAddWidgetView();
+            while (widgetView != null) {
+                widgetView = WidgetViewBuilder.create(this, widgetView);
+                addWidgetToContainer(widgetView);
+                widgetView = widgetManager.dequeAddWidgetView();
+            }
+
+            widgetView = widgetManager.dequeMoveWidgetView();
             while (widgetView != null) {
                 for (int i = 0; i < widgetContainer.getChildCount(); i++) {
                     if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
@@ -438,31 +445,29 @@ public class LauncherActivity extends AppCompatActivity implements
                                 (RoundedWidgetView) widgetContainer.getChildAt(i);
                         if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId()) {
                             widgetContainer.removeViewAt(i);
-                            DatabaseManager.getManager(this).removeWidget(widgetView.getAppWidgetId());
                         }
                     }
                 }
-                if (widgetView.getNewContainerIndex() < widgetContainer.getChildCount())
-                    widgetContainer.addView(widgetView, widgetView.getNewContainerIndex());
-                else
-                    widgetContainer.addView(widgetView);
-
+                addWidgetToContainer(widgetView, widgetView.getNewContainerIndex());
                 widgetView = widgetManager.dequeMoveWidgetView();
-            }
-
-            widgetView = widgetManager.dequeAddWidgetView();
-            while (widgetView != null) {
-                widgetView = WidgetViewBuilder.create(this, widgetView);
-                addWidgetToContainer(widgetView);
-                widgetView = widgetManager.dequeAddWidgetView();
             }
             updateCurrentWidgetIds();
         }
     }
 
     private void addWidgetToContainer(RoundedWidgetView widgetView) {
+        addWidgetToContainer(widgetView, -1);
+    }
+    private void addWidgetToContainer(RoundedWidgetView widgetView, int index) {
+        for (int i = 0; i < widgetContainer.getChildCount(); i++) {
+            if (widgetContainer.getChildAt(i) instanceof RoundedWidgetView) {
+                RoundedWidgetView appWidgetHostView = (RoundedWidgetView) widgetContainer.getChildAt(i);
+                if (appWidgetHostView.getAppWidgetId() == widgetView.getAppWidgetId())
+                    return;
+            }
+        }
         widgetView.setPadding(0, 0, 0, 0);
-        widgetContainer.addView(widgetView);
+        widgetContainer.addView(widgetView, index);
     }
 
     private void updateCurrentWidgetIds() {

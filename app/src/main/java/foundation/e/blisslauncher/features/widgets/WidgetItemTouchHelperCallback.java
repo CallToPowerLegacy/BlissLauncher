@@ -15,13 +15,11 @@ import foundation.e.blisslauncher.core.customviews.WidgetHost;
 public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
     private int dragFrom = -1;
     private final AddedWidgetsAdapter adapter;
-    private final List<Widget> items;
     private final WidgetHost widgetHost;
     private final Context applicationContext;
 
-    public WidgetItemTouchHelperCallback(AddedWidgetsAdapter adapter, List<Widget> items, WidgetHost widgetHost, Context applicationContext) {
+    public WidgetItemTouchHelperCallback(AddedWidgetsAdapter adapter, WidgetHost widgetHost, Context applicationContext) {
         this.adapter = adapter;
-        this.items = items;
         this.widgetHost = widgetHost;
         this.applicationContext = applicationContext;
     }
@@ -39,6 +37,7 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
         int fromPosition = viewHolder.getAdapterPosition();
         int toPosition = target.getAdapterPosition();
+        List<Widget> items = adapter.getAppWidgetProviderInfos();
 
         if (dragFrom == -1)
             dragFrom = fromPosition;
@@ -46,7 +45,7 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
         if (toPosition < 0)
             toPosition = 0;
 
-        if (dragFrom != toPosition && reallyMoved(dragFrom, toPosition)) {
+        if (dragFrom != toPosition && reallyMoved(dragFrom, toPosition, items)) {
             Widget widget = items.get(toPosition);
             RoundedWidgetView hostView = (RoundedWidgetView) widgetHost.createView(
                     applicationContext, widget.id, widget.info);
@@ -64,11 +63,12 @@ public class WidgetItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     }
 
-    private boolean reallyMoved(int dragFrom, int dragTo) {
+    private boolean reallyMoved(int dragFrom, int dragTo, List<Widget> items) {
         if (dragFrom < 0 || dragTo >= items.size())
             return false;
 
         Collections.swap(items, dragFrom, dragTo);
+        Collections.swap(WidgetManager.getInstance().getCurrentWidgetIds(), dragFrom, dragTo);
         return true;
     }
 }

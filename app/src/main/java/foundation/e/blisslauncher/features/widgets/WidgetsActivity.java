@@ -30,6 +30,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
     private RecyclerView mAddedWidgetsRecyclerView;
     private AppWidgetManager mAppWidgetManager;
     private WidgetHost mAppWidgetHost;
+    private List<Widget> widgets;
 
     private static final int REQUEST_PICK_APPWIDGET = 455;
     private static final int REQUEST_CREATE_APPWIDGET = 189;
@@ -55,19 +56,26 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         mAddedWidgetsAdapter = new AddedWidgetsAdapter(this, metrics.densityDpi);
         mAddedWidgetsRecyclerView.setAdapter(mAddedWidgetsAdapter);
 
+        widgets = new ArrayList<>();
         refreshRecyclerView();
 
         findViewById(R.id.add_widget_button).setOnClickListener(view -> {
             selectWidget();
         });
+
+        new ItemTouchHelper(new WidgetItemTouchHelperCallback(mAddedWidgetsAdapter, mAppWidgetHost, getApplicationContext()))
+                .attachToRecyclerView(mAddedWidgetsRecyclerView);
     }
 
     private void refreshRecyclerView() {
-        List<Widget> widgets = new ArrayList<>();
         int[] widgetIds = mAppWidgetHost.getAppWidgetIds();
         Arrays.sort(widgetIds);
-        if (WidgetManager.getInstance().getCurrentWidgetIds().length > 0)
-            widgetIds = WidgetManager.getInstance().getCurrentWidgetIds();
+        if (WidgetManager.getInstance().getCurrentWidgetIds().size() == widgetIds.length) {
+            widgetIds = WidgetManager.getInstance().getCurrentWidgetIds().stream().mapToInt(i -> i).toArray();
+            widgets = new ArrayList<>();
+        } else {
+            WidgetManager.getInstance().setCurrentWidgetIds(Arrays.stream(widgetIds).boxed().collect(Collectors.toList()));
+        }
 
         for (int id : widgetIds) {
             AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(id);
@@ -79,19 +87,24 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
             }
         }
         mAddedWidgetsAdapter.setAppWidgetProviderInfos(widgets);
-        new ItemTouchHelper(new WidgetItemTouchHelperCallback(mAddedWidgetsAdapter, widgets, mAppWidgetHost, getApplicationContext()))
-                .attachToRecyclerView(mAddedWidgetsRecyclerView);
     }
 
     @Override
     public void removeWidget(int id, int index) {
         mAppWidgetHost.deleteAppWidgetId(id);
         WidgetManager.getInstance().enqueueRemoveId(id, index);
+        removeWidgetFromCurrentList(id);
     }
 
     public void removeWidget(int id) {
         mAppWidgetHost.deleteAppWidgetId(id);
         WidgetManager.getInstance().enqueueRemoveId(id);
+        removeWidgetFromCurrentList(id);
+    }
+
+    void removeWidgetFromCurrentList(int id) {
+        WidgetManager.getInstance().getCurrentWidgetIds().remove(Integer.valueOf(id));
+        refreshRecyclerView();
     }
 
     void selectWidget() {
@@ -100,10 +113,6 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
         pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         addEmptyData(pickIntent);
         startActivityForResult(pickIntent, REQUEST_PICK_APPWIDGET);
-        List<Integer> currentWidgetIds = Arrays.stream(WidgetManager.getInstance().getCurrentWidgetIds())
-                .boxed().collect(Collectors.toList());
-        currentWidgetIds.add(appWidgetId);
-        WidgetManager.getInstance().setCurrentWidgetIds(currentWidgetIds);
     }
 
     void addEmptyData(Intent pickIntent) {
@@ -155,6 +164,7 @@ public class WidgetsActivity extends Activity implements AddedWidgetsAdapter.OnA
                 appWidgetInfo);
         hostView.setAppWidget(appWidgetId, appWidgetInfo);
         WidgetManager.getInstance().enqueueAddWidget(hostView);
+        WidgetManager.getInstance().getCurrentWidgetIds().add(appWidgetId);
         refreshRecyclerView();
     }
 
